@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Notizie - Sportello Scuola 2.0</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/_evolutions.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="Home">
+      <img class="brand-logo" src="img/logo.png" alt="" />
+      <span class="brand-text">
+        <span class="brand-top">Sportello</span>
+        <span class="brand-bottom">Scuola <small>2.0</small></span>
+      </span>
+    </a>
+    <nav class="topnav">
+      <a href="index.html">Home</a>
+      <div class="dropdown">
+        <button class="dropbtn">Categorie ▾</button>
+        <div class="dropdown-content" id="newsMenu"></div>
+      </div>
+      <a href="servizi.html">Servizi</a>
+      <a href="contatti.html">Contatti</a>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <section class="maincol">
+      <div class="toolbar">
+        <form class="searchbar" onsubmit="event.preventDefault(); loadNews({ q: document.getElementById('q').value, page:1 });">
+          <input id="q" type="search" placeholder="Cerca nelle notizie">
+          <button class="btn" type="submit">Cerca</button>
+        </form>
+      </div>
+      <div id="listaNotizie" class="news-grid"></div>
+      <div id="paginator" class="paginator"></div>
+    </section>
+
+    <aside class="sidecol">
+      <div class="deadlines card">
+        <div class="card-header">
+          <h3>📅 Scadenze importanti</h3>
+          <a class="mini" href="notizie.html?categoria=scadenze-ed-eventi">Tutte</a>
+        </div>
+        <div id="deadlinesGrouped" class="deadlines-grouped"></div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2025 Sportello Scuola 2.0</p>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/notizie.js"></script>
+  <script src="js/deadlines.js"></script>
+  <script src="js/utils_dom.js"></script>
+  <script src="js/news.js"></script>
+  <script src="js/search.js"></script>
+</body>
+</html>
