@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "node-fetch": "^2.6.7",
+    "cheerio": "^1.0.0-rc.12"
+  },
+  "private": true,
+  "name": "SpSc_v4.3_ready",
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=14"
+  }
+}

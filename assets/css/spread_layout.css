@@ -1,0 +1,47 @@
+
+/* Minimal layout rules for two-column design — DO NOT change colors or logo styles */
+/* This file only controls layout and spacing. It intentionally avoids changing colors, fonts or brand styles. */
+
+.container-two-col{
+  display:flex;
+  gap:20px;
+  align-items:stretch; /* ensure equal-height columns */
+  width:100%;
+  max-width:1200px;
+  margin:20px auto;
+  padding:10px;
+  box-sizing:border-box;
+}
+
+/* Keep existing card styles if present; if not, provide minimal card structure without color overrides */
+.card{
+  display:flex;
+  flex-direction:column;
+  border-radius:8px;
+  padding:16px;
+  box-sizing:border-box;
+  /* Do not set background or color to avoid overriding brand styles */
+  min-height:220px; /* reasonable default */
+}
+
+/* Ratio: main content twice the width of sidebar */
+.news{flex:2; min-width:0}
+.sidebar{flex:1; min-width:0}
+
+/* Make lists scroll within their container if content is long */
+.list{overflow:auto; max-height:60vh;}
+
+/* Place the help CTA below the two-column area, centered; visual styling inherited from existing .btn class */
+.help-cta{display:flex;justify-content:center;padding:16px;margin-top:12px}
+.help-cta .help-btn{ /* do not set background/color — inherit from existing .btn if any */
+  text-decoration:none;
+  padding:10px 16px;
+  border-radius:8px;
+  display:inline-block;
+}
+
+/* On small screens, stack columns */
+@media(max-width:900px){
+  .container-two-col{flex-direction:column;padding:12px}
+  .list{max-height:none}
+}

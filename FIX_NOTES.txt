@@ -1,0 +1,11 @@
+
+Modifiche integrate in questa cartella (SpSc_v4.3_ready):
+- Struttura della pagina principale rimodellata in due colonne (main = notizie, sidebar = scadenze).
+- Il layout è implementato tramite 'assets/css/spread_layout.css' — file che controlla SOLO il layout e NON sovrascrive colori, logo o altri stili esistenti.
+- Il pulsante 'Hai bisogno di aiuto? Prenota subito' è stato collocato immediatamente sotto la sezione Notizie (unico esemplare presente).
+- Correzioni alle Netlify Functions: fix della regex in fetchNews.js e normalizzazione degli import/requires in mimNews.js per compatibilità con node-fetch v2 (require).
+- package.json aggiornato per includere 'node-fetch'@^2.6.7 e 'cheerio'@^1.0.0-rc.12 (non installati qui).
+- netlify.toml aggiornato per includere il plugin @netlify/plugin-functions-install-core per installare le dipendenze delle functions durante il build.
+- Non sono stati modificati logo, colori e file di stile esistenti. Il nuovo CSS evita di impostare colori e font globali per mantenere il look invariato.
+
+Nota: in questo ambiente non eseguiamo 'npm install'. Raccomando di eseguire 'npm install' nella root prima del deploy o lasciare che Netlify lo faccia (il plugin aggiunto aiuterà l'installazione delle dependencies).

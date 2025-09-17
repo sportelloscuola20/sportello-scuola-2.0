@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scadenze - Sportello Scuola 2.0</title>
+  <link rel="stylesheet" href="css/_evolutions.css">
+  <style>
+    body{font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;}
+    .container{max-width:1100px;margin:0 auto;padding:20px;}
+    .layout{display:grid;grid-template-columns: 1fr 340px; gap: 20px;}
+    .card{background:#fff;border:1px solid var(--ss-border);border-radius:16px;box-shadow:var(--ss-shadow);padding:16px;}
+    .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px;}
+    .grid{display:grid;grid-template-columns: 1fr 1fr;gap:14px;}
+    @media (max-width: 900px){ .layout{grid-template-columns:1fr;} .grid{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Scadenze</h1>
+    <p class="ss-legend">Filtra per periodo e cerca per parola chiave. I titoli sono sintetici, il dettaglio è consultabile aprendo la voce.</p>
+
+    <div class="layout">
+      <div>
+        <div class="card">
+          <div class="toolbar">
+            <div class="ss-pill"><select id="yearSel"></select></div>
+            <div class="ss-pill"><select id="monthSel"></select></div>
+            <div class="ss-pill"><input id="q" placeholder="Cerca scadenze..." style="border:none;outline:none;background:transparent;"></div>
+          </div>
+          <ul id="list" class="ssrrw-list" style="max-height: none;"></ul>
+        </div>
+      </div>
+      <aside>
+        <div class="card">
+          <h3 class="ssrrw-title">Come aggiorno?</h3>
+          <p class="ss-legend">Modifica il file <code>data/deadlines.json</code> in repository per aggiungere nuove scadenze. Mantieni titoli brevi e chiari.</p>
+          <a class="ss-link" href="data/deadlines.json" download>Scarica il JSON attuale</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    async function load(){
+      const res = await fetch('data/deadlines.json?v=' + Date.now());
+      const data = await res.json();
+      const years = Object.keys(data).filter(k=>k!=='meta').sort();
+      const ySel = document.getElementById('yearSel');
+      const mSel = document.getElementById('monthSel');
+      const q = document.getElementById('q');
+      years.forEach(y=>{ const o=document.createElement('option'); o.value=y; o.textContent=y; ySel.appendChild(o); });
+      function fillMonths(){
+        mSel.innerHTML='';
+        const months = Object.keys(data[ySel.value]||{}).sort();
+        months.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=(new Date(ySel.value+'-'+m+'-01')).toLocaleDateString('it-IT',{month:'long',year:'numeric'}); mSel.appendChild(o); });
+      }
+      ySel.value = years[years.length-1] || String(new Date().getFullYear());
+      fillMonths();
+      mSel.value = Object.keys(data[ySel.value]||{}).sort().pop() || String(new Date().getMonth()+1).padStart(2,'0');
+      function apply(){
+        const list = document.getElementById('list'); list.innerHTML='';
+        const items = ((data[ySel.value]||{})[mSel.value]||[]).slice().sort((a,b)=> (a.date||'').localeCompare(b.date||''));
+        const query = (q.value||'').toLowerCase();
+        const filtered = items.filter(it => (it.title||'').toLowerCase().includes(query) || (it.summary||'').toLowerCase().includes(query));
+        if (filtered.length===0){ list.innerHTML = '<li class="ss-item"><div class="ss-item-head"><p class="ss-item-title">Nessuna scadenza</p></div></li>'; return; }
+        filtered.forEach(item=>{
+          const li = document.createElement('li'); li.className='ss-item';
+          const head = document.createElement('div'); head.className='ss-item-head';
+          const title = document.createElement('p'); title.className='ss-item-title'; title.textContent=item.title||'Scadenza';
+          const date = document.createElement('span'); date.className='ss-item-date'; date.textContent = item.date ? new Date(item.date).toLocaleDateString('it-IT',{day:'2-digit',month:'short'}).replace('.','') : '';
+          head.appendChild(title); head.appendChild(date);
+          const body = document.createElement('div'); body.className='ss-item-body';
+          const p = document.createElement('p'); p.textContent = item.summary || '';
+          const a = document.createElement('a'); a.href=item.link||'#'; a.className='ss-link'; a.textContent='Dettagli';
+          body.appendChild(p); body.appendChild(a);
+          head.addEventListener('click', ()=>{ li.classList.toggle('open'); });
+          li.appendChild(head); li.appendChild(body);
+          list.appendChild(li);
+        });
+      }
+      ySel.addEventListener('change', ()=>{ fillMonths(); apply(); });
+      mSel.addEventListener('change', apply);
+      q.addEventListener('input', apply);
+      apply();
+    }
+    if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', load); else load();
+  </script>
+  <script src="js/utils_dom.js"></script>
+  <script src="js/deadlines.js"></script>
+  <script src="js/news.js"></script>
+  <script src="js/search.js"></script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sportello Scuola 2.0</title>
+  <meta name="description" content="Sportello Scuola 2.0 - Notizie, scadenze e servizi per la scuola.">
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/_evolutions.css">
+<link rel="stylesheet" href="assets/css/spread_layout.css">
+</head>
+<body>
+<header class="site-header">
+    <a class="brand" href="index.html" aria-label="Home">
+      <img class="brand-logo" src="img/logo.png" alt="" />
+      <span class="brand-text">
+        <span class="brand-top">Sportello</span>
+        <span class="brand-bottom">Scuola <small>2.0</small></span>
+      </span>
+    </a>
+    <nav class="topnav">
+      <a href="index.html" class="active">Home</a>
+      <div class="dropdown">
+        <button class="dropbtn">Notizie ▾</button>
+        <div class="dropdown-content" id="newsMenu"></div>
+      </div>
+      <div class="dropdown">
+        <button class="dropbtn">Servizi ▾</button>
+        <div class="dropdown-content">
+          <a href="servizi.html#docenti">Docenti</a>
+          <a href="servizi.html#ata">Personale ATA</a>
+        </div>
+      </div>
+      <a href="contatti.html">Contatti</a>
+    </nav>
+  </header>
+
+<main id="main-content">
+  <div class="container-two-col" id="two-col-layout">
+    <section class="news card" id="news">
+      <h2>Ultime notizie</h2>
+      <div id="news-list" class="list"><!-- news will be injected here --></div>
+    </section>
+    <aside class="sidebar card" id="deadlines">
+      <h2>Scadenze</h2>
+      <div id="deadlines-list" class="list"><!-- deadlines --></div>
+    </aside>
+  </div>
+
+  <!-- Help CTA moved here; styled to inherit existing site styles, no color overrides -->
+  <div id="help-cta" class="help-cta">
+    <a class="btn help-btn" href="/prenota">Hai bisogno di aiuto? Prenota subito</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+    <nav class="footnav">
+      <a href="contatti.html">Contatti</a>
+      <a href="servizi.html">Servizi</a>
+      <a href="notizie.html">Notizie</a>
+    </nav>
+    <p>© 2025 Sportello Scuola 2.0</p>
+  </footer>
+</body>
+</html>
