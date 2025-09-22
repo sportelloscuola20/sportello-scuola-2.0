@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Contatti - Sportello Scuola 2.0</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/_evolutions.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="Home">
+      <img class="brand-logo" src="img/logo.png" alt="" />
+      <span class="brand-text">
+        <span class="brand-top">Sportello</span>
+        <span class="brand-bottom">Scuola <small>2.0</small></span>
+      </span>
+    </a>
+    <nav class="topnav">
+      <a href="index.html">Home</a>
+      <a href="servizi.html">Servizi</a>
+      <a href="notizie.html">Notizie</a>
+      <a class="active" href="contatti.html">Contatti</a>
+    </nav>
+  </header>
+
+  <main class="container narrow">
+    <section class="card">
+      <h2>Scrivici</h2>
+      <form name="contatti" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="form" id="prenota">
+        <input type="hidden" name="form-name" value="contatti" />
+        <p class="hidden"><label>Non compilare <input name="bot-field" /></label></p>
+        <div class="grid-2">
+          <input type="text" name="nome" placeholder="Nome" required />
+          <input type="email" name="email" placeholder="Email" required />
+        </div>
+        <input type="text" name="oggetto" placeholder="Oggetto" />
+        <textarea name="messaggio" placeholder="Messaggio" required></textarea>
+        <button type="submit" class="btn cta">Invia</button>
+      </form>
+    </section>
+    <section class="card">
+      <h2>Info</h2>
+      <p>Email: info@sportelloscuola.example</p>
+      <p>Orari: Lun–Ven 9–13</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2025 Sportello Scuola 2.0</p>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/utils_dom.js"></script>
+  <script src="js/deadlines.js"></script>
+  <script src="js/news.js"></script>
+  <script src="js/search.js"></script>
+</body>
+</html>

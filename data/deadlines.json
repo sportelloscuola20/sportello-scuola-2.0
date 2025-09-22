@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "generated_at": "2025-08-25T10:15:12.590738Z"
+  },
+  "2025": {
+    "08": [
+      {
+        "date": "2025-08-20",
+        "title": "Aggiornamento PTOF a.s. 2025/26",
+        "summary": "Verifica e aggiornamento PTOF e piano delle attività collegiali.",
+        "link": "#",
+        "regions": [
+          "Tutte"
+        ]
+      },
+      {
+        "date": "2025-08-31",
+        "title": "Chiusura rendicontazioni 2024/25",
+        "summary": "Rendicontazione di progetti e attività dell'a.s. precedente.",
+        "link": "#",
+        "regions": [
+          "Tutte"
+        ]
+      }
+    ],
+    "09": [
+      {
+        "date": "2025-09-05",
+        "title": "Avvio lezioni Infanzia (varia per Regione)",
+        "summary": "Controlla calendario regionale e adattamenti locali.",
+        "link": "#",
+        "regions": [
+          "Tutte"
+        ]
+      },
+      {
+        "date": "2025-09-12",
+        "title": "Avvio lezioni Primaria/Secondaria (varia)",
+        "summary": "Consultare delibere regionali.",
+        "link": "#",
+        "regions": [
+          "Tutte"
+        ]
+      }
+    ]
+  }
+}

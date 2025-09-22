@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sportello Scuola 2.0</title>
+  <meta name="description" content="Sportello Scuola 2.0 - Notizie, scadenze e servizi per la scuola.">
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/_evolutions.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="Home">
+      <img class="brand-logo" src="img/logo.png" alt="" />
+      <span class="brand-text">
+        <span class="brand-top">Sportello</span>
+        <span class="brand-bottom">Scuola <small>2.0</small></span>
+      </span>
+    </a>
+    <nav class="topnav">
+      <a href="index.html" class="active">Home</a>
+      <div class="dropdown">
+        <button class="dropbtn">Notizie ▾</button>
+        <div class="dropdown-content" id="newsMenu"></div>
+      </div>
+      <div class="dropdown">
+        <button class="dropbtn">Servizi ▾</button>
+        <div class="dropdown-content">
+          <a href="servizi.html#docenti">Docenti</a>
+          <a href="servizi.html#ata">Personale ATA</a>
+        </div>
+      </div>
+      <a href="contatti.html">Contatti</a>
+    </nav>
+  </header>
+  <div id="ss-search-container" class="search-bar" role="search" aria-label="Cerca nel sito">
+    <div class="search-inner">
+      <span class="search-icon" aria-hidden="true">🔍</span>
+      <input id="site-search" type="search" placeholder="Cerca notizie, scadenze, servizi..." aria-label="Cerca" />
+    </div>
+  </div>
+
+
+  <main class="layout">
+    <section class="maincol">
+      <div class="section-head">
+        <h2 class="section-title">Ultime notizie</h2>
+        <a class="link-more" href="notizie.html">Mostra di più →</a>
+      </div>
+      <div id="ultimeNotizie" class="news-grid"></div>
+
+      <div class="cta-row">
+        <a class="btn cta" href="contatti.html#prenota">Hai bisogno di aiuto? Prenota subito</a>
+      </div>
+    </section>
+
+    <aside class="sidecol">
+      <div class="deadlines card">
+        <div class="card-header">
+          <h3>📅 Scadenze importanti</h3>
+          <a class="mini" href="notizie.html?categoria=scadenze-ed-eventi">Tutte</a>
+        </div>
+        <div id="deadlinesGrouped" class="deadlines-grouped"></div>
+      </div>
+      <div class="card highlight">
+        <h4>Servizi rapidi</h4>
+        <ul class="links">
+          <li><a href="servizi.html#docenti">Supporto Docenti</a></li>
+          <li><a href="servizi.html#ata">Supporto ATA</a></li>
+          <li><a href="contatti.html">Scrivici ora</a></li>
+        </ul>
+      </div>
+      <div class="newsletter card">
+        <h4>Newsletter</h4>
+        <form name="newsletter" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+          <input type="hidden" name="form-name" value="newsletter" />
+          <p class="hidden"><label>Non compilare <input name="bot-field" /></label></p>
+          <input type="email" name="email" placeholder="La tua email" required />
+          <button type="submit" class="btn">Iscriviti</button>
+        </form>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <nav class="footnav">
+      <a href="contatti.html">Contatti</a>
+      <a href="servizi.html">Servizi</a>
+      <a href="notizie.html">Notizie</a>
+    </nav>
+    <p>© 2025 Sportello Scuola 2.0</p>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/notizie.js"></script>
+  <script src="js/deadlines.js"></script>
+  <div id="ss-news-mount"></div>
+<script src="js/utils_dom.js"></script>
+  <script src="js/news.js"></script>
+  <script src="js/search.js"></script>
+</body>
+</html>
