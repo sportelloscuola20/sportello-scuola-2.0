@@ -1,0 +1,18 @@
+# Cartelle dipendenze
+node_modules/
+project/node_modules/
+
+# File di configurazione MCP (contiene token Supabase)
+.mcp.json
+
+# Credenziali e impostazioni locali (Estremamente Sensibili)
+.env
+project/.env
+.claude/settings.json
+.claude/settings.local.json
+.claude/mcp-needs-auth-cache.json
+
+# Compilati e output temporanei
+project/dist/
+*.log
+logs/
