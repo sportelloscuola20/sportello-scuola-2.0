@@ -1,6 +1,6 @@
 import { Menu, X, User, LogOut, ChevronDown } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from './Auth/AuthContext';
 import LoginModal from './Auth/LoginModal';
 
@@ -10,6 +10,7 @@ export default function Header() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -21,8 +22,15 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
+
   const menuItems = [
     { label: 'Home', href: '/' },
+    { label: 'Notizie', href: '/notizie' },
+    { label: 'Scadenze', href: '/scadenze' },
     { label: 'Assistente AI', href: '/assistente/docente' },
     { label: 'Calcolo Punteggio', href: '/calcolo-punteggio' },
     { label: 'Interpelli', href: '/interpelli' },
@@ -42,19 +50,23 @@ export default function Header() {
                 className="h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
               />
               <span className="text-xl sm:text-2xl font-extrabold tracking-tight transition-transform duration-300">
-                <span className="text-[#1b4365]">Sportello </span>
-                <span className="text-[#0A955A]">Scuola </span>
-                <span className="text-[#2F777D]">2.0</span>
+                <span className="text-brand-blu">Sportello </span>
+                <span className="text-brand-verde">Scuola </span>
+                <span className="text-brand-ottanio">2.0</span>
               </span>
             </Link>
           </div>
 
-          <nav className="hidden md:flex space-x-6">
+          <nav className="hidden md:flex space-x-1">
             {menuItems.map((item) => (
               <Link
                 key={item.label}
                 to={item.href}
-                className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium text-sm lg:text-base"
+                className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  isActive(item.href)
+                    ? 'bg-brand-blu/10 text-brand-blu'
+                    : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
+                }`}
               >
                 {item.label}
               </Link>
@@ -119,7 +131,7 @@ export default function Header() {
             ) : (
               <button
                 onClick={() => setShowLogin(true)}
-                className="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium text-sm flex items-center gap-2"
+                className="bg-brand-blu text-white px-5 py-2 rounded-xl hover:bg-brand-blu/90 transition-colors duration-200 font-medium text-sm flex items-center gap-2"
               >
                 <User size={16} />
                 Accedi
@@ -137,12 +149,16 @@ export default function Header() {
 
         {isMenuOpen && (
           <div className="md:hidden pb-4">
-            <nav className="flex flex-col space-y-4">
+            <nav className="flex flex-col space-y-2">
               {menuItems.map((item) => (
                 <Link
                   key={item.label}
                   to={item.href}
-                  className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
+                  className={`px-3 py-2 rounded-xl text-sm font-medium transition ${
+                    isActive(item.href)
+                      ? 'bg-brand-blu/10 text-brand-blu'
+                      : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
+                  }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.label}
@@ -151,14 +167,14 @@ export default function Header() {
               {isAuthenticated ? (
                 <button
                   onClick={() => { logout(); setIsMenuOpen(false); }}
-                  className="text-left text-red-600 hover:text-red-700 transition-colors duration-200 font-medium"
+                  className="px-3 py-2 text-left text-red-600 hover:bg-red-50 rounded-xl font-medium"
                 >
                   Esci
                 </button>
               ) : (
                 <button
                   onClick={() => { setShowLogin(true); setIsMenuOpen(false); }}
-                  className="text-left text-indigo-600 font-medium"
+                  className="px-3 py-2 text-left text-brand-blu font-medium"
                 >
                   Accedi
                 </button>

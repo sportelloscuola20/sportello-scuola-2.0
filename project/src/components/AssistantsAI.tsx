@@ -1,134 +1,77 @@
-import { Sparkles, Bot, Briefcase, School, ShieldCheck, Users, MessageCircle, FileText, ClipboardList } from 'lucide-react';
+import { Bot, MessageCircle, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+const promptCards = [
+  "Come si calcola il punteggio di maternità sui servizi di supplenza temporanea?",
+  "Cosa succede a livello di sanzioni se rifiuto un interpello o una convocazione da GPS?",
+  "Quali sono i diritti previsti dal CCNL per i permessi per motivi di studio (150 ore)?",
+  "Come funziona la mobilità volontaria GPS 2026?",
+  "Requisiti e procedure per le MAD 2026-2028 (sostituite dagli Interpelli)",
+  "Calcolo punteggio per passaggio di ruolo ATA → Docente",
+];
 
 export default function AssistantsAI() {
   return (
-    <section id="assistente-ai" className="py-16 bg-white">
+    <section id="assistente-ai" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
-          Assistenti AI
-        </h2>
-        <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-          Assistenti specializzati per ogni ruolo scolastico, addestrati su normative, procedure e best practice del mondo della scuola.
-        </p>
+        <div className="text-center mb-6">
+          <h2 className="text-4xl font-extrabold text-brand-blu mb-4 tracking-tight">
+            Sindacalista AI
+          </h2>
+          <p className="text-gray-600 font-normal max-w-2xl mx-auto">
+            Il tuo consulente sindacale digitale attivo 24/7 per risolvere dubbi normativi, contrattuali e di reclutamento.
+          </p>
+        </div>
 
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-          {/* Assistente Docente */}
-          <Link to="/assistente/docente" className="block">
-            <div className="bg-indigo-50 p-6 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-colors hover:shadow-lg">
-              <div className="flex items-center mb-4">
-                <School className="h-6 w-6 text-indigo-600 mr-3" />
-                <h3 className="text-xl font-semibold text-indigo-800">Assistente Docente</h3>
+        <div className="grid lg:grid-cols-5 gap-8 mt-12">
+          <div className="lg:col-span-3 bg-gradient-to-br from-gray-50 to-white rounded-3xl border border-gray-200 p-6 shadow-sm">
+            <Link
+              to="/assistente/docente"
+              className="block w-full py-4 bg-brand-blu text-white rounded-2xl font-bold text-lg hover:bg-brand-blu/90 transition text-center mb-6"
+            >
+              <Sparkles size={20} className="inline mr-2" />
+              Apri il Sindacalista AI
+            </Link>
+            <div className="bg-white rounded-2xl border border-gray-200 p-5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-brand-blu/10 rounded-xl flex items-center justify-center">
+                  <Bot className="w-5 h-5 text-brand-blu" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800 text-sm">Sindacalista AI</h3>
+                  <p className="text-xs text-gray-500">Assistente sindacale digitale</p>
+                </div>
               </div>
-              <div className="mb-4">
-                <h4 className="font-medium text-indigo-700 mb-2">Conoscenze:</h4>
-                <ul className="list-disc pl-5 text-gray-600 space-y-1 text-sm">
-                  <li>GPS</li>
-                  <li>GAE</li>
-                  <li>GI</li>
-                  <li>Interpelli</li>
-                  <li>Supplenze</li>
-                  <li>UDA</li>
-                  <li>PEI</li>
-                  <li>PDP</li>
-                  <li>BES</li>
-                  <li>DSA</li>
-                  <li>Valutazione</li>
-                  <li>Normativa</li>
-                </ul>
+              <div className="bg-gray-50 rounded-2xl p-4 mb-3">
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold text-brand-blu">Sindacalista AI:</span> Buongiorno, sono il Sindacalista AI di Sportello Scuola 2.0. Sono qui per assisterti su normative scolastiche, CCNL Istruzione e Ricerca, GPS, interpelli e diritti del personale. Come posso aiutarti?
+                </p>
               </div>
-              <div className="mb-4">
-                <h4 className="font-medium text-indigo-700 mb-2">Prompt iniziali:</h4>
-                <ul className="list-disc pl-5 text-gray-600 space-y-1 text-sm">
-                  <li>&ldquo;Posso accettare questa supplenza?&rdquo;</li>
-                  <li>&ldquo;Calcola il mio punteggio GPS&rdquo;</li>
-                  <li>&ldquo;Aiutami a creare una UDA&rdquo;</li>
-                </ul>
+              <div className="h-10 bg-gray-100 rounded-2xl flex items-center px-4">
+                <p className="text-sm text-gray-400">Scrivi la tua domanda qui...</p>
               </div>
             </div>
-          </Link>
+          </div>
 
-          {/* Assistente ATA */}
-          <Link to="/assistente/ata" className="block">
-            <div className="bg-indigo-50 p-6 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-colors hover:shadow-lg">
-              <div className="flex items-center mb-4">
-                <Briefcase className="h-6 w-6 text-indigo-600 mr-3" />
-                <h3 className="text-xl font-semibold text-indigo-800">Assistente ATA</h3>
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <MessageCircle className="w-5 h-5 text-brand-verde" />
+                <h3 className="font-bold text-gray-800 text-sm">Domande frequenti</h3>
               </div>
-              <div className="mb-4">
-                <h4 className="font-medium text-indigo-700 mb-2">Conoscenze:</h4>
-                <ul className="list-disc pl-5 text-gray-600 space-y-1 text-sm">
-                  <li>Graduatorie ATA</li>
-                  <li>Punteggi</li>
-                  <li>Contratti</li>
-                  <li>Mobilità</li>
-                  <li>Segreteria</li>
-                </ul>
-              </div>
-              <div className="mb-4">
-                <h4 className="font-medium text-indigo-700 mb-2">Prompt iniziali:</h4>
-                <ul className="list-disc pl-5 text-gray-600 space-y-1 text-sm">
-                  <li>&ldquo;Quanto vale questo attestato?&rdquo;</li>
-                </ul>
+              <div className="space-y-2">
+                {promptCards.map((prompt, i) => (
+                  <Link
+                    key={i}
+                    to="/assistente/docente"
+                    className="block w-full text-left p-3 bg-gray-50 hover:bg-brand-blu/5 border border-gray-100 rounded-xl text-sm text-gray-700 hover:text-brand-blu hover:border-brand-blu/30 transition-all duration-200"
+                  >
+                    <span className="line-clamp-2">{prompt}</span>
+                  </Link>
+                ))}
               </div>
             </div>
-          </Link>
-
-          {/* Assistente Dirigente */}
-          <Link to="/assistente/dirigente" className="block">
-            <div className="bg-indigo-50 p-6 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-colors hover:shadow-lg">
-              <div className="flex items-center mb-4">
-                <ShieldCheck className="h-6 w-6 text-indigo-600 mr-3" />
-                <h3 className="text-xl font-semibold text-indigo-800">Assistente Dirigente</h3>
-              </div>
-              <div className="mb-4">
-                <h4 className="font-medium text-indigo-700 mb-2">Conoscenze:</h4>
-                <ul className="list-disc pl-5 text-gray-600 space-y-1 text-sm">
-                  <li>Normativa</li>
-                  <li>Personale</li>
-                  <li>Privacy</li>
-                  <li>Sicurezza</li>
-                  <li>Nomine</li>
-                </ul>
-              </div>
-              <div className="mb-4">
-                <h4 className="font-medium text-indigo-700 mb-2">Prompt iniziali:</h4>
-                <ul className="list-disc pl-5 text-gray-600 space-y-1 text-sm">
-                  <li>&ldquo;Come gestire una richiesta di permesso?&rdquo;</li>
-                  <li>&ldquo;Qual è la procedura per le nomine?&rdquo;</li>
-                </ul>
-              </div>
-            </div>
-          </Link>
-
-          {/* Assistente Sindacale */}
-          <Link to="/assistente/sindacale" className="block">
-            <div className="bg-indigo-50 p-6 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-colors hover:shadow-lg">
-              <div className="flex items-center mb-4">
-                <Users className="h-6 w-6 text-indigo-600 mr-3" />
-                <h3 className="text-xl font-semibold text-indigo-800">Assistente Sindacale</h3>
-              </div>
-              <div className="mb-4">
-                <h4 className="font-medium text-indigo-700 mb-2">Conoscenze:</h4>
-                <ul className="list-disc pl-5 text-gray-600 space-y-1 text-sm">
-                  <li>CCNL</li>
-                  <li>Legge 104</li>
-                  <li>Permessi</li>
-                  <li>Congedi</li>
-                  <li>Ferie</li>
-                  <li>Sanzioni</li>
-                  <li>Supplenze</li>
-                </ul>
-              </div>
-              <div className="mb-4">
-                <h4 className="font-medium text-indigo-700 mb-2">Prompt iniziali:</h4>
-                <ul className="list-disc pl-5 text-gray-600 space-y-1 text-sm">
-                  <li>&ldquo;Posso rifiutare questa supplenza?&rdquo;</li>
-                  <li>&ldquo;Hai diritto ai permessi?&rdquo;</li>
-                </ul>
-              </div>
-            </div>
-          </Link>
+          </div>
         </div>
       </div>
     </section>
