@@ -1,7 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, Mail, BellRing, Lock, Unlock, ExternalLink, CreditCard, Loader2, CheckCircle, X } from 'lucide-react';
 import { useAuth } from '../components/Auth/AuthContext';
 import LoginModal from '../components/Auth/LoginModal';
+import { supabase } from '../lib/supabaseClient';
 import type { InterpelloNazionale } from '../types/database';
 
 const PROVINCE = ['AG', 'AL', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AT', 'AV', 'BA', 'BG', 'BI', 'BL', 'BN', 'BO', 'BR', 'BS', 'BT', 'BZ', 'CA', 'CB', 'CE', 'CH', 'CL', 'CN', 'CO', 'CR', 'CS', 'CT', 'CZ', 'EN', 'FC', 'FE', 'FG', 'FI', 'FM', 'FR', 'GE', 'GO', 'GR', 'IM', 'IS', 'KR', 'LC', 'LE', 'LI', 'LO', 'LT', 'LU', 'MB', 'MC', 'ME', 'MI', 'MN', 'MO', 'MS', 'MT', 'NA', 'NO', 'NU', 'OR', 'PA', 'PC', 'PD', 'PE', 'PG', 'PI', 'PN', 'PO', 'PR', 'PU', 'PV', 'PZ', 'RA', 'RC', 'RE', 'RG', 'RI', 'RM', 'RN', 'RO', 'SA', 'SI', 'SO', 'SP', 'SR', 'SS', 'SV', 'TA', 'TE', 'TN', 'TO', 'TP', 'TR', 'TS', 'TV', 'UD', 'VA', 'VB', 'VC', 'VE', 'VI', 'VR', 'VT', 'VV'];
@@ -30,11 +32,15 @@ const MOCK_INTERPELLI: InterpelloNazionale[] = Array.from({ length: 25 }, (_, i)
 }));
 
 export default function InterpelliPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, refreshProfile } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showLogin, setShowLogin] = useState(false);
   const [searchCount, setSearchCount] = useState(0);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [subscriptionSuccess, setSubscriptionSuccess] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
 
   const [filtroProvincia, setFiltroProvincia] = useState('');
   const [filtroClasse, setFiltroClasse] = useState('');
@@ -44,18 +50,48 @@ export default function InterpelliPage() {
   const [pagina, setPagina] = useState(1);
   const risultatiPerPagina = 5;
 
+  useEffect(() => {
+    const sid = searchParams.get('session_id');
+    if (sid) {
+      setSubscriptionSuccess(true);
+      setSearchParams({}, { replace: true });
+      refreshProfile();
+      const timer = setTimeout(() => setSubscriptionSuccess(false), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, setSearchParams, refreshProfile]);
+
   const canSearch = isAuthenticated ? true : searchCount < 3;
   const isPremium = user?.is_premium || false;
+
+  const handleCheckout = useCallback(async () => {
+    if (!isAuthenticated) { setShowLogin(true); return; }
+    setCheckoutLoading(true);
+    setCheckoutError('');
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: { user_id: user!.id },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('URL checkout non ricevuto');
+      }
+    } catch (err: any) {
+      setCheckoutError(err.message || 'Errore durante l\'attivazione. Riprova più tardi.');
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }, [isAuthenticated, user]);
 
   const cerca = useCallback(() => {
     if (!canSearch) {
       if (!isAuthenticated) setShowLogin(true);
       return;
     }
-
     setLoading(true);
     setSearchCount(prev => prev + 1);
-
     setTimeout(() => {
       let filtered = [...MOCK_INTERPELLI];
       if (filtroProvincia) filtered = filtered.filter(r => r.ufficio_scolastico_provinciale === filtroProvincia);
@@ -69,7 +105,6 @@ export default function InterpelliPage() {
   }, [canSearch, isAuthenticated, filtroProvincia, filtroClasse, filtroTipoPosto, searchCount]);
 
   const paginatedResults = risultati.slice(0, pagina * risultatiPerPagina);
-  const totalPages = Math.ceil(risultati.length / risultatiPerPagina);
 
   const statoBadge: Record<string, string> = {
     aperto: 'bg-green-100 text-green-700',
@@ -80,6 +115,19 @@ export default function InterpelliPage() {
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-5xl mx-auto">
+        {subscriptionSuccess && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl flex items-center gap-3 animate-fade-in-up">
+            <CheckCircle size={20} className="text-green-600 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-green-800">Abbonamento attivato con successo!</p>
+              <p className="text-sm text-green-600">Ora hai accesso illimitato a tutti gli interpelli. Buona candidatura!</p>
+            </div>
+            <button onClick={() => setSubscriptionSuccess(false)} className="ml-auto p-1 hover:bg-green-100 rounded-full">
+              <X size={16} className="text-green-600" />
+            </button>
+          </div>
+        )}
+
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-[#0F172A] mb-2">Centro Nazionale Interpelli</h1>
           <p className="text-gray-600">Ricerca disponibilità di supplenze in tempo reale da tutte le province italiane</p>
@@ -89,7 +137,6 @@ export default function InterpelliPage() {
           <h2 className="text-xl font-semibold text-brand-blu mb-6 flex items-center gap-2">
             <Filter size={20} /> Filtri di Ricerca
           </h2>
-
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Provincia / USP</label>
@@ -229,10 +276,15 @@ export default function InterpelliPage() {
                     <p className="text-xs text-gray-500">Link di candidatura sbloccati</p>
                   </div>
                 </div>
-                <button onClick={() => { if (!isAuthenticated) setShowLogin(true); else setShowPremiumModal(true); }}
-                  className="px-8 py-3 bg-brand-ambra text-white rounded-2xl font-bold hover:bg-brand-ambra/90 transition shadow-soft flex items-center gap-2">
-                  <CreditCard size={18} /> Abbonati Ora — €4,99/mese
+                <button onClick={() => { if (!isAuthenticated) setShowLogin(true); else handleCheckout(); }}
+                  disabled={checkoutLoading}
+                  className="px-8 py-3 bg-brand-ambra text-white rounded-2xl font-bold hover:bg-brand-ambra/90 disabled:opacity-60 transition shadow-soft flex items-center gap-2">
+                  {checkoutLoading ? <Loader2 size={18} className="animate-spin" /> : <CreditCard size={18} />}
+                  {checkoutLoading ? 'Reindirizzamento a Stripe...' : 'Abbonati Ora — €4,99/mese'}
                 </button>
+                {checkoutError && (
+                  <p className="mt-2 text-sm text-red-600">{checkoutError}</p>
+                )}
               </div>
             </div>
           </div>
@@ -267,11 +319,14 @@ export default function InterpelliPage() {
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={() => { setShowPremiumModal(false); }}
-                className="w-full py-3 bg-gradient-to-r from-brand-ambra to-brand-oro text-white rounded-2xl font-bold hover:opacity-90 transition shadow-soft flex items-center justify-center gap-2">
-                <CreditCard size={18} /> Attiva Abbonamento — €4,99/mese
+              <button onClick={handleCheckout} disabled={checkoutLoading}
+                className="w-full py-3 bg-gradient-to-r from-brand-ambra to-brand-oro text-white rounded-2xl font-bold hover:opacity-90 disabled:opacity-60 transition shadow-soft flex items-center justify-center gap-2">
+                {checkoutLoading ? <Loader2 size={18} className="animate-spin" /> : <CreditCard size={18} />}
+                {checkoutLoading ? 'Reindirizzamento...' : 'Attiva Abbonamento — €4,99/mese'}
               </button>
+              {checkoutError && (
+                <p className="text-sm text-red-600 text-center">{checkoutError}</p>
+              )}
               <p className="text-xs text-gray-400 text-center">
                 Pagamento sicuro tramite Stripe. Disdici in qualsiasi momento dall'area riservata.
               </p>

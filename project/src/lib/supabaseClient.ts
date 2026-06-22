@@ -37,6 +37,9 @@ function createMockSupabase() {
       getUser: () => Promise.resolve({ data: { user: null }, error: null }),
     },
     rpc: () => Promise.resolve({ data: null, error: null }),
+    functions: {
+      invoke: () => Promise.resolve({ data: null, error: null }),
+    },
   };
 }
 

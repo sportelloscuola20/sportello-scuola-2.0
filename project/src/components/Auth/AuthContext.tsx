@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
-interface UserProfile {
+export interface UserProfile {
   id: string;
   email: string;
   full_name: string | null;
@@ -16,6 +16,7 @@ interface AuthContextType {
   signup: (email: string, password: string, fullName: string, ruolo: UserProfile['ruolo']) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -50,21 +51,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription?.unsubscribe();
   }, []);
 
+  const refreshProfile = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, ruolo, is_premium')
+      .eq('id', session.user.id)
+      .single();
+
+    if (profile) {
+      const updated: UserProfile = {
+        id: profile.id,
+        email: profile.email,
+        full_name: profile.full_name,
+        ruolo: profile.ruolo,
+        is_premium: profile.is_premium,
+      };
+      setUser(updated);
+      localStorage.setItem('ss2_user', JSON.stringify(updated));
+    }
+  }, []);
+
   const login = useCallback(async (email: string, password: string) => {
     setLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) return { error: error.message };
     if (data.user) {
-      const profile: UserProfile = {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, ruolo, is_premium')
+        .eq('id', data.user.id)
+        .single();
+
+      const p: UserProfile = {
         id: data.user.id,
         email: data.user.email || email,
-        full_name: data.user.user_metadata?.full_name || null,
-        ruolo: data.user.user_metadata?.ruolo || 'aspirante',
-        is_premium: data.user.user_metadata?.is_premium || false,
+        full_name: profile?.full_name || data.user.user_metadata?.full_name || null,
+        ruolo: profile?.ruolo || data.user.user_metadata?.ruolo || 'aspirante',
+        is_premium: profile?.is_premium || false,
       };
-      setUser(profile);
-      localStorage.setItem('ss2_user', JSON.stringify(profile));
+      setUser(p);
+      localStorage.setItem('ss2_user', JSON.stringify(p));
     }
     return { error: null };
   }, []);
@@ -90,6 +120,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       setUser(profile);
       localStorage.setItem('ss2_user', JSON.stringify(profile));
+
+      await supabase.from('profiles').insert({
+        id: data.user.id,
+        email: data.user.email || email,
+        full_name: fullName,
+        ruolo,
+        is_premium: false,
+      }).maybeSingle();
     }
     return { error: null };
   }, []);
@@ -101,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, isAuthenticated: !!user, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

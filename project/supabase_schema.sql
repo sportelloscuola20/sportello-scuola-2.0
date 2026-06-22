@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   full_name TEXT,
   ruolo TEXT NOT NULL DEFAULT 'aspirante' CHECK (ruolo IN ('docente', 'ata', 'aspirante')),
   is_premium BOOLEAN NOT NULL DEFAULT false,
+  stripe_customer_id TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -123,6 +124,22 @@ CREATE TABLE IF NOT EXISTS saved_alerts (
 );
 
 -- ============================================
+-- TABELLA ABBONAMENTI STRIPE
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  stripe_subscription_id TEXT NOT NULL UNIQUE,
+  stripe_customer_id TEXT,
+  status TEXT NOT NULL DEFAULT 'incomplete' CHECK (status IN ('trialing', 'active', 'past_due', 'canceled', 'unpaid', 'incomplete', 'incomplete_expired')),
+  current_period_start TIMESTAMPTZ,
+  current_period_end TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ============================================
 -- INDICI
 -- ============================================
 
@@ -138,6 +155,9 @@ CREATE INDEX IF NOT EXISTS idx_document_chunks_doc ON document_chunks(document_i
 CREATE INDEX IF NOT EXISTS idx_embeddings_chunk ON embeddings(chunk_id);
 CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id);
 CREATE INDEX IF NOT EXISTS idx_saved_alerts_user ON saved_alerts(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe ON subscriptions(stripe_subscription_id);
+CREATE INDEX IF NOT EXISTS idx_profiles_stripe_customer ON profiles(stripe_customer_id);
 
 -- Indice vettoriale per RAG
 CREATE INDEX IF NOT EXISTS idx_embeddings_vector ON embeddings
@@ -179,6 +199,7 @@ ALTER TABLE user_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE interpelli_alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE saved_alerts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Utenti possono leggere il proprio profilo"
   ON profiles FOR SELECT USING (auth.uid() = id);
@@ -212,6 +233,9 @@ CREATE POLICY "News pubblica leggibile da tutti"
 
 CREATE POLICY "Documenti leggibili da tutti"
   ON documents FOR SELECT USING (true);
+
+CREATE POLICY "Utenti possono leggere i propri abbonamenti"
+  ON subscriptions FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "Newsletter iscrizione pubblica"
   ON newsletter_subscriptions FOR INSERT WITH CHECK (true);
