@@ -13,16 +13,20 @@ import Contact from '../components/Contact';
 export default function HomePage() {
   return (
     <main>
-      <section className="bg-[#0F172A] py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-white text-xl font-bold mb-2">
-            Resta aggiornato su scadenze e novità
-          </h2>
-          <p className="text-gray-400 text-sm mb-4 max-w-xl mx-auto">
-            Ricevi ogni lunedì il report con le scadenze ministeriali e le ultime notizie dal mondo della scuola.
-          </p>
-          <div className="max-w-md mx-auto">
-            <NewsletterForm />
+      <section className="bg-[#0F172A] py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="md:text-left">
+              <h2 className="text-white text-lg font-bold">
+                Resta aggiornato su scadenze e novità
+              </h2>
+              <p className="text-gray-400 text-xs mt-1">
+                Report settimanale con scadenze ministeriali e novità della scuola.
+              </p>
+            </div>
+            <div className="w-full md:w-auto md:min-w-[420px]">
+              <NewsletterForm />
+            </div>
           </div>
         </div>
       </section>

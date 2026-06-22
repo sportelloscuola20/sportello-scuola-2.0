@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { User, Briefcase, Globe, GraduationCap, FileCheck, MapPin, Building, MessageCircle, HelpCircle, ChevronRight, School, ArrowRight } from 'lucide-react';
+import BookingModal from './BookingModal';
 
 type TabKey = 'docenti' | 'ata' | 'generali';
 
@@ -80,6 +81,7 @@ const servizi: Record<TabKey, { title: string; desc: string; icon: typeof User; 
 
 export default function ServiziGrid() {
   const [activeTab, setActiveTab] = useState<TabKey>('docenti');
+  const [showBooking, setShowBooking] = useState(false);
 
   return (
     <section id="servizi" className="py-20 bg-white">
@@ -139,18 +141,20 @@ export default function ServiziGrid() {
         </div>
 
         <div className="mt-10 text-center">
-          <a
-            href="mailto:sportelloscuola2.0@gmail.com?subject=Richiesta%20Consulenza&body=Salve,%20vorrei%20prenotare%20una%20consulenza%20per%20il%20seguente%20servizio:%20"
+          <button
+            onClick={() => setShowBooking(true)}
             className="inline-flex items-center gap-2 bg-brand-verde text-white px-8 py-4 rounded-2xl font-bold hover:bg-brand-verde/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             <ArrowRight size={20} />
             Prenota una Consulenza
-          </a>
+          </button>
           <p className="text-xs text-gray-400 mt-3">
             Oppure contattaci al <a href="tel:3889711647" className="text-brand-blu font-medium">388 971 1647</a> / <a href="tel:3346170986" className="text-brand-blu font-medium">334 617 0986</a>
           </p>
         </div>
       </div>
+
+      {showBooking && <BookingModal onClose={() => setShowBooking(false)} />}
     </section>
   );
 }

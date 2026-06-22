@@ -29,12 +29,23 @@ export default function Header() {
 
   const menuItems = [
     { label: 'Calcolo Punteggio', href: '/calcolo-punteggio' },
-    { label: 'Servizi', href: '/servizi' },
+    { label: 'Servizi', href: '/servizi', scrollOnHome: true },
     { label: 'Sindacalista AI', href: '/sindacalista-ai' },
     { label: 'Interpelli', href: '/interpelli' },
     { label: 'Normative e Documenti', href: '/normative' },
     { label: 'Notizie e Scadenze', href: '/notizie' },
   ];
+
+  const handleServiziClick = (e: React.MouseEvent, scrollOnHome?: boolean) => {
+    if (scrollOnHome && location.pathname === '/') {
+      e.preventDefault();
+      const el = document.getElementById('servizi');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      setIsMenuOpen(false);
+    }
+  };
 
   return (
     <header className="bg-white/80 backdrop-blur-md shadow-soft border-b border-slate-200/60 fixed w-full top-0 z-50">
@@ -55,17 +66,32 @@ export default function Header() {
 
           <nav className="hidden md:flex space-x-1">
             {menuItems.map((item) => (
-              <Link
-                key={item.label}
-                to={item.href}
-                className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  isActive(item.href)
-                    ? 'bg-brand-blu/10 text-brand-blu'
-                    : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
-                }`}
-              >
-                {item.label}
-              </Link>
+              item.scrollOnHome && location.pathname === '/' ? (
+                <a
+                  key={item.label}
+                  href="#servizi"
+                  onClick={(e) => handleServiziClick(e, true)}
+                  className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    location.hash === '#servizi'
+                      ? 'bg-brand-blu/10 text-brand-blu'
+                      : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
+                  }`}
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    isActive(item.href)
+                      ? 'bg-brand-blu/10 text-brand-blu'
+                      : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              )
             ))}
           </nav>
 
@@ -85,6 +111,11 @@ export default function Header() {
                     <div className="px-4 py-2 border-b border-slate-100">
                       <p className="text-sm font-medium text-gray-800 truncate">{user.full_name || 'Utente'}</p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      {user.is_admin && (
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-brand-ambra/10 text-brand-ambra text-xs rounded-full font-semibold">
+                          Admin
+                        </span>
+                      )}
                       {user.is_premium && (
                         <span className="inline-block mt-1 px-2 py-0.5 bg-brand-verde/10 text-brand-verde text-xs rounded-full font-semibold">
                           Premium
@@ -147,18 +178,29 @@ export default function Header() {
           <div className="md:hidden pb-4">
             <nav className="flex flex-col space-y-2">
               {menuItems.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  className={`px-3 py-2 rounded-xl text-sm font-medium transition ${
-                    isActive(item.href)
-                      ? 'bg-brand-blu/10 text-brand-blu'
-                      : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
+                item.scrollOnHome && location.pathname === '/' ? (
+                  <a
+                    key={item.label}
+                    href="#servizi"
+                    onClick={(e) => { handleServiziClick(e, true); }}
+                    className="px-3 py-2 rounded-xl text-sm font-medium text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5 transition"
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={item.label}
+                    to={item.href}
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition ${
+                      isActive(item.href)
+                        ? 'bg-brand-blu/10 text-brand-blu'
+                        : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                )
               ))}
               {isAuthenticated ? (
                 <button

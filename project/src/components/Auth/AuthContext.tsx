@@ -1,12 +1,15 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
+const CREATOR_EMAIL = import.meta.env.VITE_CREATOR_EMAIL || 'sportelloscuola2.0@gmail.com';
+
 export interface UserProfile {
   id: string;
   email: string;
   full_name: string | null;
   ruolo: 'docente' | 'ata' | 'aspirante';
   is_premium: boolean;
+  is_admin: boolean;
 }
 
 interface AuthContextType {
@@ -37,12 +40,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
+        const email = session.user.email || '';
         setUser({
           id: session.user.id,
-          email: session.user.email || '',
+          email,
           full_name: session.user.user_metadata?.full_name || null,
           ruolo: session.user.user_metadata?.ruolo || 'aspirante',
           is_premium: session.user.user_metadata?.is_premium || false,
+          is_admin: email === CREATOR_EMAIL,
         });
       } else {
         setUser(null);
@@ -68,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         full_name: profile.full_name,
         ruolo: profile.ruolo,
         is_premium: profile.is_premium,
+        is_admin: profile.email === CREATOR_EMAIL,
       };
       setUser(updated);
       localStorage.setItem('ss2_user', JSON.stringify(updated));
@@ -86,12 +92,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', data.user.id)
         .single();
 
+      const userEmail = data.user.email || email;
       const p: UserProfile = {
         id: data.user.id,
-        email: data.user.email || email,
+        email: userEmail,
         full_name: profile?.full_name || data.user.user_metadata?.full_name || null,
         ruolo: profile?.ruolo || data.user.user_metadata?.ruolo || 'aspirante',
         is_premium: profile?.is_premium || false,
+        is_admin: userEmail === CREATOR_EMAIL,
       };
       setUser(p);
       localStorage.setItem('ss2_user', JSON.stringify(p));
@@ -111,12 +119,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
     if (error) return { error: error.message };
     if (data.user) {
+      const userEmail = data.user.email || email;
       const profile: UserProfile = {
         id: data.user.id,
-        email: data.user.email || email,
+        email: userEmail,
         full_name: fullName,
         ruolo,
         is_premium: false,
+        is_admin: userEmail === CREATOR_EMAIL,
       };
       setUser(profile);
       localStorage.setItem('ss2_user', JSON.stringify(profile));
