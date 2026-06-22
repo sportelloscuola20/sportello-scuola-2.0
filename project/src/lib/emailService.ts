@@ -1,5 +1,3 @@
-import { supabase } from './supabaseClient';
-
 const CREATOR_EMAIL = import.meta.env.VITE_CREATOR_EMAIL || 'sportelloscuola2.0@gmail.com';
 
 function onboardingTemplate(params: {
@@ -120,6 +118,56 @@ ${userAgent ? `<tr><td style="font-size:13px;font-weight:600;color:#4a5568">User
 </html>`;
 }
 
+const EMAIL_QUEUE_KEY = 'ss2_email_queue';
+
+function queueEmail(payload: { to: string; subject: string; html: string }) {
+  try {
+    const existing = JSON.parse(localStorage.getItem(EMAIL_QUEUE_KEY) || '[]');
+    existing.push({ ...payload, queuedAt: new Date().toISOString() });
+    localStorage.setItem(EMAIL_QUEUE_KEY, JSON.stringify(existing));
+    console.log('[EMAIL QUEUED]', { to: payload.to, subject: payload.subject });
+  } catch {
+    console.log('[EMAIL LOG]', payload);
+  }
+}
+
+async function trySendViaApi(payload: {
+  to: string;
+  subject: string;
+  html: string;
+}): Promise<boolean> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  if (supabaseUrl && supabaseUrl.startsWith('http') && anonKey) {
+    try {
+      const res = await fetch(
+        `${supabaseUrl}/functions/v1/send-email`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${anonKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+      if (res.ok) return true;
+      const text = await res.text();
+      if (res.status === 404) {
+        console.log('[EMAIL] Edge Function not deployed. Queueing.');
+        return false;
+      }
+      console.warn('[EMAIL] API error:', res.status, text);
+      return false;
+    } catch (e) {
+      console.warn('[EMAIL] Network error:', e);
+      return false;
+    }
+  }
+  return false;
+}
+
 export async function sendOnboardingEmail(params: {
   fullName: string;
   email: string;
@@ -128,22 +176,17 @@ export async function sendOnboardingEmail(params: {
   const { fullName, email, ruolo } = params;
   const html = onboardingTemplate({ fullName, email, ruolo });
 
-  try {
-    const { error } = await supabase.functions.invoke('send-email', {
-      body: {
-        to: email,
-        subject: 'Benvenuto su Sportello Scuola 2.0 — Attiva il tuo Account',
-        html,
-      },
-    });
+  const sent = await trySendViaApi({
+    to: email,
+    subject: 'Benvenuto su Sportello Scuola 2.0 — Attiva il tuo Account',
+    html,
+  });
 
-    if (error && !error.message?.includes('not found')) {
-      return { error: error.message };
-    }
-    return { error: null };
-  } catch {
-    return { error: null };
+  if (!sent) {
+    queueEmail({ to: email, subject: 'Benvenuto su Sportello Scuola 2.0', html });
   }
+
+  return { error: null };
 }
 
 export async function sendAdminNotification(params: {
@@ -161,22 +204,17 @@ export async function sendAdminNotification(params: {
     timestamp: new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome' }),
   });
 
-  try {
-    const { error } = await supabase.functions.invoke('send-email', {
-      body: {
-        to: CREATOR_EMAIL,
-        subject: `[Sportello Scuola] Nuova Registrazione — ${params.fullName}`,
-        html,
-      },
-    });
+  const sent = await trySendViaApi({
+    to: CREATOR_EMAIL,
+    subject: `[Sportello Scuola] Nuova Registrazione — ${params.fullName}`,
+    html,
+  });
 
-    if (error && !error.message?.includes('not found')) {
-      return { error: error.message };
-    }
-    return { error: null };
-  } catch {
-    return { error: null };
+  if (!sent) {
+    queueEmail({ to: CREATOR_EMAIL, subject: `Nuova Registrazione — ${params.fullName}`, html });
   }
+
+  return { error: null };
 }
 
 export { onboardingTemplate, adminAlertTemplate };

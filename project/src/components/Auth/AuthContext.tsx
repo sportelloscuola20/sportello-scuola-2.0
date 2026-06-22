@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { sendOnboardingEmail, sendAdminNotification } from '../../lib/emailService';
 
 const CREATOR_EMAIL = import.meta.env.VITE_CREATOR_EMAIL || 'sportelloscuola2.0@gmail.com';
 
@@ -33,24 +34,36 @@ function getStoredUser(): UserProfile | null {
   }
 }
 
+function persistUser(p: UserProfile) {
+  localStorage.setItem('ss2_user', JSON.stringify(p));
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(getStoredUser);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        const email = session.user.email || '';
-        setUser({
-          id: session.user.id,
-          email,
-          full_name: session.user.user_metadata?.full_name || null,
-          ruolo: session.user.user_metadata?.ruolo || 'aspirante',
-          is_premium: session.user.user_metadata?.is_premium || false,
-          is_admin: email === CREATOR_EMAIL,
-        });
-      } else {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
         setUser(null);
+        localStorage.removeItem('ss2_user');
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session?.user) {
+          const existing = getStoredUser();
+          if (existing && existing.id === session.user.id) {
+            setUser(existing);
+            return;
+          }
+          const email = session.user.email || '';
+          setUser({
+            id: session.user.id,
+            email,
+            full_name: session.user.user_metadata?.full_name || null,
+            ruolo: session.user.user_metadata?.ruolo || 'aspirante',
+            is_premium: session.user.user_metadata?.is_premium || false,
+            is_admin: email === CREATOR_EMAIL,
+          });
+        }
       }
     });
     return () => subscription?.unsubscribe();
@@ -76,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         is_admin: profile.email === CREATOR_EMAIL,
       };
       setUser(updated);
-      localStorage.setItem('ss2_user', JSON.stringify(updated));
+      persistUser(updated);
     }
   }, []);
 
@@ -102,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         is_admin: userEmail === CREATOR_EMAIL,
       };
       setUser(p);
-      localStorage.setItem('ss2_user', JSON.stringify(p));
+      persistUser(p);
     }
     return { error: null };
   }, []);
@@ -118,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     setLoading(false);
     if (error) return { error: error.message };
+
     if (data.user) {
       const userEmail = data.user.email || email;
       const profile: UserProfile = {
@@ -129,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         is_admin: userEmail === CREATOR_EMAIL,
       };
       setUser(profile);
-      localStorage.setItem('ss2_user', JSON.stringify(profile));
+      persistUser(profile);
 
       await supabase.from('profiles').insert({
         id: data.user.id,
@@ -138,6 +152,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ruolo,
         is_premium: false,
       }).maybeSingle();
+
+      sendOnboardingEmail({ fullName, email: userEmail, ruolo }).catch(() => {});
+      sendAdminNotification({
+        uuid: data.user.id,
+        fullName,
+        email: userEmail,
+        ruolo,
+      }).catch(() => {});
     }
     return { error: null };
   }, []);
