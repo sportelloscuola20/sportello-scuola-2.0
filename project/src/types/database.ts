@@ -88,8 +88,12 @@ export interface ATACalculationResult {
   certificazioniInformatiche: number;
   laurea: number;
   qualificheProfessionali: number;
-  servizioStatale: number;
-  servizioParitario: number;
+  idoneitaConcorso: number;
+  servizioStessoProfilo: number;
+  servizioAltroProfilo: number;
+  servizioParitarioStesso: number;
+  servizioParitarioAltro: number;
+  servizioEntiLocali: number;
   punteggioTotale: number;
 }
 
@@ -99,6 +103,14 @@ export interface ServizioScolastico {
   dataFine: string;
   scuola: string;
   tipo: 'specifico' | 'non_specifico';
+  annoScolastico: string;
+}
+
+export interface ServizioATA {
+  id: string;
+  dataInizio: string;
+  dataFine: string;
+  tipo: 'stesso_profilo_statale' | 'altro_profilo_statale' | 'stesso_profilo_paritario' | 'altro_profilo_paritario' | 'enti_locali';
   annoScolastico: string;
 }
 
@@ -130,4 +142,26 @@ export interface BookingRequest {
   servizio: string;
   date: string;
   timeSlot: string;
+}
+
+export interface InterpelloNazionale {
+  id: string;
+  ufficio_scolastico_provinciale: string;
+  scuola_istanza: string;
+  classe_di_concorso: string;
+  tipo_posto: 'comune' | 'sostegno' | 'ata';
+  data_pubblicazione: string;
+  data_scadenza: string;
+  link_allegato_pdf: string;
+  stato: 'aperto' | 'scaduto' | 'assegnato';
+}
+
+export interface UtenteAbbonatoInterpelli {
+  utente_id: string;
+  email: string;
+  province_filtro: string[];
+  classi_concorso_filtro: string[];
+  tipo_posto_filtro: string[];
+  notifica_email_attiva: boolean;
+  stripe_subscription_status: string;
 }

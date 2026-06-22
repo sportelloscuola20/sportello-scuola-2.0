@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { jsPDF } from 'jspdf';
 import { supabase } from '../lib/supabaseClient';
 import type { GPSCalculationResult, ServizioScolastico } from '../types/database';
@@ -21,17 +21,19 @@ const TABELLE: Record<TabellaType, { label: string; fascia: FasciaType; grado: s
 
 const STEPS = ['Tabella', 'Titolo Accesso', 'Punti Aggiuntivi', 'Titoli Culturali', 'Servizi', 'Riepilogo'];
 
-function calcolaVoto100(voto: number, base: number): number {
-  const rapportato = (voto / base) * 100;
-  const arrotondato = Math.ceil(rapportato * 2) / 2;
-  if (arrotondato >= 96) return 12;
-  if (arrotondato >= 91) return 11;
-  if (arrotondato >= 86) return 9;
-  if (arrotondato >= 81) return 8;
-  if (arrotondato >= 76) return 7;
-  if (arrotondato >= 71) return 6;
-  if (arrotondato >= 66) return 5;
-  if (arrotondato >= 60) return 4;
+const VOTI_CENTESIMI = Array.from({ length: 41 }, (_, i) => i + 60);
+const VOTI_110 = Array.from({ length: 45 }, (_, i) => i + 66);
+const VOTI_SFP = [24, 25, 26, 27, 28, 29, 30];
+
+function calcolaVotoCentesimi(voto: number): number {
+  if (voto >= 96) return 12;
+  if (voto >= 91) return 11;
+  if (voto >= 86) return 9;
+  if (voto >= 81) return 8;
+  if (voto >= 76) return 7;
+  if (voto >= 71) return 6;
+  if (voto >= 66) return 5;
+  if (voto >= 60) return 4;
   return 0;
 }
 
@@ -42,29 +44,21 @@ function calcolaVoto110(voto: number, lode: boolean): number {
   return Math.min(punti, 33);
 }
 
-function calcolaVotoSostegnoI(voto: number, base: number): number {
-  const r = (voto / base) * 100;
-  if (r >= 96) return 24;
-  if (r >= 91) return 22;
-  if (r >= 86) return 18;
-  if (r >= 81) return 16;
-  if (r >= 76) return 14;
-  if (r >= 71) return 12;
-  if (r >= 66) return 10;
-  if (r >= 60) return 8;
+function calcolaVotoSostegnoI(voto: number): number {
+  if (voto >= 96) return 24;
+  if (voto >= 91) return 22;
+  if (voto >= 86) return 18;
+  if (voto >= 81) return 16;
+  if (voto >= 76) return 14;
+  if (voto >= 71) return 12;
+  if (voto >= 66) return 10;
+  if (voto >= 60) return 8;
   return 8;
 }
 
 function calcolaVotoSFP(media: number): number {
-  const m = Math.round(media);
-  if (m >= 30) return 12;
-  if (m === 29) return 11;
-  if (m === 28) return 10;
-  if (m === 27) return 9;
-  if (m === 26) return 8;
-  if (m === 25) return 7;
-  if (m === 24) return 6;
-  return 0;
+  const map: Record<number, number> = { 24: 6, 25: 7, 26: 8, 27: 9, 28: 10, 29: 11, 30: 12 };
+  return map[media] || 0;
 }
 
 function calcolaGiorniServizio(inizio: string, fine: string): number {
@@ -73,7 +67,7 @@ function calcolaGiorniServizio(inizio: string, fine: string): number {
   return Math.max(0, Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1);
 }
 
-function giorniAMesi(giorni: number): { specifico: number; nonSpecifico: number } {
+function scaglioneServizio(giorni: number): { specifico: number; nonSpecifico: number } {
   if (giorni >= 166) return { specifico: 12, nonSpecifico: 6 };
   if (giorni >= 136) return { specifico: 10, nonSpecifico: 5 };
   if (giorni >= 106) return { specifico: 8, nonSpecifico: 4 };
@@ -86,37 +80,35 @@ function giorniAMesi(giorni: number): { specifico: number; nonSpecifico: number 
 function calcolaPunteggioServizioGPS(servizi: ServizioScolastico[]): { specifico: number; nonSpecifico: number; dettagli: string[] } {
   const perAnno: Record<string, { specifico: number; nonSpecifico: number }> = {};
   const dettagli: string[] = [];
-
   for (const s of servizi) {
     const anno = s.annoScolastico;
     if (!perAnno[anno]) perAnno[anno] = { specifico: 0, nonSpecifico: 0 };
     const giorni = calcolaGiorniServizio(s.dataInizio, s.dataFine);
-    const punti = giorniAMesi(giorni);
+    const punti = scaglioneServizio(giorni);
     if (s.tipo === 'specifico') {
       perAnno[anno].specifico += punti.specifico;
-      dettagli.push(`${anno}: ${giorni}gg (specifico) → ${punti.specifico} pt [C.1]`);
+      dettagli.push(`${anno}: ${giorni}gg specifico → ${punti.specifico} pt [C.1]`);
     } else {
       perAnno[anno].nonSpecifico += punti.nonSpecifico;
-      dettagli.push(`${anno}: ${giorni}gg (non specifico) → ${punti.nonSpecifico} pt [C.2]`);
+      dettagli.push(`${anno}: ${giorni}gg non specifico → ${punti.nonSpecifico} pt [C.2]`);
     }
   }
-
   let totSpec = 0;
   let totNonSpec = 0;
   for (const a of Object.values(perAnno)) {
     totSpec += Math.min(a.specifico, 12);
     totNonSpec += Math.min(a.nonSpecifico, 6);
   }
-
   return { specifico: totSpec, nonSpecifico: totNonSpec, dettagli };
 }
 
 export default function GPSSimulator() {
   const [currentStep, setCurrentStep] = useState(0);
   const [tabella, setTabella] = useState<TabellaType>('A1');
-  const [voto, setVoto] = useState(100);
-  const [baseVoto, setBaseVoto] = useState(100);
-  const [lode, setLode] = useState(false);
+  const [scalaVoto, setScalaVoto] = useState<'centesimi' | '110' | 'trentesimi'>('centesimi');
+  const [votoCentesimi, setVotoCentesimi] = useState(100);
+  const [voto110, setVoto110] = useState(100);
+  const [voto110Lode, setVoto110Lode] = useState(false);
   const [mediaSFP, setMediaSFP] = useState(24);
   const [mancaVoto, setMancaVoto] = useState(false);
 
@@ -127,19 +119,19 @@ export default function GPSSimulator() {
   const [abilPAS, setAbilPAS] = useState(false);
   const [specSostegno, setSpecSostegno] = useState(false);
 
-  const [b1, setB1] = useState(0);
-  const [b2, setB2] = useState(0);
-  const [b3, setB3] = useState(0);
-  const [b4Specializzazioni, setB4Specializzazioni] = useState(0);
-  const [b5TitoloSostegno, setB5TitoloSostegno] = useState(0);
+  const [b1, setB1] = useState<number>(0);
+  const [b2, setB2] = useState<number>(0);
+  const [b3, setB3] = useState<number>(0);
+  const [b4Specializzazioni, setB4Specializzazioni] = useState<number>(0);
+  const [b5TitoloSostegno, setB5TitoloSostegno] = useState<number>(0);
   const [b6PhD, setB6PhD] = useState(false);
-  const [b7ASN, setB7ASN] = useState(0);
-  const [b8Ricerca, setB8Ricerca] = useState(0);
-  const [b9AFAM, setB9AFAM] = useState(0);
-  const [masterCount, setMasterCount] = useState(0);
+  const [b7ASN, setB7ASN] = useState<number>(0);
+  const [b8Ricerca, setB8Ricerca] = useState<number>(0);
+  const [b9AFAM, setB9AFAM] = useState<number>(0);
+  const [masterCount, setMasterCount] = useState<number>(0);
   const [certLinguaLivello, setCertLinguaLivello] = useState<'nessuna' | 'B2' | 'C1' | 'C2'>('nessuna');
   const [haCLIL, setHaCLIL] = useState(false);
-  const [certInfoCount, setCertInfoCount] = useState(0);
+  const [certInfoCount, setCertInfoCount] = useState<number>(0);
   const [servizi, setServizi] = useState<ServizioScolastico[]>([]);
 
   const [risultato, setRisultato] = useState<GPSCalculationResult | null>(null);
@@ -151,17 +143,18 @@ export default function GPSSimulator() {
   const isSostegno = tabellaData.grado === 'sostegno';
   const isSFP = tabella === 'A2';
   const isSecondaFasciaSostegno = tabella === 'A8';
+  const isBase110 = !isFasciaI && !isSecondaFasciaSostegno && !isSFP && !(isSostegno && isFasciaI);
 
   const calcolaTitoloAccesso = useCallback((): number => {
     if (mancaVoto) {
-      if (isSostegno) return isFasciaI ? 8 : 12;
+      if (isSostegno && isFasciaI) return 8;
       return isFasciaI ? 8 : 12;
     }
     if (isSFP) return calcolaVotoSFP(mediaSFP);
-    if (isSostegno && isFasciaI) return calcolaVotoSostegnoI(voto, baseVoto);
-    if (isFasciaI || isSecondaFasciaSostegno) return calcolaVoto100(voto, baseVoto);
-    return calcolaVoto110(voto, lode);
-  }, [tabella, voto, baseVoto, lode, mediaSFP, mancaVoto, isFasciaI, isSostegno, isSFP, isSecondaFasciaSostegno]);
+    if (isSostegno && isFasciaI) return calcolaVotoSostegnoI(votoCentesimi);
+    if (isFasciaI || isSecondaFasciaSostegno) return calcolaVotoCentesimi(votoCentesimi);
+    return calcolaVoto110(voto110, voto110Lode);
+  }, [tabella, votoCentesimi, voto110, voto110Lode, mediaSFP, mancaVoto, isFasciaI, isSostegno, isSFP, isSecondaFasciaSostegno]);
 
   const calcolaPuntiAggiuntivi = useCallback((): number => {
     if (!isFasciaI) return 0;
@@ -178,94 +171,78 @@ export default function GPSSimulator() {
   const calcolaTitoliCulturali = useCallback((): number => {
     let dettagli: string[] = [];
     let tot = 0;
-
     const b1pt = b1 * 3;
-    if (b1pt > 0) { tot += b1pt; dettagli.push(`B.1 Superamento concorso: +${b1pt} pt`); }
-
+    if (b1pt > 0) { tot += b1pt; dettagli.push(`B.1 Superamento concorso ×${b1}: +${b1pt} pt`); }
     const b2pt = b2 * 3;
-    if (b2pt > 0) { tot += b2pt; dettagli.push(`B.2 Laurea ulteriore: +${b2pt} pt`); }
-
+    if (b2pt > 0) { tot += b2pt; dettagli.push(`B.2 Laurea ulteriore ×${b2}: +${b2pt} pt`); }
     const b3pt = b3 * 1.5;
-    if (b3pt > 0) { tot += b3pt; dettagli.push(`B.3 Laurea triennale/ITS: +${b3pt} pt`); }
-
+    if (b3pt > 0) { tot += b3pt; dettagli.push(`B.3 Laurea triennale/ITS ×${b3}: +${b3pt} pt`); }
     if (isFasciaI) {
       const b4pt = Math.min(b4Specializzazioni, 2) * 2;
-      if (b4pt > 0) { tot += b4pt; dettagli.push(`B.4 Specializzazioni biennali: +${b4pt} pt (max 2)`); }
+      if (b4pt > 0) dettagli.push(`B.4 Specializzazioni biennali ×${Math.min(b4Specializzazioni, 2)}: +${b4pt} pt (max 2)`);
+      tot += b4pt;
     } else {
       const b4pt = b4Specializzazioni >= 1 ? 1.5 : 0;
-      if (b4pt > 0) { tot += b4pt; dettagli.push(`B.4 Abilitazione professione regolamentata: +${b4pt} pt`); }
+      if (b4pt > 0) dettagli.push('B.4 Abilitazione professione regolamentata: +1.5 pt');
+      tot += b4pt;
     }
-
     if (tabellaData.grado === 'sostegno') {
       if (isFasciaI) {
         const b5pt = b5TitoloSostegno >= 1 ? 9 : 0;
-        if (b5pt > 0) { tot += b5pt; dettagli.push(`B.5 Abilitazione grado specifico: +${b5pt} pt`); }
+        if (b5pt > 0) dettagli.push('B.5 Abilitazione grado specifico: +9 pt');
+        tot += b5pt;
       } else {
         const b5pt = b5TitoloSostegno * 9;
-        if (b5pt > 0) { tot += b5pt; dettagli.push(`B.5 Specializzazione sostegno ulteriore: +${b5pt} pt`); }
+        if (b5pt > 0) dettagli.push(`B.5 Specializzazione sostegno ×${b5TitoloSostegno}: +${b5pt} pt`);
+        tot += b5pt;
       }
     } else {
       const b5pt = b5TitoloSostegno * 9;
-      if (b5pt > 0) { tot += b5pt; dettagli.push(`B.5 Specializzazione sostegno ulteriore: +${b5pt} pt`); }
+      if (b5pt > 0) dettagli.push(`B.5 Specializzazione sostegno ×${b5TitoloSostegno}: +${b5pt} pt`);
+      tot += b5pt;
     }
-
-    if (b6PhD) { tot += 12; dettagli.push('B.6 Dottorato di ricerca (PhD): +12 pt'); }
-
+    if (b6PhD) { tot += 12; dettagli.push('B.6 Dottorato di ricerca: +12 pt'); }
     const b7pt = b7ASN * 3;
-    if (b7pt > 0) { tot += b7pt; dettagli.push(`B.7 ASN: +${b7pt} pt`); }
-
+    if (b7pt > 0) { tot += b7pt; dettagli.push(`B.7 ASN ×${b7ASN}: +${b7pt} pt`); }
     const b8pt = b8Ricerca * 6;
-    if (b8pt > 0) { tot += b8pt; dettagli.push(`B.8 Attività ricerca: +${b8pt} pt`); }
-
+    if (b8pt > 0) { tot += b8pt; dettagli.push(`B.8 Attività ricerca ×${b8Ricerca}: +${b8pt} pt`); }
     const b9pt = b9AFAM * 1;
-    if (b9pt > 0) { tot += b9pt; dettagli.push(`B.9 Graduatorie AFAM: +${b9pt} pt`); }
-
+    if (b9pt > 0) { tot += b9pt; dettagli.push(`B.9 AFAM ×${b9AFAM}: +${b9pt} pt`); }
     const masterPt = Math.min(masterCount, 3) * 1;
-    if (masterPt > 0) { tot += masterPt; dettagli.push(`B.10 Master/Perfezionamento: +${masterPt} pt (max 3)`); }
+    if (masterPt > 0) dettagli.push(`B.10 Master ×${Math.min(masterCount, 3)}: +${masterPt} pt (max 3)`);
+    tot += masterPt;
 
-    let certificazioneLinguisticaPt = 0;
-    let livelloLingua = '';
-    if (certLinguaLivello === 'C2') { certificazioneLinguisticaPt = 6; livelloLingua = 'C2'; }
-    else if (certLinguaLivello === 'C1') { certificazioneLinguisticaPt = 4; livelloLingua = 'C1'; }
-    else if (certLinguaLivello === 'B2') { certificazioneLinguisticaPt = 3; livelloLingua = 'B2'; }
-    if (certificazioneLinguisticaPt > 0) {
-      dettagli.push(`B.11 Certificazione linguistica ${livelloLingua}: +${certificazioneLinguisticaPt} pt`);
-    }
+    let linguaPt = 0;
+    let livello = '';
+    if (certLinguaLivello === 'C2') { linguaPt = 6; livello = 'C2'; }
+    else if (certLinguaLivello === 'C1') { linguaPt = 4; livello = 'C1'; }
+    else if (certLinguaLivello === 'B2') { linguaPt = 3; livello = 'B2'; }
+    if (linguaPt > 0) dettagli.push(`B.11 Certificazione linguistica ${livello}: +${linguaPt} pt`);
+    tot += linguaPt;
 
     let clilPt = 0;
-    if (haCLIL && certificazioneLinguisticaPt > 0) {
-      clilPt = 3;
-      dettagli.push(`B.12 CLIL con certificazione: +${clilPt} pt`);
-    } else if (haCLIL) {
-      clilPt = 1;
-      dettagli.push(`B.12 Solo CLIL (senza certificazione): +${clilPt} pt`);
-    }
-
-    const lingTot = certificazioneLinguisticaPt + clilPt;
-    tot += lingTot;
+    if (haCLIL && linguaPt > 0) { clilPt = 3; dettagli.push(`B.12 CLIL + ${livello}: +${linguaPt + clilPt} pt`); }
+    else if (haCLIL) { clilPt = 1; dettagli.push('B.12 Solo CLIL: +1 pt'); }
+    tot += clilPt;
 
     const certInfoPt = Math.min(certInfoCount, 4) * 0.5;
-    if (certInfoPt > 0) { tot += certInfoPt; dettagli.push(`B.13 Certificazioni informatiche: +${certInfoPt} pt (max 4 cert.)`); }
+    if (certInfoPt > 0) dettagli.push(`B.13 Cert. informatiche ×${Math.min(certInfoCount, 4)}: +${certInfoPt} pt (max 4)`);
+    tot += certInfoPt;
 
     setDettaglioVoci(prev => [...prev, ...dettagli]);
     return Math.round(tot * 100) / 100;
-  }, [isFasciaI, b1, b2, b3, b4Specializzazioni, b5TitoloSostegno, b6PhD, b7ASN, b8Ricerca, b9AFAM, masterCount, certLinguaLivello, haCLIL, certInfoCount, tabellaData.grado, isSostegno]);
+  }, [isFasciaI, b1, b2, b3, b4Specializzazioni, b5TitoloSostegno, b6PhD, b7ASN, b8Ricerca, b9AFAM, masterCount, certLinguaLivello, haCLIL, certInfoCount, tabellaData.grado]);
 
   const calcolaTotale = useCallback(() => {
     const voci: string[] = [];
     const titAccesso = calcolaTitoloAccesso();
     voci.push(`A.1 Titolo di accesso: ${titAccesso} pt`);
-
     const puntiAgg = calcolaPuntiAggiuntivi();
-    if (puntiAgg > 0) voci.push(`A.2 Punti aggiuntivi titolo accesso: +${puntiAgg} pt`);
-
+    if (puntiAgg > 0) voci.push(`A.2 Punti aggiuntivi: +${puntiAgg} pt`);
     const titCulturali = calcolaTitoliCulturali();
-
     const { specifico, nonSpecifico, dettagli: dettServ } = calcolaPunteggioServizioGPS(servizi);
     voci.push(...dettServ);
-
     const totale = titAccesso + puntiAgg + titCulturali + specifico + nonSpecifico;
-
     const result: GPSCalculationResult = {
       titoloAccesso: titAccesso,
       abilitazione: puntiAgg,
@@ -277,7 +254,6 @@ export default function GPSSimulator() {
       serviziNonSpecifici: nonSpecifico,
       punteggioTotale: Math.round(totale * 100) / 100,
     };
-
     setDettaglioVoci(voci);
     setRisultato(result);
     setCurrentStep(STEPS.length - 1);
@@ -322,48 +298,69 @@ export default function GPSSimulator() {
     doc.setTextColor('#4A5568');
     const now = new Date();
     const reportCode = `SS-GPS-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
-    doc.text(`Data: ${now.toLocaleDateString('it-IT')}  |  Ora: ${now.toLocaleTimeString('it-IT')}  |  Report: ${reportCode}`, margin, y);
+    doc.text(`Report: ${reportCode}  |  Data: ${now.toLocaleDateString('it-IT')}  |  ${now.toLocaleTimeString('it-IT')}`, margin, y);
     y += 6;
     doc.setDrawColor('#235377');
     doc.setLineWidth(0.5);
     doc.line(margin, y, pageWidth - margin, y);
     y += 8;
 
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setTextColor('#235377');
-    doc.text('Report Valutazione Punteggio GPS', margin, y);
+    doc.text('Report Valutazione Punteggio GPS — Simulazione', margin, y);
     y += 8;
-    doc.setFontSize(10);
-    doc.setTextColor('#333');
-    doc.text(`Tabella: ${tabellaData.label}`, margin, y);
-    y += 5;
-    doc.text(`Punteggio totale simulato: ${risultato.punteggioTotale} punti`, margin, y);
-    y += 10;
 
+    doc.setFontSize(10);
+    doc.setFillColor('#F7FAFC');
+    doc.rect(margin, y, contentWidth, 18, 'F');
+    doc.setDrawColor('#235377');
+    doc.setLineWidth(0.3);
+    doc.rect(margin, y, contentWidth, 18, 'S');
+    doc.setTextColor('#333');
     doc.setFontSize(9);
-    doc.setTextColor('#235377');
-    doc.text('Dettaglio delle voci:', margin, y);
-    y += 5;
+    doc.text(`Graduatoria: GPS  |  Tabella: ${tabellaData.label}  |  Fascia: ${tabellaData.fascia}`, margin + 3, y + 7);
+    doc.text(`Report generato il: ${now.toLocaleDateString('it-IT')} alle ${now.toLocaleTimeString('it-IT')}`, margin + 3, y + 14);
+    y += 24;
+
     doc.setFontSize(8);
+    doc.setTextColor('#235377');
+    doc.setFont('helvetica', 'bold');
+    doc.text('Macro-Area', margin, y);
+    doc.text('Voce', margin + 40, y);
+    doc.text('Punteggio', margin + 140, y);
+    y += 1;
+    doc.setDrawColor('#CBD5E0');
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 4;
+    doc.setFont('helvetica', 'normal');
     doc.setTextColor('#555');
+    let rowNum = 0;
     for (const voce of dettaglioVoci) {
-      if (y > 270) {
-        doc.addPage();
-        y = margin;
+      if (y > 255) { doc.addPage(); y = margin; doc.setTextColor('#555'); }
+      if (rowNum % 2 === 0) {
+        doc.setFillColor('#F7FAFC');
+        doc.rect(margin, y - 2.5, contentWidth, 7, 'F');
       }
-      doc.text(voce, margin + 3, y);
-      y += 4;
+      const label = voce.split(':')[0];
+      const valore = voce.split(':').slice(1).join(':') || '';
+      doc.setFontSize(7);
+      doc.text(label, margin + 2, y);
+      doc.text(valore, margin + 42, y);
+      const ptMatch = voce.match(/[\+\-]?\d+(\.\d+)?\s*pt/);
+      if (ptMatch) doc.text(ptMatch[0], margin + 142, y);
+      y += 6;
+      rowNum++;
     }
 
-    y += 8;
-    if (y > 260) { doc.addPage(); y = margin; }
+    y += 6;
+    if (y > 250) { doc.addPage(); y = margin; }
     doc.setFillColor('#235377');
-    doc.rect(margin, y, contentWidth, 12, 'F');
+    doc.rect(margin, y, contentWidth, 14, 'F');
     doc.setTextColor('#FFFFFF');
-    doc.setFontSize(14);
+    doc.setFontSize(13);
     doc.setFont('helvetica', 'bold');
-    doc.text(`PUNTEGGIO TOTALE SIMULATO: ${risultato.punteggioTotale} PUNTI`, margin + 5, y + 8);
-    y += 18;
+    doc.text(`PUNTEGGIO TOTALE SIMULATO: ${risultato.punteggioTotale} PUNTI`, margin + 5, y + 9);
+    y += 20;
 
     doc.setFontSize(7);
     doc.setTextColor('#999');
@@ -390,19 +387,19 @@ export default function GPSSimulator() {
   const progressPercent = ((currentStep + 1) / STEPS.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 py-8 px-4">
+    <div className="min-h-screen py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-brand-blu mb-2">Simulatore Punteggio GPS 2026-2028</h1>
-          <p className="text-gray-600">Calcolo formale conforme alle Tabelle A/1 – A/10 del MIM</p>
+          <h1 className="text-3xl font-bold text-[#0F172A] mb-2">Simulatore Punteggio GPS 2026-2028</h1>
+          <p className="text-gray-600">Calcolo formale conforme alle Tabelle A/1 – A/10 del MIM — tutti i dati sono inseriti tramite menu a tendina</p>
         </div>
 
         <div className="mb-8">
           <div className="flex justify-between mb-2 overflow-x-auto">
             {STEPS.map((step, i) => (
-              <button key={step} onClick={() => setCurrentStep(i)}
+              <button key={step} onClick={() => { if (i < currentStep) setCurrentStep(i); }}
                 className={`flex-1 text-xs sm:text-sm font-medium py-2 px-1 border-b-2 transition-all duration-200 ${
-                  i === currentStep ? 'border-brand-blu text-brand-blu' : i < currentStep ? 'border-brand-verde text-brand-verde' : 'border-gray-200 text-gray-400'
+                  i === currentStep ? 'border-brand-blu text-brand-blu' : i < currentStep ? 'border-brand-verde text-brand-verde' : 'border-slate-200 text-gray-400'
                 }`}>{step}</button>
             ))}
           </div>
@@ -411,21 +408,18 @@ export default function GPSSimulator() {
           </div>
         </div>
 
-        <div className="bg-white/70 backdrop-blur-xs rounded-3xl shadow-lg border border-white/40 p-6 sm:p-8">
+        <div className="bg-white/70 backdrop-blur-md rounded-3xl shadow-soft border border-slate-200/60 p-6 sm:p-8">
+
           {currentStep === 0 && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-brand-blu">Seleziona Tabella di Riferimento</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {Object.entries(TABELLE).map(([key, val]) => (
                   <button key={key} onClick={() => { setTabella(key as TabellaType); setMancaVoto(false); }}
-                    className={`p-4 rounded-2xl border-2 text-left transition-all ${
-                      tabella === key ? 'border-brand-blu bg-brand-blu/5' : 'border-gray-200 hover:border-brand-blu/50'
-                    }`}>
+                    className={`p-4 rounded-2xl border-2 text-left transition-all ${tabella === key ? 'border-brand-blu bg-brand-blu/5' : 'border-slate-200 hover:border-brand-blu/50'}`}>
                     <span className="font-bold text-brand-blu text-lg">Tabella {key.replace('A', 'A/')}</span>
                     <p className="text-sm text-gray-600 mt-1">{val.label}</p>
-                    <span className={`inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-semibold ${
-                      val.fascia === 'I' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-                    }`}>Fascia {val.fascia}</span>
+                    <span className={`inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-semibold ${val.fascia === 'I' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>Fascia {val.fascia}</span>
                   </button>
                 ))}
               </div>
@@ -434,60 +428,76 @@ export default function GPSSimulator() {
 
           {currentStep === 1 && (
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-brand-blu">
-                Sezione A.1 — Titolo di Accesso ({tabellaData.label})
-              </h2>
+              <h2 className="text-xl font-semibold text-brand-blu">Sezione A.1 — Titolo di Accesso ({tabellaData.label})</h2>
 
               {isSFP ? (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Media ponderata esami sostenuti</label>
-                  <input type="number" min={18} max={30} step={0.01} value={mediaSFP}
-                    onChange={e => setMediaSFP(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition" />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Media ponderata esami (trentesimi)</label>
+                  <select value={mediaSFP} onChange={e => setMediaSFP(Number(e.target.value))}
+                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
+                    {VOTI_SFP.map(v => <option key={v} value={v}>{v}/30</option>)}
+                  </select>
                   <p className="mt-2 text-sm text-brand-verde font-semibold">Punteggio: {calcolaVotoSFP(mediaSFP)} pt</p>
                 </div>
               ) : isSostegno && isFasciaI ? (
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Voto di Specializzazione</label>
-                    <input type="number" min={60} max={110} value={voto}
-                      onChange={e => setVoto(Number(e.target.value))}
-                      className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition" />
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Voto di Specializzazione (centesimi)</label>
+                  <select value={votoCentesimi} onChange={e => setVotoCentesimi(Number(e.target.value))}
+                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
+                    {VOTI_CENTESIMI.map(v => <option key={v} value={v}>{v}/100</option>)}
+                  </select>
                   <div className="p-4 bg-green-50 rounded-2xl">
-                    <p className="text-brand-verde font-semibold">Punteggio (Tab. A/7): {calcolaVotoSostegnoI(voto, 100)} pt</p>
+                    <p className="text-brand-verde font-semibold">Punteggio (Tab. A/7): {calcolaVotoSostegnoI(votoCentesimi)} pt</p>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Voto del Titolo di Accesso</label>
-                    <input type="number" min={36} max={110} value={voto}
-                      onChange={e => setVoto(Number(e.target.value))}
-                      className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Base del Voto</label>
-                    <select value={baseVoto} onChange={e => setBaseVoto(Number(e.target.value))}
-                      className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition">
-                      <option value={110}>Base 110</option>
-                      <option value={100}>Base 100</option>
-                      <option value={60}>Base 60</option>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Scala del voto</label>
+                    <select value={isBase110 ? '110' : 'centesimi'} onChange={e => setScalaVoto(e.target.value as 'centesimi' | '110')}
+                      className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
+                      {(isFasciaI || isSecondaFasciaSostegno) ? (
+                        <option value="centesimi">In Centesimi (Base 100)</option>
+                      ) : (
+                        <>
+                          <option value="110">In Centodieci (Base 110)</option>
+                          <option value="centesimi">In Centesimi (Base 100)</option>
+                        </>
+                      )}
                     </select>
                   </div>
-                  {!isFasciaI && !isSecondaFasciaSostegno && (
-                    <div className="flex items-center gap-3">
-                      <input type="checkbox" id="lode" checked={lode}
-                        onChange={e => setLode(e.target.checked)}
-                        className="h-5 w-5 rounded border-gray-300 text-brand-verde focus:ring-brand-verde" />
-                      <label htmlFor="lode" className="text-sm font-medium text-gray-700">Conseguito con Lode (+4 pt)</label>
+                  {(scalaVoto === '110' || isBase110) && !isFasciaI && !isSecondaFasciaSostegno ? (
+                    <div className="space-y-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Voto di accesso (base 110)</label>
+                      <select value={voto110} onChange={e => setVoto110(Number(e.target.value))}
+                        className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
+                        {VOTI_110.map(v => <option key={v} value={v}>{v}/110</option>)}
+                        <option value={110}>110 e Lode</option>
+                      </select>
+                      {voto110 === 110 && (
+                        <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-2xl">
+                          <input type="checkbox" id="lode" checked={voto110Lode}
+                            onChange={e => setVoto110Lode(e.target.checked)}
+                            className="h-5 w-5 rounded border-gray-300 text-brand-ambra focus:ring-brand-ambra" />
+                          <label htmlFor="lode" className="text-sm font-medium text-amber-800">Lode (+4 pt)</label>
+                        </div>
+                      )}
+                      <div className="p-4 bg-green-50 rounded-2xl">
+                        <p className="text-brand-verde font-semibold">Punteggio: {calcolaVoto110(voto110, voto110Lode)} pt</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Voto di accesso (centesimi)</label>
+                      <select value={votoCentesimi} onChange={e => setVotoCentesimi(Number(e.target.value))}
+                        className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
+                        {VOTI_CENTESIMI.map(v => <option key={v} value={v}>{v}/100</option>)}
+                      </select>
+                      <div className="p-4 bg-green-50 rounded-2xl mt-4">
+                        <p className="text-brand-verde font-semibold">Punteggio: {calcolaVotoCentesimi(votoCentesimi)} pt</p>
+                      </div>
                     </div>
                   )}
-                  <div className="p-4 bg-green-50 rounded-2xl">
-                    <p className="text-brand-verde font-semibold">
-                      Punteggio: {calcolaVoto100(voto, baseVoto)} pt
-                    </p>
-                  </div>
                 </div>
               )}
 
@@ -496,7 +506,7 @@ export default function GPSSimulator() {
                   onChange={e => setMancaVoto(e.target.checked)}
                   className="h-5 w-5 rounded border-gray-300 text-amber-600 focus:ring-amber-500" />
                 <label htmlFor="mancaVoto" className="text-sm text-amber-800">
-                  Il titolo manca di punteggio o non è quantificabile numericamente (viene assegnato punteggio d'ufficio)
+                  Il titolo manca di punteggio o non è quantificabile numericamente (viene assegnato punteggio d'ufficio: {isSostegno && isFasciaI ? '8' : isFasciaI ? '8' : '12'} pt)
                 </label>
               </div>
             </div>
@@ -515,7 +525,7 @@ export default function GPSSimulator() {
                     { id: 'abilPAS', label: 'Percorsi speciali (PAS) DM 249/2010', pts: 6, val: abilPAS, set: setAbilPAS },
                     ...(isSostegno ? [{ id: 'specSost', label: 'TFA Sostegno (titolo specializzazione)', pts: 12, val: specSostegno, set: setSpecSostegno }] : []),
                   ].map(item => (
-                    <label key={item.id} className="flex items-start gap-3 p-4 border border-gray-200 rounded-2xl hover:border-brand-blu/30 cursor-pointer transition">
+                    <label key={item.id} className="flex items-start gap-3 p-4 border border-slate-200 rounded-2xl hover:border-brand-blu/30 cursor-pointer transition">
                       <input type="checkbox" checked={item.val} onChange={e => item.set(e.target.checked)}
                         className="h-5 w-5 mt-0.5 rounded border-gray-300 text-brand-blu focus:ring-brand-blu" />
                       <div>
@@ -535,90 +545,113 @@ export default function GPSSimulator() {
 
           {currentStep === 3 && (
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-brand-blu">Sezione B — Titoli Culturali</h2>
+              <h2 className="text-xl font-semibold text-brand-blu">Sezione B — Titoli Culturali (tutti i dati sono selezionabili a tendina)</h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">B.1 Superamento concorso ordinario (non usato come accesso) — +3 pt cad.</label>
-                  <input type="number" min={0} max={5} value={b1} onChange={e => setB1(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">B.1 Concorsi ordinari superati (×3 pt)</label>
+                  <select value={b1} onChange={e => setB1(Number(e.target.value))}
+                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
+                    {[0, 1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">B.2 Laurea/specializzazione/magistrale ulteriore — +3 pt cad.</label>
-                  <input type="number" min={0} max={5} value={b2} onChange={e => setB2(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">B.2 Lauree ulteriori (×3 pt)</label>
+                  <select value={b2} onChange={e => setB2(Number(e.target.value))}
+                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
+                    {[0, 1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">B.3 Laurea triennale/ITS ulteriore — +1,5 pt cad.</label>
-                  <input type="number" min={0} max={5} value={b3} onChange={e => setB3(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">B.3 Lauree triennali/ITS (×1.5 pt)</label>
+                  <select value={b3} onChange={e => setB3(Number(e.target.value))}
+                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
+                    {[0, 1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">B.4 {isFasciaI ? 'Specializzazioni biennali (+2 pt, max 2)' : 'Abilitazione professione regolamentata (+1,5 pt, max 1)'}</label>
-                  <input type="number" min={0} max={5} value={b4Specializzazioni} onChange={e => setB4Specializzazioni(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">B.4 {isFasciaI ? 'Specializzazioni biennali (×2 pt, max 2)' : 'Abilitazione professione regolamentata (max 1.5 pt)'}</label>
+                  <select value={b4Specializzazioni} onChange={e => setB4Specializzazioni(Number(e.target.value))}
+                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
+                    {isFasciaI ? [0, 1, 2].map(v => <option key={v} value={v}>{v}</option>) : [0, 1].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">B.5 {isSostegno ? 'Specializzazione sostegno ulteriore' : 'Titolo specializzazione sostegno'} — +9 pt cad.</label>
-                  <input type="number" min={0} max={5} value={b5TitoloSostegno} onChange={e => setB5TitoloSostegno(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">B.5 Specializzazione sostegno (×9 pt)</label>
+                  <select value={b5TitoloSostegno} onChange={e => setB5TitoloSostegno(Number(e.target.value))}
+                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
+                    {[0, 1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
                 </div>
-                <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-2xl">
+                <div className="flex items-center gap-3 p-4 border border-slate-200 rounded-2xl">
                   <input type="checkbox" id="phd" checked={b6PhD} onChange={e => setB6PhD(e.target.checked)}
                     className="h-5 w-5 rounded border-gray-300 text-brand-blu focus:ring-brand-blu" />
-                  <label htmlFor="phd" className="text-sm font-medium text-gray-700">B.6 Dottorato di ricerca (PhD) — +12 pt (max 1)</label>
+                  <label htmlFor="phd" className="text-sm font-medium text-gray-700">B.6 Dottorato di ricerca — +12 pt</label>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">B.7 ASN (Abilitazione Scientifica Nazionale) — +3 pt cad.</label>
-                  <input type="number" min={0} max={5} value={b7ASN} onChange={e => setB7ASN(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">B.7 ASN (×3 pt)</label>
+                  <select value={b7ASN} onChange={e => setB7ASN(Number(e.target.value))}
+                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
+                    {[0, 1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">B.8 Attività ricerca (assegni art.51/22) — +6 pt cad.</label>
-                  <input type="number" min={0} max={5} value={b8Ricerca} onChange={e => setB8Ricerca(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">B.8 Attività ricerca (×6 pt)</label>
+                  <select value={b8Ricerca} onChange={e => setB8Ricerca(Number(e.target.value))}
+                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
+                    {[0, 1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">B.9 Graduatorie AFAM — +1 pt cad.</label>
-                  <input type="number" min={0} max={5} value={b9AFAM} onChange={e => setB9AFAM(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">B.9 AFAM (×1 pt)</label>
+                  <select value={b9AFAM} onChange={e => setB9AFAM(Number(e.target.value))}
+                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
+                    {[0, 1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">B.10 Master / Corsi perfezionamento (max 3) — +1 pt cad.</label>
-                  <input type="number" min={0} max={10} value={masterCount} onChange={e => setMasterCount(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">B.10 Master / Corsi perfezionamento (max 3, ×1 pt)</label>
+                  <select value={masterCount} onChange={e => setMasterCount(Number(e.target.value))}
+                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
+                    {[0, 1, 2, 3].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
                 </div>
               </div>
 
-              <div className="border-t border-gray-200 pt-6">
+              <div className="border-t border-slate-200 pt-6">
                 <h3 className="font-semibold text-gray-800 mb-4">B.11 — Certificazioni Linguistiche (QCER)</h3>
                 <select value={certLinguaLivello} onChange={e => setCertLinguaLivello(e.target.value as typeof certLinguaLivello)}
-                  className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition">
+                  className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
                   <option value="nessuna">Nessuna certificazione</option>
-                  <option value="B2">B2 — +3 pt</option>
-                  <option value="C1">C1 — +4 pt</option>
-                  <option value="C2">C2 — +6 pt</option>
+                  <option value="B2">B2 — 3 pt</option>
+                  <option value="C1">C1 — 4 pt</option>
+                  <option value="C2">C2 — 6 pt</option>
                 </select>
-                <p className="text-xs text-gray-500 mt-2">Valutabile un solo titolo per lingua (viene calcolato il livello più alto).</p>
               </div>
 
-              <div className="border-t border-gray-200 pt-6">
+              <div className="border-t border-slate-200 pt-6">
                 <h3 className="font-semibold text-gray-800 mb-4">B.12 — Certificazioni CLIL</h3>
-                <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-2xl">
-                  <input type="checkbox" id="clil" checked={haCLIL} onChange={e => setHaCLIL(e.target.checked)}
+                <label className="flex items-center gap-3 p-4 border border-slate-200 rounded-2xl cursor-pointer hover:border-brand-blu/30 transition">
+                  <input type="checkbox" checked={haCLIL} onChange={e => setHaCLIL(e.target.checked)}
                     className="h-5 w-5 rounded border-gray-300 text-brand-blu focus:ring-brand-blu" />
-                  <label htmlFor="clil" className="text-sm text-gray-700">
-                    Corso CLIL {certLinguaLivello !== 'nessuna' ? `+ certificazione ${certLinguaLivello} → ${certLinguaLivello === 'C2' ? '6+3=9' : certLinguaLivello === 'C1' ? '4+3=7' : '3+3=6'} pt totali` : '(senza certificazione: +1 pt)'}
-                  </label>
-                </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">Corso CLIL</p>
+                    <p className="text-xs text-gray-500">
+                      {certLinguaLivello !== 'nessuna'
+                        ? `Combinato con ${certLinguaLivello}: totale ${certLinguaLivello === 'C2' ? 9 : certLinguaLivello === 'C1' ? 7 : 6} pt`
+                        : 'Senza certificazione linguistica: +1 pt'}
+                    </p>
+                  </div>
+                </label>
               </div>
 
-              <div className="border-t border-gray-200 pt-6">
-                <h3 className="font-semibold text-gray-800 mb-4">B.13 — Certificazioni Informatiche</h3>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Numero certificazioni (max 4 valide, +0,50 pt cad., tetto max 2 pt)</label>
-                <input type="number" min={0} max={10} value={certInfoCount} onChange={e => setCertInfoCount(Number(e.target.value))}
-                  className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition" />
-                <p className="text-xs text-gray-500 mt-1">Punteggio: {Math.min(certInfoCount, 4) * 0.5} pt (max 4 certificazioni = 2 pt)</p>
+              <div className="border-t border-slate-200 pt-6">
+                <h3 className="font-semibold text-gray-800 mb-4">B.13 — Certificazioni Informatiche (max 4, ×0.50 pt, tetto 2 pt)</h3>
+                <select value={certInfoCount} onChange={e => setCertInfoCount(Number(e.target.value))}
+                  className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu transition bg-white">
+                  {[0, 1, 2, 3, 4].map(v => <option key={v} value={v}>{v} certificazione{v > 1 ? 'i' : ''} — {v * 0.5} pt</option>)}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Tetto massimo invalicabile: 4 certificazioni = 2 pt</p>
               </div>
             </div>
           )}
@@ -626,19 +659,19 @@ export default function GPSSimulator() {
           {currentStep === 4 && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-brand-blu">Sezione C — Titoli di Servizio</h2>
-              <p className="text-sm text-gray-600">Inserisci i periodi di servizio. Il calcolo segue la griglia a scaglioni ministeriali. Massimo 12 pt/anno per servizio specifico.</p>
+              <p className="text-sm text-gray-600">Inserisci i contratti con date di inizio e fine. L'algoritmo calcola i punti secondo gli scaglioni ministeriali. Massimo 12 pt/anno per servizio specifico.</p>
 
               {servizi.length === 0 && (
                 <div className="text-center py-8 text-gray-400">
-                  <p>Nessun servizio inserito. Clicca "Aggiungi Periodo" per iniziare.</p>
+                  <p>Nessun servizio inserito.</p>
                 </div>
               )}
 
               {servizi.map((s, idx) => {
                 const giorni = s.dataInizio && s.dataFine ? calcolaGiorniServizio(s.dataInizio, s.dataFine) : 0;
-                const punti = giorni > 0 ? giorniAMesi(giorni) : null;
+                const punti = giorni > 0 ? scaglioneServizio(giorni) : null;
                 return (
-                  <div key={s.id} className="p-4 border border-gray-200 rounded-2xl space-y-3 relative">
+                  <div key={s.id} className="p-4 border border-slate-200 rounded-2xl space-y-3 relative">
                     <button onClick={() => removeServizio(s.id)}
                       className="absolute top-2 right-2 text-red-400 hover:text-red-600 text-sm transition">✕ Rimuovi</button>
                     <h3 className="font-medium text-brand-blu">Periodo {idx + 1}</h3>
@@ -646,30 +679,32 @@ export default function GPSSimulator() {
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Data Inizio</label>
                         <input type="date" value={s.dataInizio} onChange={e => updateServizio(s.id, 'dataInizio', e.target.value)}
-                          className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-blu transition" />
+                          className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-blu transition bg-white" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Data Fine</label>
                         <input type="date" value={s.dataFine} onChange={e => updateServizio(s.id, 'dataFine', e.target.value)}
-                          className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-blu transition" />
+                          className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-blu transition bg-white" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Tipo Servizio</label>
                         <select value={s.tipo} onChange={e => updateServizio(s.id, 'tipo', e.target.value)}
-                          className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-blu transition">
-                          <option value="specifico">Specifico (C.1) — 2 pt/mese</option>
-                          <option value="non_specifico">Non specifico (C.2) — 1 pt/mese</option>
+                          className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-blu transition bg-white">
+                          <option value="specifico">Specifico (C.1) — supplenze su scuola/classe concorso</option>
+                          <option value="non_specifico">Non specifico (C.2) — altro grado/classe concorso</option>
                         </select>
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Anno Scolastico</label>
-                        <input type="text" value={s.annoScolastico} onChange={e => updateServizio(s.id, 'annoScolastico', e.target.value)}
-                          className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-blu transition" />
+                        <select value={s.annoScolastico} onChange={e => updateServizio(s.id, 'annoScolastico', e.target.value)}
+                          className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-blu transition bg-white">
+                          {['2024/2025', '2025/2026', '2026/2027', '2027/2028'].map(a => <option key={a} value={a}>{a}</option>)}
+                        </select>
                       </div>
                     </div>
                     {punti && (
                       <p className="text-xs text-gray-500">
-                        Giorni: {giorni} → {s.tipo === 'specifico' ? `C.1: ${punti.specifico} pt (specifico)` : `C.2: ${punti.nonSpecifico} pt (non specifico)`}
+                        {giorni} giorni → scaglione: {s.tipo === 'specifico' ? `C.1 = ${punti.specifico} pt` : `C.2 = ${punti.nonSpecifico} pt`}
                       </p>
                     )}
                   </div>
@@ -698,7 +733,7 @@ export default function GPSSimulator() {
                   { label: 'A.1 Titolo di Accesso', value: risultato.titoloAccesso, color: 'bg-blue-100 text-brand-blu' },
                   { label: 'A.2 Punti Aggiuntivi', value: risultato.abilitazione, color: 'bg-purple-100 text-purple-700' },
                   { label: 'B.10 Master / Corsi', value: risultato.masterCorsi, color: 'bg-green-100 text-brand-verde' },
-                  { label: 'B.11 Cert. Linguistiche', value: risultato.certificazioniLinguistiche, color: 'bg-teal-100 text-brand-ottanio' },
+                  { label: 'B.11 Cert. Linguistiche', value: risultato.certificazioniLinguistiche, color: 'bg-cyan-100 text-cyan-700' },
                   { label: 'C.1 Servizi Specifici', value: risultato.serviziSpecifici, color: 'bg-amber-100 text-amber-700' },
                   { label: 'C.2 Servizi Non Specifici', value: risultato.serviziNonSpecifici, color: 'bg-orange-100 text-orange-700' },
                 ].map(item => (
@@ -714,17 +749,17 @@ export default function GPSSimulator() {
                 <p className="text-5xl font-extrabold mt-1">{risultato.punteggioTotale}</p>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 flex-wrap">
                 <button onClick={salvaSuSupabase}
-                  className="flex-1 py-3 bg-brand-verde text-white rounded-2xl font-semibold hover:bg-brand-verde/90 transition">
+                  className="flex-1 min-w-[160px] py-3 bg-brand-verde text-white rounded-2xl font-semibold hover:bg-brand-verde/90 transition">
                   {salvataggioOK ? '✓ Salvato!' : 'Salva nel tuo profilo'}
                 </button>
                 <button onClick={scaricaPDF}
-                  className="flex-1 py-3 bg-brand-blu text-white rounded-2xl font-semibold hover:bg-brand-blu/90 transition">
+                  className="flex-1 min-w-[160px] py-3 bg-brand-blu text-white rounded-2xl font-semibold hover:bg-brand-blu/90 transition">
                   Scarica Report PDF
                 </button>
                 <button onClick={() => { setCurrentStep(0); setRisultato(null); setDettaglioVoci([]); }}
-                  className="flex-1 py-3 border-2 border-brand-blu text-brand-blu rounded-2xl font-semibold hover:bg-brand-blu/5 transition">
+                  className="flex-1 min-w-[160px] py-3 border-2 border-brand-blu text-brand-blu rounded-2xl font-semibold hover:bg-brand-blu/5 transition">
                   Nuovo Calcolo
                 </button>
               </div>
@@ -733,7 +768,7 @@ export default function GPSSimulator() {
 
           <div className="flex justify-between mt-8">
             <button onClick={() => setCurrentStep(i => Math.max(0, i - 1))} disabled={currentStep === 0}
-              className="px-6 py-2 border border-gray-300 rounded-2xl text-gray-600 hover:bg-gray-50 disabled:opacity-30 transition">
+              className="px-6 py-2 border border-slate-200 rounded-2xl text-gray-600 hover:bg-gray-50 disabled:opacity-30 transition">
               ← Indietro
             </button>
             {currentStep < STEPS.length - 2 ? (

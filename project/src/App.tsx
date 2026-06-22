@@ -2,9 +2,8 @@ import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './components/Auth/AuthContext';
 import Header from './components/Header';
 import Hero from './components/Hero';
-import PlatformUsers from './components/PlatformUsers';
-import AssistantsAI from './components/AssistantsAI';
 import PunteggioGPS from './components/PunteggioGPS';
+import AssistantsAI from './components/AssistantsAI';
 import NormativeDocuments from './components/NormativeDocuments';
 import News from './components/News';
 import Deadlines from './components/Deadlines';
@@ -25,13 +24,14 @@ import InterpelliPage from './pages/InterpelliPage';
 function App() {
   return (
     <AuthProvider>
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-surface">
         <Header />
         <div className="pt-20">
           <Breadcrumb />
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/assistente/*" element={<AssistantPage />} />
+            <Route path="/sindacalista-ai" element={<AssistantPage />} />
             <Route path="/calcolo-punteggio" element={<ScorePage />} />
             <Route path="/normative" element={<NormativePage />} />
             <Route path="/notizie" element={<NewsPage />} />

@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 const routeLabels: Record<string, string> = {
   '/': 'Home',
   '/assistente': 'Assistente AI',
+  '/sindacalista-ai': 'Sindacalista AI',
   '/calcolo-punteggio': 'Calcolo Punteggio',
   '/normative': 'Normative e Documenti',
   '/notizie': 'Notizie',
@@ -30,11 +31,11 @@ export default function Breadcrumb() {
   }
 
   return (
-    <nav className="bg-gray-50 px-4 py-2 sm:px-6 lg:px-8" aria-label="breadcrumb">
+    <nav className="bg-surface-warm/60 px-4 py-2 sm:px-6 lg:px-8 border-b border-slate-200/40" aria-label="breadcrumb">
       <ol className="flex flex-wrap items-center space-x-2 text-sm text-gray-500">
         {items.map((item, index) => (
           <Fragment key={index}>
-            <Link to={item.href} className="hover:text-indigo-600 transition-colors">
+            <Link to={item.href} className="hover:text-brand-blu transition-colors">
               {item.label}
             </Link>
             {index < items.length - 1 && <span className="mx-2">/</span>}

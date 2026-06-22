@@ -28,34 +28,30 @@ export default function Header() {
   };
 
   const menuItems = [
-    { label: 'Home', href: '/' },
-    { label: 'Notizie', href: '/notizie' },
-    { label: 'Scadenze', href: '/scadenze' },
-    { label: 'Assistente AI', href: '/assistente/docente' },
     { label: 'Calcolo Punteggio', href: '/calcolo-punteggio' },
-    { label: 'Interpelli', href: '/interpelli' },
     { label: 'Servizi', href: '/servizi' },
-    { label: 'Normative', href: '/normative' },
+    { label: 'Sindacalista AI', href: '/sindacalista-ai' },
+    { label: 'Interpelli', href: '/interpelli' },
+    { label: 'Normative e Documenti', href: '/normative' },
+    { label: 'Notizie e Scadenze', href: '/notizie' },
   ];
 
   return (
-    <header className="bg-white shadow-md fixed w-full top-0 z-50">
+    <header className="bg-white/80 backdrop-blur-md shadow-soft border-b border-slate-200/60 fixed w-full top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-3 group">
-              <img
-                src="/logo.png"
-                alt="Logo Sportello Scuola 2.0"
-                className="h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-              />
-              <span className="text-xl sm:text-2xl font-extrabold tracking-tight transition-transform duration-300">
-                <span className="text-brand-blu">Sportello </span>
-                <span className="text-brand-verde">Scuola </span>
-                <span className="text-brand-ottanio">2.0</span>
-              </span>
-            </Link>
-          </div>
+          <Link to="/" className="flex items-center gap-3 group">
+            <img
+              src="/logo.png"
+              alt="Sportello Scuola 2.0"
+              className="h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+            />
+            <span className="text-xl sm:text-2xl font-extrabold tracking-tight">
+              <span className="text-brand-blu">Sportello </span>
+              <span className="text-brand-verde">Scuola </span>
+              <span className="text-brand-ottanio">2.0</span>
+            </span>
+          </Link>
 
           <nav className="hidden md:flex space-x-1">
             {menuItems.map((item) => (
@@ -85,8 +81,8 @@ export default function Header() {
                   <ChevronDown size={14} className={`transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
                 </button>
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-2xl shadow-xl py-2 animate-fade-in">
-                    <div className="px-4 py-2 border-b border-gray-100">
+                  <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200/60 rounded-2xl shadow-xl py-2 animate-fade-in-up">
+                    <div className="px-4 py-2 border-b border-slate-100">
                       <p className="text-sm font-medium text-gray-800 truncate">{user.full_name || 'Utente'}</p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                       {user.is_premium && (
@@ -107,7 +103,7 @@ export default function Header() {
                       onClick={() => setShowUserMenu(false)}
                       className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
                     >
-                      Le mie Scadenze Preferite
+                      Le mie Notizie Salvate
                     </Link>
                     <Link
                       to="/servizi"
@@ -116,7 +112,7 @@ export default function Header() {
                     >
                       Le mie Prenotazioni
                     </Link>
-                    <div className="border-t border-gray-100 mt-1 pt-1">
+                    <div className="border-t border-slate-100 mt-1 pt-1">
                       <button
                         onClick={() => { logout(); setShowUserMenu(false); }}
                         className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition"
