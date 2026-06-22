@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import NewsletterForm from '../components/NewsletterForm';
 import Hero from '../components/Hero';
 import PunteggioGPS from '../components/PunteggioGPS';
@@ -8,8 +10,20 @@ import NormativeDocuments from '../components/NormativeDocuments';
 import NewsHub from '../components/NewsHub';
 import FAQ from '../components/FAQ';
 import Contact from '../components/Contact';
+import LoginModal from '../components/Auth/LoginModal';
 
 export default function HomePage() {
+  const location = useLocation();
+  const [showLogin, setShowLogin] = useState(false);
+
+  useEffect(() => {
+    const state = location.state as { showLogin?: boolean } | null;
+    if (state?.showLogin) {
+      setShowLogin(true);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [location.state]);
+
   return (
     <main>
       <section className="bg-[#0F172A] py-4">
@@ -38,6 +52,7 @@ export default function HomePage() {
       <NewsHub />
       <FAQ />
       <Contact />
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </main>
   );
 }

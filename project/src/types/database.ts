@@ -165,3 +165,27 @@ export interface UtenteAbbonatoInterpelli {
   notifica_email_attiva: boolean;
   stripe_subscription_status: string;
 }
+
+export interface SavedItem {
+  id: string;
+  user_id: string;
+  item_type: 'news' | 'deadline' | 'document';
+  item_id: string;
+  item_data: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface UserPreference {
+  user_id: string;
+  full_name: string;
+  ruolo: RuoloUtente;
+  classe_concorso: string;
+  punteggio_gps: number;
+  punteggio_ata: number;
+  fascia_gps: string;
+  titoli: string[];
+  certificazioni: string[];
+  provincia_preferita: string;
+  regione_preferita: string;
+  updated_at: string;
+}

@@ -13,6 +13,8 @@ import FAQPage from './pages/FAQPage';
 import ContactPage from './pages/ContactPage';
 import ServicesPage from './pages/ServicesPage';
 import InterpelliPage from './pages/InterpelliPage';
+import DashboardPage from './pages/DashboardPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -39,6 +41,7 @@ function App() {
             <Route path="/contatti" element={<ContactPage />} />
             <Route path="/servizi" element={<ServicesPage />} />
             <Route path="/interpelli" element={<InterpelliPage />} />
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           </Routes>
         </div>
         <Footer />
