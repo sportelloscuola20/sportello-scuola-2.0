@@ -65,9 +65,9 @@ export default function News() {
         </div>
 
         <div className="text-center">
-          <button className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold">
+          <a href="/notizie" className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold">
             Vedi tutte le notizie
-          </button>
+          </a>
         </div>
       </div>
     </section>

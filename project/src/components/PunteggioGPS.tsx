@@ -21,7 +21,7 @@ export default function PunteggioGPS() {
             <p className="text-gray-600 mb-4">
               Calcola il tuo punteggio per le Graduatorie Provinciali per le Supplenze (GPS) considerando titoli di servizio, certificazioni linguistiche, informatiche e altri titoli valutabili.
             </p>
-            <a href="#" className="text-indigo-600 font-medium hover:text-indigo-800 transition-colors">
+            <a href="/calcolo-punteggio" className="text-indigo-600 font-medium hover:text-indigo-800 transition-colors">
               Calcola il tuo punteggio GPS →
             </a>
           </div>
@@ -35,7 +35,7 @@ export default function PunteggioGPS() {
             <p className="text-gray-600 mb-4">
               Calcola il tuo punteggio per le graduatorie del Personale ATA considerando titoli di servizio, titoli culturali, certificazioni informatiche e altri requisiti specifici per ogni profilo.
             </p>
-            <a href="#" className="text-indigo-600 font-medium hover:text-indigo-800 transition-colors">
+            <a href="/calcolo-punteggio" className="text-indigo-600 font-medium hover:text-indigo-800 transition-colors">
               Calcola il tuo punteggio ATA →
             </a>
           </div>

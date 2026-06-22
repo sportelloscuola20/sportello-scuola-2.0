@@ -1,182 +1,280 @@
-import { useState, useEffect } from 'react';
-import { MessageCircle, Send, FileText, Sparkles, ArrowLeft } from 'lucide-react';
-import ragService from '../rag/service';
-import { Document } from '../rag/types';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import type { ChatMessage } from '../types/database';
 
-export default function AIChatContainer({
-  assistantType,
-  initialMessages = []
-}: {
-  assistantType: string;
-  initialMessages?: Array<{ role: 'user' | 'assistant', content: string }>;
-}) {
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant', content: string, citations?: any[] }>>(initialMessages);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [suggestedPrompts, setSuggestedPrompts] = useState<Array<string>>([]);
+const FREE_MESSAGE_LIMIT = 3;
+const SUGGESTED_PROMPTS = [
+  'Quali sono i miei diritti per il congedo parentale come docente?',
+  'Come funziona la mobilità volontaria GPS 2026?',
+  'Requisiti e procedure per le MAD 2026-2028',
+  'Calcolo punteggio per passaggio di ruolo ATA → Docente',
+  'CCNL Istruzione e Ricerca: ferie e permessi del personale ATA',
+  'Come presentare ricorso per esclusione da graduatoria GPS',
+];
 
-  // Load suggested prompts based on assistant type
+function getChatCount(): number {
+  try {
+    return Number(localStorage.getItem('ss2_chat_count') || '0');
+  } catch {
+    return 0;
+  }
+}
+
+function incrementChatCount(): number {
+  const next = getChatCount() + 1;
+  localStorage.setItem('ss2_chat_count', String(next));
+  return next;
+}
+
+function resetChatCount(): void {
+  localStorage.setItem('ss2_chat_count', '0');
+}
+
+function BannerPaywall() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full mx-4 p-8 text-center">
+        <div className="w-16 h-16 bg-gradient-to-r from-brand-blu to-brand-verde rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-brand-blu mb-3">Soglia di consultazione gratuita superata</h2>
+        <p className="text-gray-600 mb-6">
+          Abbonati a <strong className="text-brand-verde">Sportello Scuola 2.0 Pro</strong> per sbloccare l'assistenza sindacale AI illimitata ed evitare errori legali nella tua carriera.
+        </p>
+        <button
+          onClick={() => window.location.href = '/servizi'}
+          className="w-full py-4 bg-gradient-to-r from-brand-blu to-brand-verde text-white rounded-2xl font-bold text-lg hover:opacity-90 transition shadow-lg"
+        >
+          Abbonati a Sportello Scuola 2.0 Pro
+        </button>
+        <p className="mt-4 text-xs text-gray-400">Hai utilizzato {FREE_MESSAGE_LIMIT} consulenze gratuite. Passa a Pro per accesso illimitato.</p>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonLoader() {
+  return (
+    <div className="flex items-start gap-3 animate-pulse">
+      <div className="w-8 h-8 bg-brand-ottanio/20 rounded-full flex-shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="h-4 bg-gray-200 rounded w-3/4" />
+        <div className="h-4 bg-gray-200 rounded w-1/2" />
+        <div className="h-3 bg-gray-100 rounded w-1/3" />
+        <p className="text-xs text-brand-ottanio font-medium mt-2">
+          Il Sindacalista AI sta setacciando le gazzette ufficiali e le note ministeriali MIM...
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default function AIChatContainer() {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPaywall, setShowPaywall] = useState<boolean>(false);
+  const [chatCount, setChatCount] = useState<number>(getChatCount());
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const promptsMap: Record<string, Array<string>> = {
-      'Docente': [
-        "Posso accettare questa supplenza?",
-        "Calcola il mio punteggio GPS",
-        "Aiutami a creare una UDA"
-      ],
-      'ATA': [
-        "Quanto vale questo attestato?",
-        "Quali sono i requisiti per la mobilità ATA?",
-        "Come si calcola il punteggio per il profilo di assistente amministrativo?"
-      ],
-      'Dirigente': [
-        "Come gestire una richiesta di permesso?",
-        "Qual è la procedura per le nomine?",
-        "Quali sono gli obblighi in materia di sicurezza sul lavoro?"
-      ],
-      'Sindacale': [
-        "Posso rifiutare questa supplenza?",
-        "Hai diritto ai permessi per legge 104?",
-        "Quali sono le sanzioni per violazione del CCNL?"
-      ]
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading]);
+
+  useEffect(() => {
+    if (chatCount >= FREE_MESSAGE_LIMIT) {
+      setShowPaywall(true);
+    }
+  }, [chatCount]);
+
+  const sendMessage = useCallback(async (content: string) => {
+    if (!content.trim() || isLoading) return;
+
+    const currentCount = getChatCount();
+    if (currentCount >= FREE_MESSAGE_LIMIT) {
+      setShowPaywall(true);
+      return;
+    }
+
+    const userMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: content.trim(),
+      timestamp: new Date().toISOString(),
     };
 
-    setSuggestedPrompts(promptsMap[assistantType as keyof typeof promptsMap] || []);
-  }, [assistantType]);
-
-  // Add a welcome message if no messages yet
-  useEffect(() => {
-    if (messages.length === 0) {
-      const welcomeMessage = `Ciao! Sono il tuo assistente AI specializzato per ${assistantType.toLowerCase()}. Come posso aiutarti oggi?`;
-      setMessages(prev => [...prev, { role: 'assistant' as const, content: welcomeMessage }]);
-    }
-  }, [messages.length, assistantType]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-
-    const userMessage = { role: 'user' as const, content: input };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => [...prev, userMsg]);
     setInput('');
-    setLoading(true);
+    setIsLoading(true);
+
+    const newCount = incrementChatCount();
+    setChatCount(newCount);
 
     try {
-      // Query the RAG system
-      const response = await ragService.query({
-        query: input,
-        limit: 5,
-        threshold: 0.7
+      const { data, error } = await supabase.functions.invoke('ai-sindacalista', {
+        body: {
+          message: content.trim(),
+          history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
+        },
       });
 
-      const assistantMessage = {
-        role: 'assistant' as const,
-        content: response.answer,
-        citations: response.citations
+      if (error) throw error;
+
+      const assistantMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: data?.response || 'Mi scusi, non sono riuscito a elaborare la risposta. La prego di riprovare.',
+        timestamp: new Date().toISOString(),
+        citations: data?.citations || [],
       };
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error querying RAG:', error);
-      setMessages(prev => [...prev, {
-        role: 'assistant' as const,
-        content: 'Si è verificato un errore. Per favore, riprova più tardi.'
-      }]);
+
+      setMessages(prev => [...prev, assistantMsg]);
+    } catch {
+      const assistantMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: '**Servizio temporaneamente non disponibile.** Il Sindacalista AI è in manutenzione. Riprova tra qualche minuto o consulta le sezioni normative del portale per risposte immediate.',
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, assistantMsg]);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }, [isLoading, messages]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(input);
+    }
+  }, [input, sendMessage]);
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">
-            Assistente {assistantType}
-          </h2>
-          <div className="flex items-center gap-3">
-            <Sparkles className="h-5 w-5 text-indigo-500 animate-pulse" />
-            <span className="text-indigo-600 font-medium">AI Potenziato</span>
-          </div>
-        </div>
+    <div className="flex flex-col h-[calc(100vh-80px)] max-w-4xl mx-auto">
+      {showPaywall && <BannerPaywall />}
 
-        {/* Chat Messages */}
-        <div className="space-y-4 mb-6">
-          {messages.map((msg, index) => (
-            <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] px-4 py-3 rounded-lg ${msg.role === 'user'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-800'
-                }`}
-              >
-                <p className="whitespace-pre-wrap">{msg.content}</p>
-                {msg.role === 'assistant' && msg.citations && msg.citations.length > 0 && (
-                  <div className="mt-2 text-xs text-gray-500 border-t pt-2">
-                    <strong>Fonti:</strong>
-                    <ul className="mt-1 list-disc pl-5 space-y-1">
-                      {msg.citations.map((cite, idx) => (
-                        <li key={idx}>
-                          <em>{cite.documentTitle}</em> (attendibilità: {(cite.score * 100).toFixed(0)}%)
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-20 h-20 bg-gradient-to-r from-brand-blu to-brand-verde rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
             </div>
-          ))}
-        </div>
-
-        {/* Loading indicator */}
-        {loading && (
-          <div className="flex items-center justify-start mb-4">
-            <div className="flex-shrink-0">
-              <Sparkles className="h-5 w-5 text-indigo-500 animate-pulse" />
-            </div>
-            <span className="ml-2 text-gray-500">L'assistente sta pensando...</span>
-          </div>
-        )}
-
-        {/* Suggested Prompts - only show if no messages beyond the welcome message */}
-        {(messages.length === 1 && messages[0].role === 'assistant') && suggestedPrompts.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-700 mb-3">
-              Prova una di queste domande:
-            </h3>
-            <div className="flex flex-wrap gap-3">
-              {suggestedPrompts.map((prompt, index) => (
+            <h2 className="text-2xl font-bold text-brand-blu mb-2">Sindacalista AI</h2>
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              Assistente virtuale specializzato su CCNL Istruzione e Ricerca, congedi, MAD, GPS e diritti del personale scolastico.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
+              {SUGGESTED_PROMPTS.slice(0, 4).map(prompt => (
                 <button
-                  key={index}
-                  onClick={() => {
-                    setInput(prompt);
-                    handleSubmit(new Event('submit') as React.FormEvent);
-                  }}
-                  className="bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-medium px-4 py-2 rounded-lg transition-colors border border-indigo-200 hover:border-indigo-300 text-sm"
+                  key={prompt}
+                  onClick={() => sendMessage(prompt)}
+                  className="text-left p-3 bg-white/70 border border-gray-200 rounded-2xl text-sm text-gray-700 hover:border-brand-blu hover:bg-brand-blu/5 transition"
                 >
                   {prompt}
                 </button>
               ))}
             </div>
+            <p className="text-xs text-gray-400 mt-4">
+              Consultazioni gratuite rimanenti: {Math.max(0, FREE_MESSAGE_LIMIT - chatCount)} / {FREE_MESSAGE_LIMIT}
+            </p>
           </div>
         )}
 
-        {/* Chat Input */}
-        <form onSubmit={handleSubmit} className="flex gap-3">
+        {messages.map(msg => (
+          <div
+            key={msg.id}
+            className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+          >
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                msg.role === 'user' ? 'bg-brand-blu' : 'bg-gradient-to-r from-brand-verde to-brand-ottanio'
+              }`}
+            >
+              <span className="text-white text-xs font-bold">
+                {msg.role === 'user' ? 'U' : 'AI'}
+              </span>
+            </div>
+            <div
+              className={`max-w-[80%] p-4 rounded-2xl ${
+                msg.role === 'user'
+                  ? 'bg-brand-blu text-white'
+                  : 'bg-white border border-gray-200 text-gray-800'
+              }`}
+            >
+              <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : ''}`}>
+                {msg.content.split('\n').map((line, i) => (
+                  <p key={i} className={line.startsWith('**') ? 'font-bold' : ''}>
+                    {line.replace(/\*\*/g, '')}
+                  </p>
+                ))}
+              </div>
+              {msg.citations && msg.citations.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-xs text-gray-500 font-medium mb-1">Fonti:</p>
+                  {msg.citations.map((c, i) => (
+                    <p key={i} className="text-xs text-brand-ottanio">
+                      {c.title} (affinità: {(c.confidence * 100).toFixed(0)}%)
+                    </p>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-gray-400 mt-2">
+                {new Date(msg.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+          </div>
+        ))}
+
+        {isLoading && <SkeletonLoader />}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="border-t border-gray-200 bg-white/80 backdrop-blur-xs p-4">
+        <div className="flex gap-3 max-w-4xl mx-auto">
           <textarea
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Scrivi il tuo messaggio qui..."
-            className="flex-1 min-h-[60px] rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
-            disabled={loading}
-            rows={2}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isLoading || chatCount >= FREE_MESSAGE_LIMIT}
+            placeholder={
+              chatCount >= FREE_MESSAGE_LIMIT
+                ? 'Limite gratuito raggiunto. Abbonati a Pro per continuare.'
+                : 'Scrivi la tua domanda al Sindacalista AI...'
+            }
+            rows={1}
+            className="flex-1 border border-gray-300 rounded-2xl px-4 py-3 resize-none focus:ring-2 focus:ring-brand-blu focus:border-brand-blu disabled:opacity-50 disabled:cursor-not-allowed transition"
           />
           <button
-            type="submit"
-            disabled={loading || !input.trim()}
-            className="flex-shrink-0 bg-indigo-600 text-white px-5 py-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-indigo-300 disabled:cursor-not-allowed"
+            onClick={() => sendMessage(input)}
+            disabled={isLoading || !input.trim() || chatCount >= FREE_MESSAGE_LIMIT}
+            className="px-6 py-3 bg-gradient-to-r from-brand-blu to-brand-verde text-white rounded-2xl font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
-            {loading ? 'Invio...' : 'Invia'}
-            <Send className="ml-2 h-4 w-4" />
+            Invia
           </button>
-        </form>
+        </div>
+        <div className="flex justify-between mt-2 max-w-4xl mx-auto">
+          <p className="text-xs text-gray-400">
+            Consultazioni gratuite: {Math.max(0, FREE_MESSAGE_LIMIT - chatCount)}/{FREE_MESSAGE_LIMIT}
+          </p>
+          {chatCount > 0 && (
+            <button
+              onClick={() => {
+                setMessages([]);
+                resetChatCount();
+                setChatCount(0);
+                setShowPaywall(false);
+              }}
+              className="text-xs text-gray-400 hover:text-red-400 transition"
+            >
+              Reset conversazione
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

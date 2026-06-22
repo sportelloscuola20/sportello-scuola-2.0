@@ -1,4 +1,5 @@
 import { Mail, Phone } from 'lucide-react';
+import NewsletterForm from './NewsletterForm';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -7,19 +8,21 @@ export default function Footer() {
     {
       title: 'Navigazione',
       links: [
-        { label: 'Home', href: '#home' },
-        { label: 'Ultime Notizie', href: '#notizie' },
-        { label: 'Calcolo GPS', href: '#calcolo-gps' },
-        { label: 'Scadenze', href: '#scadenze' },
+        { label: 'Home', href: '/' },
+        { label: 'Assistente AI', href: '/assistente/docente' },
+        { label: 'Calcolo GPS', href: '/calcolo-punteggio' },
+        { label: 'Notizie', href: '/notizie' },
+        { label: 'Interpelli', href: '/interpelli' },
+        { label: 'Servizi', href: '/servizi' },
       ],
     },
     {
-      title: 'Servizi',
+      title: 'Risorse',
       links: [
-        { label: 'Calcolo Punteggio', href: '#calcolo-gps' },
-        { label: 'Progetto21', href: '#progetto21' },
-        { label: 'Formazione', href: '#progetto21' },
-        { label: 'Supporto Docenti', href: '#contatti' },
+        { label: 'Normative', href: '/normative' },
+        { label: 'Scadenze', href: '/scadenze' },
+        { label: 'FAQ', href: '/faq' },
+        { label: 'Contatti', href: '/contatti' },
       ],
     },
     {
@@ -77,6 +80,30 @@ export default function Footer() {
               </ul>
             </div>
           ))}
+        </div>
+
+        <div className="border-t border-gray-800 pt-8 mb-8">
+          <h4 className="text-lg font-semibold mb-4">Newsletter Settimanale</h4>
+          <p className="text-gray-400 text-sm mb-4">
+            Ricevi ogni lunedì il report con le scadenze ministeriali e le ultime notizie.
+          </p>
+          <NewsletterForm />
+        </div>
+
+        <div className="border-t border-gray-800 pt-8 mb-8">
+          <div className="bg-gray-800/50 rounded-2xl p-6 text-center">
+            <h4 className="text-lg font-semibold mb-2">Diventa Partner di Sportello Scuola 2.0</h4>
+            <p className="text-gray-400 text-sm mb-4 max-w-2xl mx-auto">
+              Vuoi posizionare i tuoi corsi universitari o certificazioni informatiche davanti a migliaia di docenti e ATA?
+              Diventa Partner Commerciale di Sportello Scuola 2.0 e raggiungi il tuo pubblico target.
+            </p>
+            <a
+              href="mailto:sportelloscuola2.0@gmail.com?subject=Richiesta%20Partner%20Commerciale"
+              className="inline-block px-6 py-3 bg-gradient-to-r from-brand-blu to-brand-verde text-white rounded-2xl font-semibold hover:opacity-90 transition"
+            >
+              Contatta il nostro ufficio marketing
+            </a>
+          </div>
         </div>
 
         <div className="border-t border-gray-800 pt-8">

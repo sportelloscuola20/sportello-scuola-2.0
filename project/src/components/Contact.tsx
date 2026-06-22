@@ -117,7 +117,7 @@ export default function Contact() {
                   <span className="font-medium">Sabato</span>
                   <span>9:00 - 13:00</span>
                 </div>
-                <div className="flex justify-between text-gray-450">
+                <div className="flex justify-between text-gray-400">
                   <span className="font-medium">Domenica</span>
                   <span className="text-red-500 font-semibold">Chiuso</span>
                 </div>
@@ -165,7 +165,7 @@ export default function Contact() {
                   <p className="text-sm leading-relaxed">{feedbackMessage}</p>
                   <button 
                     onClick={() => setStatus('idle')}
-                    className="text-red-750 hover:text-red-950 font-semibold text-xs mt-3 underline"
+                    className="text-red-600 hover:text-red-700 font-semibold text-xs mt-3 underline"
                   >
                     Riprova
                   </button>
@@ -259,7 +259,7 @@ export default function Contact() {
               </h3>
             </div>
             
-            <p className="text-sm text-gray-650 mb-4 leading-relaxed">
+            <p className="text-sm text-gray-600 mb-4 leading-relaxed">
               Configura i canali di ricezione delle email e le chiavi API del portale. I dati vengono salvati esclusivamente sul tuo browser.
             </p>
 
@@ -300,7 +300,7 @@ export default function Contact() {
                   placeholder="Incolla qui la chiave (es. ab12c34d-...)"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <p className="text-xxs text-gray-500 mt-1 leading-normal">
+                <p className="text-xs text-gray-500 mt-1 leading-normal">
                   Fornisce l'invio integrato in-app senza aprire altre finestre. Se non inserita, il modulo funzionerà in modalità simulata/demo locale.
                 </p>
               </div>
@@ -316,7 +316,7 @@ export default function Contact() {
                   placeholder="sk-proj-..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <p className="text-xxs text-gray-500 mt-1 leading-normal">
+                <p className="text-xs text-gray-500 mt-1 leading-normal">
                   Sblocca l'interazione libera e in tempo reale con gli Agenti AI. Se assente, gli agenti useranno il motore locale predefinito.
                 </p>
               </div>
@@ -325,7 +325,7 @@ export default function Contact() {
                 <button
                   type="button"
                   onClick={() => setShowSettings(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-750 hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   Annulla
                 </button>

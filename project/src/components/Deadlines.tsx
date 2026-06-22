@@ -121,9 +121,9 @@ export default function Deadlines() {
               <p className="text-gray-700 mb-4">
                 Iscriviti al nostro servizio di promemoria e non perdere mai una scadenza importante.
               </p>
-              <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold">
+              <a href="/interpelli" className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold">
                 Attiva notifiche
-              </button>
+              </a>
             </div>
           </div>
         </div>

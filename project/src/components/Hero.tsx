@@ -16,7 +16,7 @@ export default function Hero() {
           <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight leading-tight">
             La piattaforma AI specializzata per Docenti, ATA e Dirigenti scolastici.
           </h1>
-          <p className="text-lg md:text-xl text-gray-650 font-semibold max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-lg md:text-xl text-gray-600 font-semibold max-w-2xl mx-auto mb-10 leading-relaxed">
             Calcola il tuo punteggio GPS e ATA, consulta normative aggiornate, genera documenti scolastici e ricevi assistenza professionale 24/7.
           </p>
 

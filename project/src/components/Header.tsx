@@ -1,16 +1,33 @@
-import { Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { Menu, X, User, LogOut, ChevronDown } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from './Auth/AuthContext';
+import LoginModal from './Auth/LoginModal';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const menuItems = [
-    { label: 'Home', href: '#home' },
-    { label: 'Assistente AI', href: '#assistente-ai' },
-    { label: 'Calcolo Punteggio', href: '#calcolo-punteggio' },
-    { label: 'Normative', href: '#normative' },
-    { label: 'Scadenze', href: '#scadenze' },
-    { label: 'Contatti', href: '#contatti' },
+    { label: 'Home', href: '/' },
+    { label: 'Assistente AI', href: '/assistente/docente' },
+    { label: 'Calcolo Punteggio', href: '/calcolo-punteggio' },
+    { label: 'Interpelli', href: '/interpelli' },
+    { label: 'Servizi', href: '/servizi' },
+    { label: 'Normative', href: '/normative' },
   ];
 
   return (
@@ -18,7 +35,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center">
-            <a href="#home" className="flex items-center gap-3 group">
+            <Link to="/" className="flex items-center gap-3 group">
               <img
                 src="/logo.png"
                 alt="Logo Sportello Scuola 2.0"
@@ -29,27 +46,86 @@ export default function Header() {
                 <span className="text-[#0A955A]">Scuola </span>
                 <span className="text-[#2F777D]">2.0</span>
               </span>
-            </a>
+            </Link>
           </div>
 
           <nav className="hidden md:flex space-x-6">
             {menuItems.map((item) => (
-              <a
+              <Link
                 key={item.label}
-                href={item.href}
+                to={item.href}
                 className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium text-sm lg:text-base"
               >
                 {item.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
-          <a
-            href="#assistente-ai"
-            className="hidden md:block bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium text-sm"
-          >
-            Assistente AI
-          </a>
+          <div className="hidden md:flex items-center gap-3">
+            {isAuthenticated && user ? (
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 bg-brand-blu/10 text-brand-blu px-4 py-2 rounded-2xl font-medium text-sm hover:bg-brand-blu/20 transition"
+                >
+                  <User size={16} />
+                  {user.full_name || user.email}
+                  <ChevronDown size={14} className={`transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                </button>
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-2xl shadow-xl py-2 animate-fade-in">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-800 truncate">{user.full_name || 'Utente'}</p>
+                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      {user.is_premium && (
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-brand-verde/10 text-brand-verde text-xs rounded-full font-semibold">
+                          Premium
+                        </span>
+                      )}
+                    </div>
+                    <Link
+                      to="/calcolo-punteggio"
+                      onClick={() => setShowUserMenu(false)}
+                      className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
+                    >
+                      I miei Punteggi Salvati
+                    </Link>
+                    <Link
+                      to="/notizie"
+                      onClick={() => setShowUserMenu(false)}
+                      className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
+                    >
+                      Le mie Scadenze Preferite
+                    </Link>
+                    <Link
+                      to="/servizi"
+                      onClick={() => setShowUserMenu(false)}
+                      className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
+                    >
+                      Le mie Prenotazioni
+                    </Link>
+                    <div className="border-t border-gray-100 mt-1 pt-1">
+                      <button
+                        onClick={() => { logout(); setShowUserMenu(false); }}
+                        className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition"
+                      >
+                        <LogOut size={14} />
+                        Esci
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowLogin(true)}
+                className="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium text-sm flex items-center gap-2"
+              >
+                <User size={16} />
+                Accedi
+              </button>
+            )}
+          </div>
 
           <button
             className="md:hidden text-gray-700"
@@ -63,19 +139,36 @@ export default function Header() {
           <div className="md:hidden pb-4">
             <nav className="flex flex-col space-y-4">
               {menuItems.map((item) => (
-                <a
+                <Link
                   key={item.label}
-                  href={item.href}
+                  to={item.href}
                   className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.label}
-                </a>
+                </Link>
               ))}
+              {isAuthenticated ? (
+                <button
+                  onClick={() => { logout(); setIsMenuOpen(false); }}
+                  className="text-left text-red-600 hover:text-red-700 transition-colors duration-200 font-medium"
+                >
+                  Esci
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setShowLogin(true); setIsMenuOpen(false); }}
+                  className="text-left text-indigo-600 font-medium"
+                >
+                  Accedi
+                </button>
+              )}
             </nav>
           </div>
         )}
       </div>
+
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </header>
   );
 }

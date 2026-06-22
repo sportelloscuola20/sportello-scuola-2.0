@@ -1,6 +1,9 @@
-import { ChevronDown, Sparkles, Calculator, FileText, ShieldCheck, Users, Briefcase } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 export default function FAQ() {
+  const [openId, setOpenId] = useState<number | null>(null);
+
   const faqItems = [
     {
       id: 1,
@@ -39,26 +42,35 @@ export default function FAQ() {
           Trova risposte rapide alle domande più comuni sulla nostra piattaforma AI per la scuola.
         </p>
 
-        <div className="space-y-6">
-          {faqItems.map((faq) => (
-            <div key={faq.id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between p-6">
-                <div className="flex-1">
-                  <h3 className="text-lg font-medium text-gray-800">{faq.question}</h3>
-                  <p className="text-gray-600 mt-2 line-clamp-4">
-                    {faq.answer}
-                  </p>
-                </div>
+        <div className="max-w-3xl mx-auto space-y-4">
+          {faqItems.map((faq) => {
+            const isOpen = openId === faq.id;
+            return (
+              <div
+                key={faq.id}
+                className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow overflow-hidden"
+              >
                 <button
-                  className="flex-shrink-0 p-2 text-indigo-500 hover:text-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                  aria-controls={`faq-${faq.id}`}
-                  aria-expanded="false"
+                  onClick={() => setOpenId(isOpen ? null : faq.id)}
+                  className="w-full flex items-center justify-between p-6 text-left"
                 >
-                  <ChevronDown size={20} className="transition-transform duration-200" />
+                  <h3 className="text-lg font-semibold text-gray-800 pr-4">{faq.question}</h3>
+                  <ChevronDown
+                    size={20}
+                    className={`text-indigo-500 flex-shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                  />
                 </button>
+                <div
+                  className="overflow-hidden transition-all duration-300 ease-in-out"
+                  style={{ maxHeight: isOpen ? '300px' : '0' }}
+                >
+                  <div className="px-6 pb-6 pt-0 border-t border-gray-100">
+                    <p className="text-gray-600 leading-relaxed mt-4">{faq.answer}</p>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
