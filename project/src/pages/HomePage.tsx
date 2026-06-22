@@ -5,8 +5,7 @@ import ServiziGrid from '../components/ServiziGrid';
 import AssistantsAI from '../components/AssistantsAI';
 import CentroInterpelli from '../components/CentroInterpelli';
 import NormativeDocuments from '../components/NormativeDocuments';
-import News from '../components/News';
-import Deadlines from '../components/Deadlines';
+import NewsHub from '../components/NewsHub';
 import FAQ from '../components/FAQ';
 import Contact from '../components/Contact';
 
@@ -36,8 +35,7 @@ export default function HomePage() {
       <AssistantsAI />
       <CentroInterpelli />
       <NormativeDocuments />
-      <News />
-      <Deadlines />
+      <NewsHub />
       <FAQ />
       <Contact />
     </main>

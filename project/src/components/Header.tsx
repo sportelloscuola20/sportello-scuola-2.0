@@ -32,6 +32,21 @@ export default function Header() {
     setIsMenuOpen(false);
   };
 
+  const handleServiziClick = (e: React.MouseEvent) => {
+    if (location.pathname === '/') {
+      e.preventDefault();
+      const targetSection = document.getElementById('i-nostri-servizi-professionali');
+      const navbar = document.getElementById('main-navbar');
+      if (targetSection) {
+        const navbarHeight = navbar ? navbar.offsetHeight : 80;
+        window.scrollTo({
+          top: targetSection.offsetTop - navbarHeight,
+          behavior: 'smooth',
+        });
+      }
+    }
+  };
+
   const menuItems = [
     { label: 'Calcolo Punteggio', href: '/calcolo-punteggio' },
     { label: 'Servizi', href: '/servizi' },
@@ -42,7 +57,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="bg-white/80 backdrop-blur-md shadow-soft border-b border-slate-200/60 fixed w-full top-0 z-50">
+    <header id="main-navbar" className="bg-white/80 backdrop-blur-md shadow-soft border-b border-slate-200/60 fixed w-full top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <Link to="/" className="flex items-center gap-3 group">
@@ -59,20 +74,38 @@ export default function Header() {
           </Link>
 
           <nav className="hidden md:flex space-x-1">
-            {menuItems.map((item) => (
-              <Link
-                key={item.label}
-                to={item.href}
-                onClick={() => window.scrollTo(0, 0)}
-                className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  isActive(item.href)
-                    ? 'bg-brand-blu/10 text-brand-blu'
-                    : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {menuItems.map((item) => {
+              if (item.label === 'Servizi') {
+                return (
+                  <a
+                    key={item.label}
+                    href="/servizi"
+                    onClick={handleServiziClick}
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      location.pathname === '/' || location.pathname.startsWith('/servizi')
+                        ? 'bg-brand-blu/10 text-brand-blu'
+                        : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
+                    }`}
+                  >
+                    {item.label}
+                  </a>
+                );
+              }
+              return (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  onClick={() => window.scrollTo(0, 0)}
+                  className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    isActive(item.href)
+                      ? 'bg-brand-blu/10 text-brand-blu'
+                      : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
@@ -157,20 +190,34 @@ export default function Header() {
         {isMenuOpen && (
           <div className="md:hidden pb-4">
             <nav className="flex flex-col space-y-2">
-              {menuItems.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  onClick={handleNavClick}
-                  className={`px-3 py-2 rounded-xl text-sm font-medium transition ${
-                    isActive(item.href)
-                      ? 'bg-brand-blu/10 text-brand-blu'
-                      : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {menuItems.map((item) => {
+                if (item.label === 'Servizi') {
+                  return (
+                    <a
+                      key={item.label}
+                      href="/servizi"
+                      onClick={(e) => { handleServiziClick(e); setIsMenuOpen(false); }}
+                      className="px-3 py-2 rounded-xl text-sm font-medium text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5 transition"
+                    >
+                      {item.label}
+                    </a>
+                  );
+                }
+                return (
+                  <Link
+                    key={item.label}
+                    to={item.href}
+                    onClick={handleNavClick}
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition ${
+                      isActive(item.href)
+                        ? 'bg-brand-blu/10 text-brand-blu'
+                        : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
               {isAuthenticated ? (
                 <button
                   onClick={() => { logout(); setIsMenuOpen(false); }}

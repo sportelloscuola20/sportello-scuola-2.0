@@ -36,128 +36,369 @@ export default function LoginModal({ onClose }: LoginModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur">
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-4">
-        <div className="bg-white rounded-2xl shadow-2xl shadow-black/20 p-8 relative animate-scale-up">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+    <div
+      className="modal-overlay"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 99999,
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: '#ffffff',
+          borderRadius: 16,
+          width: '100%',
+          maxWidth: 420,
+          margin: 16,
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          position: 'relative',
+          padding: 32,
+        }}
+      >
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            color: '#9CA3AF',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 6,
+            borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onMouseOver={e => (e.currentTarget.style.color = '#4B5563')}
+          onMouseOut={e => (e.currentTarget.style.color = '#9CA3AF')}
+        >
+          <X size={20} />
+        </button>
+
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              background: 'linear-gradient(135deg, #235377, #1F915E)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px',
+            }}
           >
-            <X size={20} />
-          </button>
-
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-r from-brand-blu to-brand-verde rounded-full flex items-center justify-center mx-auto mb-4">
-              <User className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold text-brand-blu">
-              {mode === 'login' ? 'Accedi' : 'Registrati'}
-            </h2>
-            <p className="text-gray-500 text-sm mt-1">
-              {mode === 'login'
-                ? 'Accedi al tuo account Sportello Scuola 2.0'
-                : 'Crea il tuo account gratuito'}
-            </p>
+            <User style={{ width: 32, height: 32, color: '#ffffff' }} />
           </div>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#235377', margin: 0 }}>
+            {mode === 'login' ? 'Accedi' : 'Registrati'}
+          </h2>
+          <p style={{ color: '#6B7280', fontSize: 14, marginTop: 4 }}>
+            {mode === 'login'
+              ? 'Accedi al tuo account Sportello Scuola 2.0'
+              : 'Crea il tuo account gratuito'}
+          </p>
+        </div>
 
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-              {error}
+        {error && (
+          <div
+            style={{
+              marginBottom: 16,
+              padding: 12,
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #FECACA',
+              borderRadius: 12,
+              color: '#B91C1C',
+              fontSize: 14,
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {mode === 'signup' && (
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: '#374151',
+                  marginBottom: 4,
+                }}
+              >
+                Nome e Cognome
+              </label>
+              <div style={{ position: 'relative' }}>
+                <User
+                  style={{
+                    position: 'absolute',
+                    left: 12,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: '#9CA3AF',
+                  }}
+                  size={18}
+                />
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={e => setFullName(e.target.value)}
+                  placeholder="Mario Rossi"
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px 12px 12px 40px',
+                    border: '1px solid #D1D5DB',
+                    borderRadius: 12,
+                    fontSize: 14,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    transition: 'border-color 0.2s, box-shadow 0.2s',
+                  }}
+                  onFocus={e => {
+                    e.currentTarget.style.borderColor = '#1F915E';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(31, 145, 94, 0.15)';
+                  }}
+                  onBlur={e => {
+                    e.currentTarget.style.borderColor = '#D1D5DB';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === 'signup' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome e Cognome</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={e => setFullName(e.target.value)}
-                    placeholder="Mario Rossi"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-verde focus:border-brand-verde outline-none transition"
-                    required
-                  />
-                </div>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="nome@esempio.com"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-verde focus:border-brand-verde outline-none transition"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="Minimo 6 caratteri"
-                  minLength={6}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-verde focus:border-brand-verde outline-none transition"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            {mode === 'signup' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ruolo</label>
-                <select
-                  value={ruolo}
-                  onChange={e => setRuolo(e.target.value as typeof ruolo)}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-brand-verde focus:border-brand-verde outline-none transition"
-                >
-                  <option value="aspirante">Aspirante</option>
-                  <option value="docente">Docente</option>
-                  <option value="ata">ATA</option>
-                </select>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-brand-blu to-brand-verde text-white rounded-xl font-bold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-lg shadow-brand-blu/20"
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontSize: 14,
+                fontWeight: 500,
+                color: '#374151',
+                marginBottom: 4,
+              }}
             >
-              {loading && <Loader2 className="animate-spin" size={18} />}
-              {mode === 'login' ? 'Accedi' : 'Registrati'}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">
-              {mode === 'login' ? 'Non hai un account?' : 'Hai gi\u00e0 un account?'}
-              <button
-                onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); }}
-                className="ml-1 text-brand-verde font-semibold hover:underline"
-              >
-                {mode === 'login' ? 'Registrati' : 'Accedi'}
-              </button>
-            </p>
+              Email
+            </label>
+            <div style={{ position: 'relative' }}>
+              <Mail
+                style={{
+                  position: 'absolute',
+                  left: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#9CA3AF',
+                }}
+                size={18}
+              />
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="nome@esempio.com"
+                required
+                style={{
+                  width: '100%',
+                  padding: '12px 12px 12px 40px',
+                  border: '1px solid #D1D5DB',
+                  borderRadius: 12,
+                  fontSize: 14,
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  transition: 'border-color 0.2s, box-shadow 0.2s',
+                }}
+                onFocus={e => {
+                  e.currentTarget.style.borderColor = '#1F915E';
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(31, 145, 94, 0.15)';
+                }}
+                onBlur={e => {
+                  e.currentTarget.style.borderColor = '#D1D5DB';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              />
+            </div>
           </div>
+
+          <div>
+            <label
+              style={{
+                display: 'block',
+                fontSize: 14,
+                fontWeight: 500,
+                color: '#374151',
+                marginBottom: 4,
+              }}
+            >
+              Password
+            </label>
+            <div style={{ position: 'relative' }}>
+              <Lock
+                style={{
+                  position: 'absolute',
+                  left: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#9CA3AF',
+                }}
+                size={18}
+              />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Minimo 6 caratteri"
+                minLength={6}
+                required
+                style={{
+                  width: '100%',
+                  padding: '12px 48px 12px 40px',
+                  border: '1px solid #D1D5DB',
+                  borderRadius: 12,
+                  fontSize: 14,
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  transition: 'border-color 0.2s, box-shadow 0.2s',
+                }}
+                onFocus={e => {
+                  e.currentTarget.style.borderColor = '#1F915E';
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(31, 145, 94, 0.15)';
+                }}
+                onBlur={e => {
+                  e.currentTarget.style.borderColor = '#D1D5DB';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#9CA3AF',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  display: 'flex',
+                }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          {mode === 'signup' && (
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: '#374151',
+                  marginBottom: 4,
+                }}
+              >
+                Ruolo
+              </label>
+              <select
+                value={ruolo}
+                onChange={e => setRuolo(e.target.value as typeof ruolo)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '1px solid #D1D5DB',
+                  borderRadius: 12,
+                  fontSize: 14,
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  transition: 'border-color 0.2s, box-shadow 0.2s',
+                }}
+                onFocus={e => {
+                  e.currentTarget.style.borderColor = '#1F915E';
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(31, 145, 94, 0.15)';
+                }}
+                onBlur={e => {
+                  e.currentTarget.style.borderColor = '#D1D5DB';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <option value="aspirante">Aspirante</option>
+                <option value="docente">Docente</option>
+                <option value="ata">ATA</option>
+              </select>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '14px 24px',
+              background: 'linear-gradient(135deg, #235377, #1F915E)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: 12,
+              fontSize: 16,
+              fontWeight: 700,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.5 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              boxShadow: '0 4px 14px rgba(35, 83, 119, 0.3)',
+              transition: 'opacity 0.2s, transform 0.2s',
+            }}
+            onMouseOver={e => {
+              if (!loading) e.currentTarget.style.opacity = '0.9';
+            }}
+            onMouseOut={e => {
+              if (!loading) e.currentTarget.style.opacity = '1';
+            }}
+          >
+            {loading && <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={18} />}
+            {mode === 'login' ? 'Accedi' : 'Registrati'}
+          </button>
+        </form>
+
+        <div style={{ marginTop: 24, textAlign: 'center' }}>
+          <p style={{ fontSize: 14, color: '#6B7280', margin: 0 }}>
+            {mode === 'login' ? 'Non hai un account?' : 'Hai gi\u00e0 un account?'}
+            <button
+              onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); }}
+              style={{
+                marginLeft: 4,
+                color: '#1F915E',
+                fontWeight: 600,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 14,
+                textDecoration: 'underline',
+              }}
+            >
+              {mode === 'login' ? 'Registrati' : 'Accedi'}
+            </button>
+          </p>
         </div>
       </div>
     </div>

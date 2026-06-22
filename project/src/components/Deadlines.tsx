@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Clock, Bell, ExternalLink, Search, ChevronDown, FileText, AlertTriangle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from './Auth/AuthContext';
 import LoginModal from './Auth/LoginModal';
 
@@ -156,12 +157,15 @@ const typeColors: Record<string, string> = {
   Formazione: 'bg-teal-100 text-teal-700',
 };
 
-export default function Deadlines() {
+const MAX_VISIBLE = 4;
+
+export default function Deadlines({ compact = false }: { compact?: boolean }) {
   const { isAuthenticated } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [followed, setFollowed] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const [activeType, setActiveType] = useState('Tutte');
 
   const filtered = deadlines.filter(d => {
@@ -169,6 +173,8 @@ export default function Deadlines() {
     const matchSearch = !searchQuery || d.title.toLowerCase().includes(searchQuery.toLowerCase()) || d.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchType && matchSearch;
   });
+
+  const displayed = showAll ? filtered : filtered.slice(0, MAX_VISIBLE);
 
   const toggleFollow = (id: number) => {
     if (!isAuthenticated) {
@@ -180,138 +186,169 @@ export default function Deadlines() {
 
   const types = ['Tutte', ...new Set(deadlines.map(d => d.type))];
 
+  const grid = (
+    <>
+      {!compact && (
+        <>
+          <div className="text-center mb-6">
+            <h2 className="text-4xl font-extrabold text-[#0F172A] mb-4 tracking-tight">
+              Scadenze Importanti
+            </h2>
+            <p className="text-gray-600 font-normal max-w-2xl mx-auto">
+              Non perdere le date pi&ugrave; importanti per la tua carriera. Ogni scadenza include countdown in tempo reale,
+              quadro normativo e accesso diretto alle procedure POLIS.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mt-8 mb-8">
+            <div className="flex gap-2 flex-wrap">
+              {types.map(t => (
+                <button key={t} onClick={() => setActiveType(t)}
+                  className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-all ${
+                    activeType === t ? 'bg-brand-blu text-white' : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-blu/30'
+                  }`}>{t}</button>
+              ))}
+            </div>
+            <div className="relative w-full sm:w-64">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input type="text" placeholder="Cerca scadenze..." value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 rounded-2xl border border-slate-200/60 bg-white text-sm focus:ring-2 focus:ring-brand-blu/20 focus:border-brand-blu transition outline-none" />
+            </div>
+          </div>
+        </>
+      )}
+      <div className="space-y-4">
+        {displayed.map((deadline) => {
+          const isExpanded = expandedId === deadline.id;
+          const isFoll = followed.includes(deadline.id);
+          const targetDate = parseItalianDate(deadline.date);
+          const isValidDate = !isNaN(targetDate.getTime());
+          return (
+            <div
+              key={deadline.id}
+              className={`bg-white/70 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-soft transition-all duration-500 ease-in-out overflow-hidden ${
+                isExpanded ? 'border-brand-ambra/30 shadow-medium' : 'hover:border-brand-ambra/20'
+              }`}
+            >
+              <div className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${typeColors[deadline.type] || 'bg-gray-100 text-gray-600'}`}>
+                        {deadline.type}
+                      </span>
+                      <span className="text-xs font-medium text-brand-ambra flex items-center gap-1">
+                        <Calendar size={12} /> {deadline.date}
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-bold text-[#0F172A] mb-2">{deadline.title}</h3>
+                    <p className={`text-gray-600 text-sm leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
+                      {deadline.description}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => toggleFollow(deadline.id)}
+                    className={`ml-4 p-2 rounded-xl transition-all duration-200 flex-shrink-0 ${
+                      isFoll ? 'text-brand-ambra bg-brand-ambra/10' : 'text-gray-300 hover:text-brand-ambra hover:bg-brand-ambra/5'
+                    }`}
+                  >
+                    <Bell
+                      size={20}
+                      fill={isFoll ? '#D97706' : 'none'}
+                      strokeWidth={2}
+                      className={isFoll ? 'animate-ping-once' : ''}
+                    />
+                  </button>
+                </div>
+
+                {isExpanded && (
+                  <div className="mt-4 pt-4 border-t border-slate-200/60 animate-fade-in-up space-y-4">
+                    {isValidDate && (
+                      <div className="flex items-center justify-between">
+                        <CountdownTimer targetDate={targetDate} />
+                        <span className="text-xs text-gray-500">Scadenza: ore 23:59</span>
+                      </div>
+                    )}
+                    <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">
+                      {deadline.details}
+                    </pre>
+                    <div className="bg-brand-ambra/5 rounded-2xl p-4 border border-brand-ambra/10">
+                      <h4 className="text-xs font-bold text-brand-ambra uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <FileText size={12} /> Guida Operativa
+                      </h4>
+                      <p className="text-sm text-gray-700 leading-relaxed mb-3">
+                        Per presentare domanda accedi alla piattaforma POLIS del Ministero dell&rsquo;Istruzione
+                        con SPID (Livello 2) o CIE 3.0. Scarica il documento di identit&agrave; elettronica
+                        o utilizza il lettore NFC del tuo smartphone.
+                      </p>
+                      {deadline.link && deadline.link !== '#' && (
+                        <a
+                          href={deadline.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-ambra to-brand-verde text-white rounded-xl text-sm font-semibold hover:opacity-90 transition"
+                        >
+                          <ExternalLink size={14} /> Avvia procedura su POLIS
+                        </a>
+                      )}
+                    </div>
+                    {isFoll && (
+                      <div className="p-3 bg-brand-ambra/5 rounded-2xl border border-brand-ambra/20">
+                        <p className="text-sm text-brand-ambra font-medium flex items-center gap-2">
+                          <Bell size={16} />
+                          Riceverai una notifica 48 ore prima della scadenza
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="px-6 pb-4">
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : deadline.id)}
+                  className="inline-flex items-center gap-2 text-brand-ambra font-semibold hover:text-brand-ambra/80 transition-colors text-sm"
+                >
+                  {isExpanded ? 'Riduci' : 'Dettagli scadenza'}
+                  <ChevronDown size={16} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {filtered.length > MAX_VISIBLE && !showAll && (
+        <div className="text-center mt-8">
+          {compact ? (
+            <Link
+              to="/notizie-scadenze"
+              className="inline-flex items-center gap-2 text-brand-ambra font-semibold hover:text-brand-ambra/80 transition-colors text-sm border border-brand-ambra/20 px-5 py-2.5 rounded-xl hover:bg-brand-ambra/5"
+            >
+              Vedi archivio completo
+              <ExternalLink size={14} />
+            </Link>
+          ) : (
+            <button
+              onClick={() => setShowAll(true)}
+              className="inline-flex items-center gap-2 bg-brand-ambra text-white px-8 py-3 rounded-2xl hover:bg-brand-ambra/90 transition-colors font-semibold shadow-soft"
+            >
+              Vedi tutte le scadenze ({filtered.length})
+              <ExternalLink size={16} />
+            </button>
+          )}
+        </div>
+      )}
+    </>
+  );
+
+  if (compact) return grid;
+
   return (
     <section id="scadenze" className="py-20 bg-surface-warm/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-6">
-          <h2 className="text-4xl font-extrabold text-[#0F172A] mb-4 tracking-tight">
-            Scadenze Importanti
-          </h2>
-          <p className="text-gray-600 font-normal max-w-2xl mx-auto">
-            Non perdere le date pi&ugrave; importanti per la tua carriera. Ogni scadenza include countdown in tempo reale,
-            quadro normativo e accesso diretto alle procedure POLIS.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mt-8 mb-8">
-          <div className="flex gap-2 flex-wrap">
-            {types.map(t => (
-              <button key={t} onClick={() => setActiveType(t)}
-                className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-all ${
-                  activeType === t ? 'bg-brand-blu text-white' : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-blu/30'
-                }`}>{t}</button>
-            ))}
-          </div>
-          <div className="relative w-full sm:w-64">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type="text" placeholder="Cerca scadenze..." value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-2xl border border-slate-200/60 bg-white text-sm focus:ring-2 focus:ring-brand-blu/20 focus:border-brand-blu transition outline-none" />
-          </div>
-        </div>
-
-        <div className="space-y-4 mt-8">
-          {filtered.map((deadline) => {
-            const isExpanded = expandedId === deadline.id;
-            const isFoll = followed.includes(deadline.id);
-            const targetDate = parseItalianDate(deadline.date);
-            const isValidDate = !isNaN(targetDate.getTime());
-            return (
-              <div
-                key={deadline.id}
-                className={`bg-white/70 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-soft transition-all duration-500 ease-in-out overflow-hidden ${
-                  isExpanded ? 'border-brand-ambra/30 shadow-medium' : 'hover:border-brand-ambra/20'
-                }`}
-              >
-                <div className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${typeColors[deadline.type] || 'bg-gray-100 text-gray-600'}`}>
-                          {deadline.type}
-                        </span>
-                        <span className="text-xs font-medium text-brand-ambra flex items-center gap-1">
-                          <Calendar size={12} /> {deadline.date}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-bold text-[#0F172A] mb-2">{deadline.title}</h3>
-                      <p className={`text-gray-600 text-sm leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
-                        {deadline.description}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => toggleFollow(deadline.id)}
-                      className={`ml-4 p-2 rounded-xl transition-all duration-200 flex-shrink-0 ${
-                        isFoll ? 'text-brand-ambra bg-brand-ambra/10' : 'text-gray-300 hover:text-brand-ambra hover:bg-brand-ambra/5'
-                      }`}
-                    >
-                      <Bell
-                        size={20}
-                        fill={isFoll ? '#D97706' : 'none'}
-                        strokeWidth={2}
-                        className={isFoll ? 'animate-ping-once' : ''}
-                      />
-                    </button>
-                  </div>
-
-                  {isExpanded && (
-                    <div className="mt-4 pt-4 border-t border-slate-200/60 animate-fade-in-up space-y-4">
-                      {isValidDate && (
-                        <div className="flex items-center justify-between">
-                          <CountdownTimer targetDate={targetDate} />
-                          <span className="text-xs text-gray-500">Scadenza: ore 23:59</span>
-                        </div>
-                      )}
-                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">
-                        {deadline.details}
-                      </pre>
-                      <div className="bg-brand-ambra/5 rounded-2xl p-4 border border-brand-ambra/10">
-                        <h4 className="text-xs font-bold text-brand-ambra uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                          <FileText size={12} /> Guida Operativa
-                        </h4>
-                        <p className="text-sm text-gray-700 leading-relaxed mb-3">
-                          Per presentare domanda accedi alla piattaforma POLIS del Ministero dell&rsquo;Istruzione
-                          con SPID (Livello 2) o CIE 3.0. Scarica il documento di identit&agrave; elettronica
-                          o utilizza il lettore NFC del tuo smartphone.
-                        </p>
-                        {deadline.link && deadline.link !== '#' && (
-                          <a
-                            href={deadline.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-ambra to-brand-verde text-white rounded-xl text-sm font-semibold hover:opacity-90 transition"
-                          >
-                            <ExternalLink size={14} /> Avvia procedura su POLIS
-                          </a>
-                        )}
-                      </div>
-                      {isFoll && (
-                        <div className="p-3 bg-brand-ambra/5 rounded-2xl border border-brand-ambra/20">
-                          <p className="text-sm text-brand-ambra font-medium flex items-center gap-2">
-                            <Bell size={16} />
-                            Riceverai una notifica 48 ore prima della scadenza
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="px-6 pb-4">
-                  <button
-                    onClick={() => setExpandedId(isExpanded ? null : deadline.id)}
-                    className="inline-flex items-center gap-2 text-brand-ambra font-semibold hover:text-brand-ambra/80 transition-colors text-sm"
-                  >
-                    {isExpanded ? 'Riduci' : 'Dettagli scadenza'}
-                    <ChevronDown size={16} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {grid}
       </div>
-
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </section>
   );

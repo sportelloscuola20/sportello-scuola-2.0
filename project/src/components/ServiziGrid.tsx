@@ -84,7 +84,7 @@ export default function ServiziGrid() {
   const [showBooking, setShowBooking] = useState(false);
 
   return (
-    <section id="servizi" className="py-20 bg-white">
+    <section id="i-nostri-servizi-professionali" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-4">
           <h2 className="text-4xl font-extrabold text-[#0F172A] mb-4 tracking-tight">

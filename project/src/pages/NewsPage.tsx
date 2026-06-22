@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Newspaper, CalendarClock, RefreshCw } from 'lucide-react';
-import News from '../components/News';
-import Deadlines from '../components/Deadlines';
+import { useState } from 'react';
+import { RefreshCw } from 'lucide-react';
+import NewsHub from '../components/NewsHub';
 
 const LOCAL_NEWS = [
   {
@@ -37,7 +36,6 @@ const LOCAL_NEWS = [
 ];
 
 export default function NewsPage() {
-  const [activeTab, setActiveTab] = useState<'notizie' | 'scadenze'>('notizie');
   const [localItems] = useState(LOCAL_NEWS);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -57,31 +55,6 @@ export default function NewsPage() {
             Hub informativo unificato con notizie del settore istruzione, approfondimenti normativi
             e scadenze ministeriali con countdown in tempo reale.
           </p>
-        </div>
-
-        <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm rounded-2xl p-1.5 border border-slate-200/60 shadow-soft mb-6 max-w-md mx-auto">
-          <button
-            onClick={() => setActiveTab('notizie')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              activeTab === 'notizie'
-                ? 'bg-brand-blu text-white shadow-sm'
-                : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
-            }`}
-          >
-            <Newspaper size={16} />
-            Notizie
-          </button>
-          <button
-            onClick={() => setActiveTab('scadenze')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              activeTab === 'scadenze'
-                ? 'bg-brand-ambra text-white shadow-sm'
-                : 'text-gray-600 hover:text-brand-ambra hover:bg-brand-ambra/5'
-            }`}
-          >
-            <CalendarClock size={16} />
-            Scadenze
-          </button>
         </div>
 
         <div className="mb-8 bg-white/70 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-soft p-5">
@@ -123,7 +96,7 @@ export default function NewsPage() {
           </div>
         </div>
 
-        {activeTab === 'notizie' ? <News /> : <Deadlines />}
+        <NewsHub />
       </div>
     </div>
   );

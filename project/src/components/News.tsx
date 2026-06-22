@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Calendar, ExternalLink, Star, ChevronDown, Search, FileText, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './Auth/AuthContext';
@@ -101,7 +101,9 @@ const newsItems: NewsItem[] = [
 
 const CATEGORIE = ['Tutte', 'Docenti Concorsi', 'Immissioni in Ruolo', 'Aggiornamento GPS', 'ATA Terza Fascia', 'Mondo Scuola / Riforme'];
 
-export default function News() {
+const MAX_VISIBLE = 4;
+
+export default function News({ compact = false }: { compact?: boolean }) {
   const { isAuthenticated } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [activeCategory, setActiveCategory] = useState('Tutte');
@@ -117,7 +119,7 @@ export default function News() {
     return matchCat && matchSearch;
   });
 
-  const displayed = showAll ? filtered : filtered.slice(0, 3);
+  const displayed = showAll ? filtered : filtered.slice(0, MAX_VISIBLE);
 
   const toggleFavorite = (id: number) => {
     if (!isAuthenticated) {
@@ -136,139 +138,149 @@ export default function News() {
     Riforme: 'bg-purple-100 text-purple-700',
   };
 
-  return (
-    <section id="notizie" className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-6">
-          <h2 className="text-4xl font-extrabold text-[#0F172A] mb-4 tracking-tight">
-            Ultime Notizie del Settore Istruzione
-          </h2>
-          <p className="text-gray-600 font-normal max-w-2xl mx-auto">
-            Notiziario aggiornato con le novit&agrave; legislative, i bandi e le procedure del comparto istruzione.
-            Ogni notizia include abstract tecnico, quadro normativo con riferimenti ufficiali e guida operativa.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mt-8 mb-8">
-          <div className="flex gap-2 flex-wrap">
-            {CATEGORIE.map(cat => (
-              <button key={cat} onClick={() => setActiveCategory(cat)}
-                className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-all ${
-                  activeCategory === cat ? 'bg-brand-blu text-white' : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-blu/30'
-                }`}>{cat}</button>
-            ))}
+  const grid = (
+    <>
+      {!compact && (
+        <>
+          <div className="text-center mb-6">
+            <h2 className="text-4xl font-extrabold text-[#0F172A] mb-4 tracking-tight">
+              Ultime Notizie del Settore Istruzione
+            </h2>
+            <p className="text-gray-600 font-normal max-w-2xl mx-auto">
+              Notiziario aggiornato con le novit&agrave; legislative, i bandi e le procedure del comparto istruzione.
+              Ogni notizia include abstract tecnico, quadro normativo con riferimenti ufficiali e guida operativa.
+            </p>
           </div>
-          <div className="relative w-full sm:w-64">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type="text" placeholder="Cerca notizie..." value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-2xl border border-slate-200/60 bg-white text-sm focus:ring-2 focus:ring-brand-blu/20 focus:border-brand-blu transition outline-none" />
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mt-8 mb-8">
+            <div className="flex gap-2 flex-wrap">
+              {CATEGORIE.map(cat => (
+                <button key={cat} onClick={() => setActiveCategory(cat)}
+                  className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-all ${
+                    activeCategory === cat ? 'bg-brand-blu text-white' : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-blu/30'
+                  }`}>{cat}</button>
+              ))}
+            </div>
+            <div className="relative w-full sm:w-64">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input type="text" placeholder="Cerca notizie..." value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 rounded-2xl border border-slate-200/60 bg-white text-sm focus:ring-2 focus:ring-brand-blu/20 focus:border-brand-blu transition outline-none" />
+            </div>
           </div>
-        </div>
-
-        <div className="space-y-4 mt-8">
-          {displayed.map((news) => {
-            const isExpanded = expandedId === news.id;
-            const isFav = favorites.includes(news.id);
-            return (
-              <div
-                key={news.id}
-                className={`bg-white/70 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-soft transition-all duration-500 ease-in-out overflow-hidden ${
-                  isExpanded ? 'border-brand-blu/30 shadow-medium' : 'hover:border-brand-blu/20'
-                }`}
-              >
-                <div className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${categoryColors[news.category] || 'bg-gray-100 text-gray-600'}`}>
-                          {news.category}
-                        </span>
-                        <span className="text-xs text-gray-400 flex items-center gap-1">
-                          <Calendar size={12} /> {news.date}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-bold text-[#0F172A] mb-2">{news.title}</h3>
-                      <p className={`text-gray-600 text-sm leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
-                        {news.description}
-                      </p>
+        </>
+      )}
+      <div className="space-y-4">
+        {displayed.map((news) => {
+          const isExpanded = expandedId === news.id;
+          const isFav = favorites.includes(news.id);
+          return (
+            <div
+              key={news.id}
+              className={`bg-white/70 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-soft transition-all duration-500 ease-in-out overflow-hidden ${
+                isExpanded ? 'border-brand-blu/30 shadow-medium' : 'hover:border-brand-blu/20'
+              }`}
+            >
+              <div className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${categoryColors[news.category] || 'bg-gray-100 text-gray-600'}`}>
+                        {news.category}
+                      </span>
+                      <span className="text-xs text-gray-400 flex items-center gap-1">
+                        <Calendar size={12} /> {news.date}
+                      </span>
                     </div>
-                    <button
-                      onClick={() => toggleFavorite(news.id)}
-                      className={`ml-4 p-2 rounded-xl transition-all duration-200 flex-shrink-0 ${
-                        isFav ? 'text-brand-ambra bg-brand-ambra/10' : 'text-gray-300 hover:text-brand-ambra hover:bg-brand-ambra/5'
-                      }`}
-                    >
-                      <Star
-                        size={20}
-                        className={pingId === news.id ? 'animate-ping-once' : ''}
-                        fill={isFav ? '#D97706' : 'none'}
-                        strokeWidth={2}
-                      />
-                    </button>
+                    <h3 className="text-lg font-bold text-[#0F172A] mb-2">{news.title}</h3>
+                    <p className={`text-gray-600 text-sm leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
+                      {news.description}
+                    </p>
                   </div>
-
-                  {isExpanded && (
-                    <div className="mt-4 pt-4 border-t border-slate-200/60 animate-fade-in-up space-y-4">
-                      <div>
-                        <h4 className="text-xs font-bold text-brand-blu uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                          <FileText size={12} /> Abstract Tecnico
-                        </h4>
-                        <p className="text-sm text-gray-700 leading-relaxed">{news.description}</p>
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-brand-blu uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                          <FileText size={12} /> Quadro Normativo e Dettagli
-                        </h4>
-                        <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">
-                          {news.content}
-                        </pre>
-                      </div>
-                      <div className="bg-brand-blu/5 rounded-2xl p-4 border border-brand-blu/10">
-                        <h4 className="text-xs font-bold text-brand-blu uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                          <FileText size={12} /> Guida Operativa
-                        </h4>
-                        <p className="text-sm text-gray-700 leading-relaxed mb-3">
-                          Per presentare domanda &egrave; necessario accedere alla piattaforma POLIS del Ministero dell&rsquo;Istruzione
-                          tramite SPID (Livello 2) o CIE (Carta d&rsquo;Identit&agrave; Elettronica).
-                          Assicurati di avere un dispositivo con lettore NFC o un lettore smartcard USB.
-                        </p>
-                        {news.link && news.link !== '#' && (
-                          <a
-                            href={news.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-blu to-brand-verde text-white rounded-xl text-sm font-semibold hover:opacity-90 transition"
-                          >
-                            <ExternalLink size={14} /> Avvia procedura su POLIS
-                          </a>
-                        )}
-                      </div>
-                      <div className="flex gap-2 flex-wrap">
-                        {news.tags.map(tag => (
-                          <span key={tag} className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">{tag}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="px-6 pb-4">
                   <button
-                    onClick={() => setExpandedId(isExpanded ? null : news.id)}
-                    className="inline-flex items-center gap-2 text-brand-verde font-semibold hover:text-brand-verde/80 transition-colors text-sm"
+                    onClick={() => toggleFavorite(news.id)}
+                    className={`ml-4 p-2 rounded-xl transition-all duration-200 flex-shrink-0 ${
+                      isFav ? 'text-brand-ambra bg-brand-ambra/10' : 'text-gray-300 hover:text-brand-ambra hover:bg-brand-ambra/5'
+                    }`}
                   >
-                    {isExpanded ? 'Riduci' : 'Leggi di più'}
-                    <ChevronDown size={16} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                    <Star
+                      size={20}
+                      className={pingId === news.id ? 'animate-ping-once' : ''}
+                      fill={isFav ? '#D97706' : 'none'}
+                      strokeWidth={2}
+                    />
                   </button>
                 </div>
-              </div>
-            );
-          })}
-        </div>
 
-        {filtered.length > 3 && !showAll && (
-          <div className="text-center mt-10">
+                {isExpanded && (
+                  <div className="mt-4 pt-4 border-t border-slate-200/60 animate-fade-in-up space-y-4">
+                    <div>
+                      <h4 className="text-xs font-bold text-brand-blu uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <FileText size={12} /> Abstract Tecnico
+                      </h4>
+                      <p className="text-sm text-gray-700 leading-relaxed">{news.description}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-brand-blu uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <FileText size={12} /> Quadro Normativo e Dettagli
+                      </h4>
+                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">
+                        {news.content}
+                      </pre>
+                    </div>
+                    <div className="bg-brand-blu/5 rounded-2xl p-4 border border-brand-blu/10">
+                      <h4 className="text-xs font-bold text-brand-blu uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <FileText size={12} /> Guida Operativa
+                      </h4>
+                      <p className="text-sm text-gray-700 leading-relaxed mb-3">
+                        Per presentare domanda &egrave; necessario accedere alla piattaforma POLIS del Ministero dell&rsquo;Istruzione
+                        tramite SPID (Livello 2) o CIE (Carta d&rsquo;Identit&agrave; Elettronica).
+                        Assicurati di avere un dispositivo con lettore NFC o un lettore smartcard USB.
+                      </p>
+                      {news.link && news.link !== '#' && (
+                        <a
+                          href={news.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-blu to-brand-verde text-white rounded-xl text-sm font-semibold hover:opacity-90 transition"
+                        >
+                          <ExternalLink size={14} /> Avvia procedura su POLIS
+                        </a>
+                      )}
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      {news.tags.map(tag => (
+                        <span key={tag} className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">{tag}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="px-6 pb-4">
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : news.id)}
+                  className="inline-flex items-center gap-2 text-brand-verde font-semibold hover:text-brand-verde/80 transition-colors text-sm"
+                >
+                  {isExpanded ? 'Riduci' : 'Leggi di pi\u00f9'}
+                  <ChevronDown size={16} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {filtered.length > MAX_VISIBLE && !showAll && (
+        <div className="text-center mt-8">
+          {compact ? (
+            <Link
+              to="/notizie-scadenze"
+              className="inline-flex items-center gap-2 text-brand-blu font-semibold hover:text-brand-blu/80 transition-colors text-sm border border-brand-blu/20 px-5 py-2.5 rounded-xl hover:bg-brand-blu/5"
+            >
+              Vedi archivio completo
+              <ExternalLink size={14} />
+            </Link>
+          ) : (
             <button
               onClick={() => setShowAll(true)}
               className="inline-flex items-center gap-2 bg-brand-blu text-white px-8 py-3 rounded-2xl hover:bg-brand-blu/90 transition-colors font-semibold shadow-soft"
@@ -276,10 +288,19 @@ export default function News() {
               Vedi tutte le notizie ({filtered.length})
               <ExternalLink size={16} />
             </button>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
+    </>
+  );
 
+  if (compact) return grid;
+
+  return (
+    <section id="notizie" className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {grid}
+      </div>
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </section>
   );
