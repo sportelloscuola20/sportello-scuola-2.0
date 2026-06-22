@@ -27,25 +27,19 @@ export default function Header() {
     return location.pathname.startsWith(path);
   };
 
+  const handleNavClick = () => {
+    window.scrollTo(0, 0);
+    setIsMenuOpen(false);
+  };
+
   const menuItems = [
     { label: 'Calcolo Punteggio', href: '/calcolo-punteggio' },
-    { label: 'Servizi', href: '/servizi', scrollOnHome: true },
+    { label: 'Servizi', href: '/servizi' },
     { label: 'Sindacalista AI', href: '/sindacalista-ai' },
     { label: 'Interpelli', href: '/interpelli' },
     { label: 'Normative e Documenti', href: '/normative' },
-    { label: 'Notizie e Scadenze', href: '/notizie' },
+    { label: 'Notizie e Scadenze', href: '/notizie-scadenze' },
   ];
-
-  const handleServiziClick = (e: React.MouseEvent, scrollOnHome?: boolean) => {
-    if (scrollOnHome && location.pathname === '/') {
-      e.preventDefault();
-      const el = document.getElementById('servizi');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-      setIsMenuOpen(false);
-    }
-  };
 
   return (
     <header className="bg-white/80 backdrop-blur-md shadow-soft border-b border-slate-200/60 fixed w-full top-0 z-50">
@@ -66,32 +60,18 @@ export default function Header() {
 
           <nav className="hidden md:flex space-x-1">
             {menuItems.map((item) => (
-              item.scrollOnHome && location.pathname === '/' ? (
-                <a
-                  key={item.label}
-                  href="#servizi"
-                  onClick={(e) => handleServiziClick(e, true)}
-                  className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    location.hash === '#servizi'
-                      ? 'bg-brand-blu/10 text-brand-blu'
-                      : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
-                  }`}
-                >
-                  {item.label}
-                </a>
-              ) : (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    isActive(item.href)
-                      ? 'bg-brand-blu/10 text-brand-blu'
-                      : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              )
+              <Link
+                key={item.label}
+                to={item.href}
+                onClick={() => window.scrollTo(0, 0)}
+                className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  isActive(item.href)
+                    ? 'bg-brand-blu/10 text-brand-blu'
+                    : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
+                }`}
+              >
+                {item.label}
+              </Link>
             ))}
           </nav>
 
@@ -130,11 +110,11 @@ export default function Header() {
                       I miei Punteggi Salvati
                     </Link>
                     <Link
-                      to="/notizie"
-                      onClick={() => setShowUserMenu(false)}
+                      to="/notizie-scadenze"
+                      onClick={() => { setShowUserMenu(false); window.scrollTo(0, 0); }}
                       className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
                     >
-                      Le mie Notizie Salvate
+                      Notizie e Scadenze Salvate
                     </Link>
                     <Link
                       to="/servizi"
@@ -178,29 +158,18 @@ export default function Header() {
           <div className="md:hidden pb-4">
             <nav className="flex flex-col space-y-2">
               {menuItems.map((item) => (
-                item.scrollOnHome && location.pathname === '/' ? (
-                  <a
-                    key={item.label}
-                    href="#servizi"
-                    onClick={(e) => { handleServiziClick(e, true); }}
-                    className="px-3 py-2 rounded-xl text-sm font-medium text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5 transition"
-                  >
-                    {item.label}
-                  </a>
-                ) : (
-                  <Link
-                    key={item.label}
-                    to={item.href}
-                    className={`px-3 py-2 rounded-xl text-sm font-medium transition ${
-                      isActive(item.href)
-                        ? 'bg-brand-blu/10 text-brand-blu'
-                        : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                )
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  onClick={handleNavClick}
+                  className={`px-3 py-2 rounded-xl text-sm font-medium transition ${
+                    isActive(item.href)
+                      ? 'bg-brand-blu/10 text-brand-blu'
+                      : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
+                  }`}
+                >
+                  {item.label}
+                </Link>
               ))}
               {isAuthenticated ? (
                 <button

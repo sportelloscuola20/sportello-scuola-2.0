@@ -3,52 +3,42 @@ import { Newspaper, CalendarClock, RefreshCw } from 'lucide-react';
 import News from '../components/News';
 import Deadlines from '../components/Deadlines';
 
-const RSS_FEEDS = [
-  { name: 'MIM — Comunicati Stampa', url: 'https://www.mim.gov.it/feed/comunicati' },
-  { name: 'Orizzonte Scuola — Ultime Notizie', url: 'https://www.orizzontescuola.it/feed/' },
-];
-
-const MOCK_RSS = [
+const LOCAL_NEWS = [
   {
-    title: 'MIM: Pubblicate le graduatorie GPS definitive 2026-2028',
+    title: 'Graduatorie GPS definitive 2026-2028: pubblicate le nuove tabelle',
     date: '22 Giugno 2026',
-    source: 'MIM',
-    summary: 'Il Ministero dell\'Istruzione e del Merito ha pubblicato le graduatorie provinciali per le supplenze definitive per il triennio 2026-2028.',
-    link: 'https://www.mim.gov.it/graduatorie-provinciali-supplenze',
+    summary: 'Sportello Scuola analizza le nuove tabelle di valutazione GPS per il triennio 2026-2028 con tutte le novit\u00e0 su punteggi e titoli.',
+    link: '#',
   },
   {
-    title: 'Orizzonte Scuola: GPS 2026, come verificare il punteggio',
-    date: '22 Giugno 2026',
-    source: 'Orizzonte Scuola',
-    summary: 'Guida completa alla verifica del punteggio GPS 2026 con le nuove tabelle di valutazione.',
-    link: 'https://www.orizzontescuola.it/gps-2026-verifica-punteggio',
-  },
-  {
-    title: 'MIM: Concorso docenti 2026, riaperti i termini per 5.000 posti',
+    title: 'Concorso docenti 2026: riaperti i termini per 5.000 posti aggiuntivi',
     date: '20 Giugno 2026',
-    source: 'MIM',
-    summary: 'Riaperti i termini per il concorso straordinario docenti secondaria con 5.000 posti aggiuntivi.',
-    link: 'https://www.mim.gov.it/concorso-straordinario-2026',
+    summary: 'Riaperti i termini per il concorso straordinario docenti secondaria: guida completa alla domanda su POLIS.',
+    link: '#',
   },
   {
-    title: 'Orizzonte Scuola: TFA Sostegno VIII ciclo, tutto sul bando',
+    title: 'TFA Sostegno VIII ciclo: tutto sul bando con 12.000 posti',
     date: '19 Giugno 2026',
-    source: 'Orizzonte Scuola',
-    summary: 'Tutte le informazioni sul bando TFA Sostegno VIII ciclo con 12.000 posti disponibili.',
-    link: 'https://www.orizzontescuola.it/tfa-sostegno-viii-ciclo-bando',
+    summary: 'Bando TFA Sostegno VIII ciclo pubblicato: requisiti, prove e scadenze per l\'accesso al sostegno didattico.',
+    link: '#',
   },
   {
-    title: 'MIM: Nuovo DPCM per percorsi abilitanti 30/36/60 CFU',
+    title: 'Nuovo DPCM per percorsi abilitanti 30/36/60 CFU',
     date: '18 Giugno 2026',
-    source: 'MIM',
-    summary: 'Pubblicato il DPCM che aggiorna i percorsi di formazione iniziale dei docenti.',
-    link: 'https://www.mim.gov.it/percorsi-abilitazione-2026',
+    summary: 'Pubblicato il DPCM che aggiorna i percorsi di formazione iniziale dei docenti. Analisi dei requisiti di accesso.',
+    link: '#',
+  },
+  {
+    title: 'Graduatorie ATA terza fascia: stato di pubblicazione per provincia',
+    date: '17 Giugno 2026',
+    summary: 'Monitoraggio in tempo reale della pubblicazione delle graduatorie ATA terza fascia 2024-2027 provincia per provincia.',
+    link: '#',
   },
 ];
 
 export default function NewsPage() {
   const [activeTab, setActiveTab] = useState<'notizie' | 'scadenze'>('notizie');
-  const [rssItems] = useState(MOCK_RSS);
+  const [localItems] = useState(LOCAL_NEWS);
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = () => {
@@ -64,8 +54,8 @@ export default function NewsPage() {
             Notizie e Scadenze
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Hub informativo unificato con notizie del MIM, aggiornamenti da Orizzonte Scuola
-            e scadenze ministeriali. Auto-aggiornato ogni 30 minuti.
+            Hub informativo unificato con notizie del settore istruzione, approfondimenti normativi
+            e scadenze ministeriali con countdown in tempo reale.
           </p>
         </div>
 
@@ -98,7 +88,7 @@ export default function NewsPage() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-brand-blu flex items-center gap-2">
               <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-              Feed RSS Ministeriali e dal Web
+              Approfondimenti Sportello Scuola
             </h3>
             <button
               onClick={handleRefresh}
@@ -109,22 +99,8 @@ export default function NewsPage() {
               Aggiorna
             </button>
           </div>
-          <div className="flex flex-wrap gap-3">
-            {RSS_FEEDS.map(feed => (
-              <a
-                key={feed.name}
-                href={feed.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-blu/5 text-brand-blu rounded-xl text-xs font-medium hover:bg-brand-blu/10 transition"
-              >
-                <RefreshCw size={10} />
-                {feed.name}
-              </a>
-            ))}
-          </div>
-          <div className="mt-4 space-y-2">
-            {rssItems.map((item, i) => (
+          <div className="mt-2 space-y-2">
+            {localItems.map((item, i) => (
               <a
                 key={i}
                 href={item.link}
@@ -132,10 +108,8 @@ export default function NewsPage() {
                 rel="noopener noreferrer"
                 className="flex items-start gap-3 p-3 rounded-2xl hover:bg-gray-50 transition group"
               >
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5 ${
-                  item.source === 'MIM' ? 'bg-brand-blu/10 text-brand-blu' : 'bg-brand-verde/10 text-brand-verde'
-                }`}>
-                  {item.source}
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5 bg-brand-blu/10 text-brand-blu">
+                  Sportello Scuola
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 group-hover:text-brand-blu transition truncate">

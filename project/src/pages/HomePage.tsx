@@ -18,10 +18,10 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div className="md:text-left">
               <h2 className="text-white text-lg font-bold">
-                Resta aggiornato su scadenze e novità
+                Iscriviti alla Newsletter di Sportello Scuola
               </h2>
               <p className="text-gray-400 text-xs mt-1">
-                Report settimanale con scadenze ministeriali e novità della scuola.
+                Ricevi ogni luned&igrave; il report con le scadenze GPS, ATA e concorsi. Rimani sempre informato.
               </p>
             </div>
             <div className="w-full md:w-auto md:min-w-[420px]">

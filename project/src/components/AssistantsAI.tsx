@@ -42,7 +42,7 @@ export default function AssistantsAI() {
             </div>
 
             <p className="text-gray-600 text-sm leading-relaxed mb-6">
-              Il tuo consulente sindacale digitale attivo 24/7 per risolvere dubbi normativi, contrattuali e di reclutamento. Basato sulla knowledge base ufficiale di CCNL Istruzione e Ricerca, Ordinanze Ministeriali e Decreti del MIM.
+              Il tuo consulente sindacale digitale attivo 24/7 per risolvere dubbi normativi, contrattuali e di reclutamento. Basato sulla knowledge base ufficiale di CCNL Istruzione e Ricerca, Ordinanze Ministeriali e decreti del settore istruzione.
             </p>
 
             <div className="grid md:grid-cols-3 gap-4 mb-8">

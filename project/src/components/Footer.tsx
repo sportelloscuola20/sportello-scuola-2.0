@@ -1,5 +1,4 @@
 import { Mail, Phone } from 'lucide-react';
-import NewsletterForm from './NewsletterForm';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -11,7 +10,7 @@ export default function Footer() {
         { label: 'Home', href: '/' },
         { label: 'Assistente AI', href: '/assistente/docente' },
         { label: 'Calcolo GPS', href: '/calcolo-punteggio' },
-        { label: 'Notizie', href: '/notizie' },
+        { label: 'Notizie e Scadenze', href: '/notizie-scadenze' },
         { label: 'Interpelli', href: '/interpelli' },
         { label: 'Servizi', href: '/servizi' },
       ],
@@ -20,7 +19,7 @@ export default function Footer() {
       title: 'Risorse',
       links: [
         { label: 'Normative', href: '/normative' },
-        { label: 'Scadenze', href: '/scadenze' },
+        { label: 'Scadenze', href: '/notizie-scadenze' },
         { label: 'FAQ', href: '/faq' },
         { label: 'Contatti', href: '/contatti' },
       ],
@@ -80,14 +79,6 @@ export default function Footer() {
               </ul>
             </div>
           ))}
-        </div>
-
-        <div className="border-t border-gray-800 pt-8 mb-8">
-          <h4 className="text-lg font-semibold mb-4">Newsletter Settimanale</h4>
-          <p className="text-gray-400 text-sm mb-4">
-            Ricevi ogni lunedì il report con le scadenze ministeriali e le ultime notizie.
-          </p>
-          <NewsletterForm />
         </div>
 
         <div className="border-t border-gray-800 pt-8 mb-8">

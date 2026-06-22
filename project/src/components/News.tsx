@@ -141,11 +141,11 @@ export default function News() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-6">
           <h2 className="text-4xl font-extrabold text-[#0F172A] mb-4 tracking-tight">
-            Ultime Notizie del Ministero dell'Istruzione
+            Ultime Notizie del Settore Istruzione
           </h2>
           <p className="text-gray-600 font-normal max-w-2xl mx-auto">
-            Notiziario aggiornato in tempo reale sulle novità legislative e i bandi del comparto istruzione.
-            Ogni notizia include i riferimenti normativi ufficiali e i link al portale del MIM.
+            Notiziario aggiornato con le novit&agrave; legislative, i bandi e le procedure del comparto istruzione.
+            Ogni notizia include abstract tecnico, quadro normativo con riferimenti ufficiali e guida operativa.
           </p>
         </div>
 
@@ -209,20 +209,45 @@ export default function News() {
                   </div>
 
                   {isExpanded && (
-                    <div className="mt-4 pt-4 border-t border-slate-200/60 animate-fade-in-up">
-                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">
-                        {news.content}
-                      </pre>
-                      <div className="flex gap-2 mt-4 flex-wrap">
+                    <div className="mt-4 pt-4 border-t border-slate-200/60 animate-fade-in-up space-y-4">
+                      <div>
+                        <h4 className="text-xs font-bold text-brand-blu uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <FileText size={12} /> Abstract Tecnico
+                        </h4>
+                        <p className="text-sm text-gray-700 leading-relaxed">{news.description}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-brand-blu uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <FileText size={12} /> Quadro Normativo e Dettagli
+                        </h4>
+                        <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">
+                          {news.content}
+                        </pre>
+                      </div>
+                      <div className="bg-brand-blu/5 rounded-2xl p-4 border border-brand-blu/10">
+                        <h4 className="text-xs font-bold text-brand-blu uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <FileText size={12} /> Guida Operativa
+                        </h4>
+                        <p className="text-sm text-gray-700 leading-relaxed mb-3">
+                          Per presentare domanda &egrave; necessario accedere alla piattaforma POLIS del Ministero dell&rsquo;Istruzione
+                          tramite SPID (Livello 2) o CIE (Carta d&rsquo;Identit&agrave; Elettronica).
+                          Assicurati di avere un dispositivo con lettore NFC o un lettore smartcard USB.
+                        </p>
+                        {news.link && news.link !== '#' && (
+                          <a
+                            href={news.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-blu to-brand-verde text-white rounded-xl text-sm font-semibold hover:opacity-90 transition"
+                          >
+                            <ExternalLink size={14} /> Avvia procedura su POLIS
+                          </a>
+                        )}
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
                         {news.tags.map(tag => (
                           <span key={tag} className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">{tag}</span>
                         ))}
-                        {news.link && news.link !== '#' && (
-                          <a href={news.link} target="_blank" rel="noopener noreferrer"
-                            className="text-xs px-3 py-1 rounded-full bg-brand-blu/10 text-brand-blu font-medium hover:bg-brand-blu/20 transition inline-flex items-center gap-1">
-                            <ExternalLink size={10} /> Fonte ufficiale MIM
-                          </a>
-                        )}
                       </div>
                     </div>
                   )}
