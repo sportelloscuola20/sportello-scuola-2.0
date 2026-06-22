@@ -1,4 +1,4 @@
-import { Mail, Phone, Send, Settings, CheckCircle2, AlertCircle, X, ExternalLink, Loader2 } from 'lucide-react';
+import { Mail, Phone, Send, CheckCircle2, AlertCircle, X, ExternalLink, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { sendEmailBackground, getMailConfig, saveMailConfig, MailConfig } from './emailService';
 
@@ -14,7 +14,6 @@ export default function Contact() {
   const [showSettings, setShowSettings] = useState(false);
   const [config, setConfig] = useState<MailConfig>({ destinationEmail: '', web3formsKey: '', openaiKey: '' });
 
-  // Carica le configurazioni all'avvio
   useEffect(() => {
     setConfig(getMailConfig());
   }, [showSettings]);
@@ -54,18 +53,17 @@ export default function Contact() {
     <section id="contatti" className="py-20 bg-white relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">
+          <h2 className="text-4xl font-bold text-[#0F172A] mb-4 tracking-tight">
             Contattaci
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto font-normal">
             Ti forniamo supporto per qualsiasi esigenza scolastica in modo tempestivo e professionale
           </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12">
-          {/* Colonna Informazioni Contatto */}
           <div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-8">
+            <h3 className="text-2xl font-bold text-[#0F172A] mb-8">
               I nostri contatti
             </h3>
 
@@ -73,7 +71,7 @@ export default function Contact() {
               <div className="flex items-start gap-4 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-6 border border-blue-100 shadow-sm transition-all duration-200 hover:shadow-md">
                 <Mail className="text-blue-600 flex-shrink-0 mt-1" size={28} />
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Email</h4>
+                  <h4 className="font-semibold text-[#0F172A] mb-2">Email</h4>
                   <a
                     href={`mailto:${config.destinationEmail || 'sportelloscuola2.0@gmail.com'}`}
                     className="text-blue-600 hover:text-blue-700 text-lg font-medium transition-colors"
@@ -87,7 +85,7 @@ export default function Contact() {
               <div className="flex items-start gap-4 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl p-6 border border-green-100 shadow-sm transition-all duration-200 hover:shadow-md">
                 <Phone className="text-green-600 flex-shrink-0 mt-1" size={28} />
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Telefono</h4>
+                  <h4 className="font-semibold text-[#0F172A] mb-2">Telefono</h4>
                   <div className="space-y-2">
                     <a
                       href="tel:3889711647"
@@ -107,15 +105,15 @@ export default function Contact() {
             </div>
 
             <div className="bg-gray-50 rounded-xl p-6 border border-gray-150 shadow-inner">
-              <h4 className="font-semibold text-gray-900 mb-4">Orari di apertura sportello</h4>
+              <h4 className="font-semibold text-[#0F172A] mb-4">Orari di apertura sportello</h4>
               <div className="space-y-2.5 text-gray-700">
                 <div className="flex justify-between border-b border-gray-200 pb-2">
                   <span className="font-medium">Lunedì - Venerdì</span>
-                  <span>9:00 - 18:00</span>
+                  <span className="font-medium">09:00 - 13:00 | 15:00 - 19:00</span>
                 </div>
                 <div className="flex justify-between border-b border-gray-200 pb-2">
                   <span className="font-medium">Sabato</span>
-                  <span>9:00 - 13:00</span>
+                  <span className="font-medium">09:00 - 12:00</span>
                 </div>
                 <div className="flex justify-between text-gray-400">
                   <span className="font-medium">Domenica</span>
@@ -125,19 +123,18 @@ export default function Contact() {
             </div>
           </div>
 
-          {/* Colonna Modulo di Contatto Integrato */}
           <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-8 relative overflow-hidden">
             <div className="absolute top-4 right-4">
               <button
                 onClick={() => setShowSettings(true)}
                 title="Configura Email Ricevente"
-                className="text-gray-400 hover:text-blue-600 p-2 rounded-full hover:bg-gray-100 transition-all duration-200"
+                className="text-gray-400 hover:text-brand-blu p-2 rounded-full hover:bg-gray-100 transition-all duration-200"
               >
-                <Settings size={22} className="animate-hover-spin" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
               </button>
             </div>
 
-            <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <h3 className="text-2xl font-bold text-[#0F172A] mb-6 flex items-center gap-2">
               Invia un messaggio
             </h3>
 
@@ -176,14 +173,14 @@ export default function Contact() {
             <form onSubmit={handleSubmit} className={`space-y-6 transition-all duration-300 ${status === 'success' ? 'opacity-30 pointer-events-none' : ''}`}>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Nome e Cognome
+                  Nome e Cognome <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.nome}
                   onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                   placeholder="es. Mario Rossi"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-blu focus:border-brand-blu transition-all placeholder-gray-400"
                   required
                   disabled={status === 'loading'}
                 />
@@ -191,14 +188,14 @@ export default function Contact() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Indirizzo Email
+                  Indirizzo Email <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="es. mario.rossi@gmail.com"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-blu focus:border-brand-blu transition-all placeholder-gray-400"
                   required
                   disabled={status === 'loading'}
                 />
@@ -206,14 +203,14 @@ export default function Contact() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Messaggio / Richiesta di Supporto
+                  Messaggio / Richiesta di Supporto <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={formData.messaggio}
                   onChange={(e) => setFormData({ ...formData, messaggio: e.target.value })}
                   placeholder="Scrivi qui la tua richiesta in dettaglio..."
                   rows={5}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-blu focus:border-brand-blu resize-none transition-all placeholder-gray-400"
                   required
                   disabled={status === 'loading'}
                 ></textarea>
@@ -222,7 +219,7 @@ export default function Contact() {
               <button
                 type="submit"
                 disabled={status === 'loading'}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed"
+                className="w-full bg-[#064E3B] text-white px-8 py-4 rounded-xl hover:bg-[#10B981] transition-all duration-300 font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-green-900/20 active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed"
               >
                 {status === 'loading' ? (
                   <>
@@ -232,7 +229,7 @@ export default function Contact() {
                 ) : (
                   <>
                     <Send size={18} />
-                    Invia messaggio
+                    Invia Messaggio
                   </>
                 )}
               </button>
@@ -241,10 +238,9 @@ export default function Contact() {
         </div>
       </div>
 
-      {/* Modal Impostazioni Mail (Web3Forms / Destinatario) */}
       {showSettings && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative border border-gray-150 animate-scale-up">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative border border-gray-150">
             <button
               onClick={() => setShowSettings(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
@@ -252,9 +248,9 @@ export default function Contact() {
               <X size={20} />
             </button>
 
-            <div className="flex items-center gap-2 mb-4 text-blue-600">
-              <Settings size={24} />
-              <h3 className="text-xl font-bold text-gray-900">
+            <div className="flex items-center gap-2 mb-4 text-brand-blu">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+              <h3 className="text-xl font-bold text-[#0F172A]">
                 Impostazioni Moduli e API
               </h3>
             </div>
@@ -273,7 +269,7 @@ export default function Contact() {
                   value={config.destinationEmail}
                   onChange={(e) => setConfig({ ...config, destinationEmail: e.target.value })}
                   placeholder="es. sportelloscuola2.0@gmail.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blu focus:border-brand-blu"
                   required
                 />
               </div>
@@ -287,7 +283,7 @@ export default function Contact() {
                     href="https://web3forms.com"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs text-blue-600 hover:underline flex items-center gap-0.5"
+                    className="text-xs text-brand-blu hover:underline flex items-center gap-0.5"
                   >
                     Ottieni Chiave Gratis
                     <ExternalLink size={10} />
@@ -298,26 +294,10 @@ export default function Contact() {
                   value={config.web3formsKey}
                   onChange={(e) => setConfig({ ...config, web3formsKey: e.target.value })}
                   placeholder="Incolla qui la chiave (es. ab12c34d-...)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blu focus:border-brand-blu"
                 />
                 <p className="text-xs text-gray-500 mt-1 leading-normal">
                   Fornisce l'invio integrato in-app senza aprire altre finestre. Se non inserita, il modulo funzionerà in modalità simulata/demo locale.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">
-                  OpenAI API Key (Opzionale per Agenti AI)
-                </label>
-                <input
-                  type="password"
-                  value={config.openaiKey}
-                  onChange={(e) => setConfig({ ...config, openaiKey: e.target.value })}
-                  placeholder="sk-proj-..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <p className="text-xs text-gray-500 mt-1 leading-normal">
-                  Sblocca l'interazione libera e in tempo reale con gli Agenti AI. Se assente, gli agenti useranno il motore locale predefinito.
                 </p>
               </div>
 
@@ -331,7 +311,7 @@ export default function Contact() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/10"
+                  className="flex-1 px-4 py-2 bg-brand-blu text-white rounded-lg text-sm font-semibold hover:bg-brand-blu/90 transition-colors shadow-md shadow-brand-blu/10"
                 >
                   Salva Impostazioni
                 </button>

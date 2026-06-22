@@ -111,10 +111,6 @@ export default function Footer() {
             <p className="text-gray-400 text-sm">
               &copy; {currentYear} Sportello Scuola 2.0. Tutti i diritti riservati.
             </p>
-            <p className="text-gray-400 text-sm">
-              In collaborazione con{' '}
-              <span className="text-green-400 font-semibold">Centro Studi Progetto21</span>
-            </p>
           </div>
         </div>
       </div>

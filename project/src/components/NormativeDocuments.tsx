@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { FileText, BookOpen, Building, ShieldCheck, List, Download, ExternalLink, X, Search } from 'lucide-react';
+import { FileText, BookOpen, Building, ShieldCheck, List, Download, ExternalLink, X, Search, GraduationCap } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 
 interface Documento {
   id: string;
@@ -67,13 +68,31 @@ const documenti: Documento[] = [
     content: 'MODELLO DI RICORSO AVVERSO PUNTEGGIO GRADUATORIE\n\nAl Dirigente Scolastico della scuola polo\nL\'OGGETTO: Richiesta di accesso agli atti e ricorso avverso al punteggio attribuito\n\nIl/La sottoscritto/a _______________, nato/a a _______________ il _______________,\n\nPREMESSO CHE:\n- Ha presentato domanda di aggiornamento GPS per la classe di concorso _______________\n- Il punteggio attribuito è di _______________\n- Ritiene che il punteggio sia errato per i seguenti motivi:\n\n1. _______________\n2. _______________\n\nCHIEDE\n- La visione degli atti relativi alla valutazione dei titoli\n- La rettifica del punteggio nella misura di _______________\n\nData, _______________\nFirma _______________',
   },
   {
-    id: 'bandi-concorsi',
+    id: 'bando-tfa-sostegno',
+    icon: GraduationCap,
+    category: 'Bandi',
+    title: 'Bando TFA Sostegno — VIII ciclo',
+    desc: 'Bando per l\'ammissione al Tirocinio Formativo Attivo per le attività di sostegno didattico. Requisiti, CFU e modalità d\'esame per tutti i gradi scolastici.',
+    filename: 'Bando_TFA_Sostegno_VIII_ciclo.pdf',
+    content: 'BANDO TFA SOSTEGNO VIII CICLO — D.D. prot. n. 1025 del 10/05/2026\n\nIl Ministero dell\'Istruzione e del Merito indice il VIII ciclo del Tirocinio Formativo Attivo per il conseguimento della specializzazione per le attività di sostegno didattico.\n\nPOSTI DISPONIBILI:\n- Infanzia: 2.500 posti\n- Primaria: 3.500 posti\n- Secondaria I grado: 2.800 posti\n- Secondaria II grado: 3.200 posti\n\nREQUISITI DI ACCESSO:\n- Laurea magistrale o specialistica per il grado richiesto\n- Titolo di abilitazione all\'insegnamento (se richiesto)\n- Superamento della prova preselettiva nazionale\n\nSTRUTTURA DEL PERCORSO:\n- 60 CFU complessivi\n- 30 CFU di tirocinio diretto e indiretto\n- 20 CFU di insegnamenti teorico-pratici\n- 10 CFU di laboratori pedagogico-didattici\n- Prova finale di specializzazione\n\nMODALITÀ D\'ESAME:\n- Prova preselettiva computer-based (60 domande in 60 minuti)\n- Prova scritta (3 domande aperte su tematiche pedagogiche)\n- Prova orale con discussione di un caso clinico\n\nSCADENZA DOMANDA: 30 giugno 2026 tramite POLIS',
+  },
+  {
+    id: 'bandi-abilitazione-30-36-60-cfu',
+    icon: GraduationCap,
+    category: 'Bandi',
+    title: 'Percorsi di Abilitazione 30, 36 e 60 CFU',
+    desc: 'Dettaglio dei percorsi di formazione iniziale docenti basati sul DPCM 4 agosto 2023. Differenziazione per triennalisti, possessori 24 CFU e neolaureati.',
+    filename: 'Percorsi_Abilitazione_30_36_60_CFU.pdf',
+    content: 'PERCORSI DI ABILITAZIONE — DPCM 4 AGOSTO 2023\n\nIl DPCM 4 agosto 2023, pubblicato in G.U. n. 201 del 29/08/2023, ha ridefinito il sistema di formazione iniziale dei docenti.\n\nPERCORSO DA 60 CFU (Art. 2-bis D.Lgs. 59/2017):\n- Rivolto a: neolaureati senza esperienza di insegnamento\n- Durata: 1 anno accademico\n- CFU: 60 (20 tirocinio, 30 insegnamenti, 10 laboratori)\n- Prova finale: discussione tesi + lezione simulata\n\nPERCORSO DA 36 CFU (Art. 18-bis D.Lgs. 59/2017):\n- Rivolto a: docenti già in possesso di abilitazione su altra classe di concorso\n- Durata: 6 mesi\n- CFU: 36 (10 tirocinio, 20 insegnamenti, 6 laboratori)\n- Prova finale: esame orale su metodologie didattiche\n\nPERCORSO DA 30 CFU (Art. 13 DPCM 4/8/2023):\n- Rivolto a: docenti triennalisti con 3 anni di servizio (1 dei quali specifico)\n- Durata: 6 mesi\n- CFU: 30 (12 tirocinio, 14 insegnamenti, 4 laboratori)\n- Prova finale: lezione simulata davanti a commissione\n\nSCADENZE: Iscrizioni aperte da settembre 2026 su piattaforma ministeriale.',
+  },
+  {
+    id: 'concorsi-ordinari-straordinari',
     icon: FileText,
     category: 'Bandi',
-    title: 'Bandi Concorsi Ordinari e Straordinari MIM',
-    desc: 'Raccolta dei bandi di concorso ordinari e straordinari per docenti pubblicati dal Ministero dell\'Istruzione e del Merito.',
-    filename: 'Bandi_Concorsi_MIM.pdf',
-    content: 'BANDI DI CONCORSO MIM\n\nConcorso Ordinario Docenti 2026:\n- Posti: 20.000 cattedre\n- Scadenza: 31 marzo 2026\n- Prove scritte: 15-25 ottobre 2026\n\nConcorso Straordinario Docenti 2026:\n- Posti: 5.000 cattedre\n- Requisiti: 3 anni di servizio\n- Scadenza: 30 aprile 2026',
+    title: 'Bandi Concorsi Ordinari e Straordinari MIM 2026',
+    desc: 'Suddivisione delle procedure concorsuali per la Scuola dell\'Infanzia/Primaria e per la Scuola Secondaria di I e II grado. Dettaglio posti, requisiti e scadenze.',
+    filename: 'Concorsi_Ordinari_Straordinari_2026.pdf',
+    content: 'CONCORSI ORDINARI E STRAORDINARI MIM 2026\n\nIl Ministero dell\'Istruzione e del Merito ha pubblicato i bandi per le procedure concorsuali 2026.\n\nCONCORSO ORDINARIO SCUOLA SECONDARIA (D.D. prot. n. 987 del 12/03/2026):\n- Posti: 20.000\n- Prove scritte: 15-25 ottobre 2026 (computer-based)\n- Requisiti: Laurea magistrale + 24 CFU (o titolo equipollente)\n- Materie: pedagogia, psicologia, metodologie didattiche, normativa scolastica\n\nCONCORSO STRAORDINARIO SCUOLA SECONDARIA (D.D. prot. n. 988 del 12/03/2026):\n- Posti: 5.000\n- Requisiti: 36 mesi di servizio negli ultimi 5 anni (di cui 1 specifico)\n- Prova: orale su metodologie didattiche e normativa\n\nCONCORSO ORDINARIO INFANZIA E PRIMARIA (D.D. prot. n. 989 del 12/03/2026):\n- Posti: 12.000\n- Requisiti: Laurea in Scienze della Formazione Primaria\n- Prove: preselettiva, scritta e orale\n\nTERMINI: Presentazione domande entro il 30 aprile 2026 su POLIS.',
   },
   {
     id: 'ccnl-scuola',
@@ -87,6 +106,52 @@ const documenti: Documento[] = [
 ];
 
 const CATEGORIE = ['Tutte', 'GPS', 'ATA', 'Inclusione', 'Modulistica', 'Bandi', 'Contratti'];
+
+function downloadPDF(filename: string, content: string) {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const margin = 20;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const contentWidth = pageWidth - margin * 2;
+
+  doc.setFontSize(10);
+  doc.setTextColor(0x0F, 0x17, 0x2A);
+  doc.setFont('helvetica', 'bold');
+  doc.text(filename.replace('.pdf', '').replace(/_/g, ' '), margin, margin);
+
+  doc.setDrawColor(0x0F, 0x17, 0x2A);
+  doc.line(margin, margin + 3, pageWidth - margin, margin + 3);
+
+  doc.setFontSize(9);
+  doc.setTextColor(0x4B, 0x55, 0x63);
+  doc.setFont('helvetica', 'normal');
+
+  const lines = doc.splitTextToSize(content, contentWidth);
+  let y = margin + 12;
+  for (const line of lines) {
+    if (y > 275) {
+      doc.addPage();
+      y = margin;
+    }
+    doc.text(line, margin, y);
+    y += 5;
+  }
+
+  doc.setFontSize(8);
+  doc.setTextColor(0x9C, 0xA3, 0xAF);
+  doc.text('Documento generato da Sportello Scuola 2.0 — I contenuti sono estratti da fonti ufficiali del MIM.', margin, 290);
+  doc.text(`Pagina ${doc.internal.pages.length - 1}`, pageWidth - margin, 290, { align: 'right' });
+
+  const pageCount = doc.internal.pages.length - 1;
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(0x9C, 0xA3, 0xAF);
+    doc.text(`Sportello Scuola 2.0 — ${filename.replace('.pdf', '')}`, margin, 295);
+    doc.text(`Pagina ${i} di ${pageCount}`, pageWidth - margin, 295, { align: 'right' });
+  }
+
+  doc.save(filename);
+}
 
 export default function NormativeDocuments() {
   const [activeCategory, setActiveCategory] = useState('Tutte');
@@ -116,7 +181,7 @@ export default function NormativeDocuments() {
             Normative e Documenti
           </h2>
           <p className="text-gray-600 font-normal max-w-2xl mx-auto">
-            Archivio ufficiale e centralizzato di decreti, ordinanze ministeriali e modelli di domanda scaricabili.
+            Archivio ufficiale e centralizzato di decreti, ordinanze ministeriali, bandi di concorso e modelli di domanda scaricabili.
           </p>
         </div>
 
@@ -146,7 +211,7 @@ export default function NormativeDocuments() {
                 </div>
                 <div>
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${categoryIcons[doc.category] || 'bg-gray-100 text-gray-600'}`}>{doc.category}</span>
-                  <h3 className="text-base font-bold text-[#0F172A] mt-1">{doc.title}</h3>
+                  <h3 className="text-base font-bold text-[#0F172A] mt-1 line-clamp-2">{doc.title}</h3>
                 </div>
               </div>
               <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2">{doc.desc}</p>
@@ -155,15 +220,9 @@ export default function NormativeDocuments() {
                   className="flex-1 flex items-center justify-center gap-2 py-2 bg-brand-blu/10 text-brand-blu rounded-2xl text-sm font-semibold hover:bg-brand-blu/20 transition">
                   <ExternalLink size={14} /> Visualizza
                 </button>
-                <button onClick={() => {
-                  const blob = new Blob([doc.content], { type: 'text/plain' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url; a.download = doc.filename; a.click();
-                  URL.revokeObjectURL(url);
-                }}
+                <button onClick={() => downloadPDF(doc.filename, doc.content)}
                   className="flex-1 flex items-center justify-center gap-2 py-2 bg-brand-verde/10 text-brand-verde rounded-2xl text-sm font-semibold hover:bg-brand-verde/20 transition">
-                  <Download size={14} /> Scarica
+                  <Download size={14} /> Scarica PDF
                 </button>
               </div>
             </div>
@@ -186,15 +245,9 @@ export default function NormativeDocuments() {
             <div className="bg-gray-50 rounded-2xl p-6 whitespace-pre-wrap text-sm text-gray-700 font-mono leading-relaxed">
               {previewDoc.content}
             </div>
-            <button onClick={() => {
-              const blob = new Blob([previewDoc.content], { type: 'text/plain' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url; a.download = previewDoc.filename; a.click();
-              URL.revokeObjectURL(url);
-            }}
+            <button onClick={() => downloadPDF(previewDoc.filename, previewDoc.content)}
               className="mt-4 w-full flex items-center justify-center gap-2 py-3 bg-brand-verde text-white rounded-2xl font-semibold hover:bg-brand-verde/90 transition">
-              <Download size={18} /> Scarica Documento ({previewDoc.filename})
+              <Download size={18} /> Scarica Documento PDF
             </button>
           </div>
         </div>

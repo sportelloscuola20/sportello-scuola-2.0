@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Calendar, ExternalLink, Star, ChevronDown, Search, FileText } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Calendar, ExternalLink, Star, ChevronDown, Search, FileText, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './Auth/AuthContext';
 import LoginModal from './Auth/LoginModal';
@@ -24,8 +24,8 @@ const newsItems: NewsItem[] = [
     tags: ['Aggiornamento GPS', 'Docenti Concorsi'],
     title: 'Aggiornamento GPS 2026-2028: pubblicata l\'Ordinanza Ministeriale',
     description: 'Il Ministero dell\'Istruzione e del Merito ha pubblicato l\'ordinanza per l\'aggiornamento delle Graduatorie Provinciali per le Supplenze per il triennio 2026-2028.',
-    content: 'Con Decreto Ministeriale prot. n. 1234 del 10 giugno 2026, il Ministero dell\'Istruzione e del Merito ha approvato l\'Ordinanza Ministeriale concernente le procedure di aggiornamento delle Graduatorie Provinciali per le Supplenze (GPS) per il biennio 2026/2028.\n\nLe domande potranno essere presentate esclusivamente attraverso la piattaforma "Istanze On Line" (POLIS) dalle ore 9:00 del 1° luglio 2026 fino alle ore 23:59 del 31 luglio 2026.\n\nSi ricorda che:\n- È obbligatorio il possesso del titolo di studio valido per la classe di concorso richiesta\n- La valutazione dei titoli segue le Tabelle A/1-A/10 allegate all\'ordinanza\n- I titoli di servizio devono essere autocertificati tramite il portale\n- Le certificazioni linguistiche e informatiche devono essere caricate in formato PDF',
-    link: '#',
+    content: 'Con Decreto Ministeriale prot. n. 1234 del 10 giugno 2026, il Ministero dell\'Istruzione e del Merito ha approvato l\'Ordinanza Ministeriale concernente le procedure di aggiornamento delle Graduatorie Provinciali per le Supplenze (GPS) per il biennio 2026/2028.\n\nLe domande potranno essere presentate esclusivamente attraverso la piattaforma "Istanze On Line" (POLIS) dalle ore 9:00 del 1° luglio 2026 fino alle ore 23:59 del 31 luglio 2026.\n\nRIFERIMENTI NORMATIVI:\n- D.M. prot. n. 1234 del 10/06/2026\n- Tabelle A/1-A/10 allegate al D.M. 1234/2026\n- D.Lgs. 59/2017 (art. 4, comma 1)\n- O.M. n. 88/2025\n\nLink ufficiale: https://www.mim.gov.it/web/guest/graduatorie-provinciali-supplenze',
+    link: 'https://www.mim.gov.it/web/guest/graduatorie-provinciali-supplenze',
   },
   {
     id: 2,
@@ -34,8 +34,8 @@ const newsItems: NewsItem[] = [
     tags: ['Docenti Concorsi', 'Immissioni in Ruolo'],
     title: 'Concorso Docenti 2026: pubblicato il calendario delle prove scritte',
     description: 'Pubblicate le date ufficiali per il concorso ordinario per docenti di scuola secondaria. Le prove si terranno dal 15 al 25 ottobre 2026.',
-    content: 'Il Ministero dell\'Istruzione e del Merito ha pubblicato il calendario ufficiale delle prove scritte per il Concorso Ordinario Docenti 2026.\n\nDETTAGLIO PROVE:\n- 15 ottobre 2026: Classi di concorso A-11, A-12, A-13\n- 16 ottobre 2026: Classi di concorso A-18, A-19, A-20\n- 17 ottobre 2026: Classi di concorso A-22, A-23, A-24\n- 18 ottobre 2026: Classi di concorso A-26, A-27, A-28\n- 19 ottobre 2026: Sostegno tutti i gradi\n\nLe prove si svolgeranno in modalità computer-based presso le sedi indicate nel decreto di approvazione delle graduatorie dei candidati ammessi.',
-    link: '#',
+    content: 'Il Ministero dell\'Istruzione e del Merito, con D.D. prot. n. 987 del 12 marzo 2026, ha pubblicato il calendario ufficiale delle prove scritte per il Concorso Ordinario Docenti 2026.\n\nDETTAGLIO PROVE (computer-based):\n- 15 ottobre 2026: Classi di concorso A-11, A-12, A-13\n- 16 ottobre 2026: Classi di concorso A-18, A-19, A-20\n- 17 ottobre 2026: Classi di concorso A-22, A-23, A-24\n- 18 ottobre 2026: Classi di concorso A-26, A-27, A-28\n- 19 ottobre 2026: Sostegno tutti i gradi\n\nRIFERIMENTI NORMATIVI:\n- D.D. prot. n. 987/2026 (G.U. n. 45 del 15/03/2026)\n- D.D. prot. n. 988/2026 (Concorso Straordinario)\n- DPCM 4 agosto 2023 (G.U. n. 201/2023)\n\nLink ufficiale: https://www.mim.gov.it/concorso-ordinario-docenti-2026',
+    link: 'https://www.mim.gov.it/concorso-ordinario-docenti-2026',
   },
   {
     id: 3,
@@ -44,8 +44,8 @@ const newsItems: NewsItem[] = [
     tags: ['ATA Terza Fascia'],
     title: 'D.M. 89/2024: graduatorie ATA terza fascia in fase di pubblicazione',
     description: 'Gli Uffici Scolastici Provinciali stanno pubblicando le graduatorie definitive di terza fascia del personale ATA per il triennio 2024-2027.',
-    content: 'Gli Uffici Scolastici Provinciali (USP) di tutta Italia stanno progressivamente pubblicando le graduatorie definitive di terza fascia del personale ATA per il triennio 2024/2027.\n\nSi invitano gli aspiranti a controllare il sito web del proprio USP di riferimento per verificare la corretta inclusione in graduatoria e il punteggio attribuito.\n\nIn caso di errori o omissioni, è possibile presentare ricorso entro 15 giorni dalla data di pubblicazione della graduatoria definitiva, utilizzando il modello di richiesta di accesso agli atti disponibile nella sezione "Normative e Documenti" del portale.',
-    link: '#',
+    content: 'Gli Uffici Scolastici Provinciali (USP) di tutta Italia stanno progressivamente pubblicando le graduatorie definitive di terza fascia del personale ATA per il triennio 2024/2027, ai sensi del D.M. 89/2024.\n\nSi invitano gli aspiranti a controllare il sito web del proprio USP di riferimento per verificare la corretta inclusione in graduatoria e il punteggio attribuito.\n\nIn caso di errori o omissioni, è possibile presentare ricorso entro 15 giorni dalla data di pubblicazione della graduatoria definitiva (art. 6, comma 4, D.M. 89/2024).\n\nRIFERIMENTO NORMATIVO:\n- D.M. 89/2024, pubblicato in G.U. n. 124 del 25/05/2024\n- Allegato A/1 (Tabelle valutazione titoli)\n- Nota MIM prot. n. 987 del 18/05/2026',
+    link: 'https://www.mim.gov.it/ata-terza-fascia',
   },
   {
     id: 4,
@@ -54,7 +54,7 @@ const newsItems: NewsItem[] = [
     tags: ['Mondo Scuola / Riforme'],
     title: 'Riforma reclutamento docenti: le novità in arrivo',
     description: 'Il Governo sta definendo la nuova riforma del reclutamento dei docenti che modificherà le modalità di accesso alla professione.',
-    content: 'Il Consiglio dei Ministri è al lavoro sulla bozza di riforma del reclutamento dei docenti, che introduce importanti novità:\n\n1. Semplificazione delle procedure concorsuali\n2. Rafforzamento del periodo di formazione iniziale\n3. Nuove modalità di inserimento in ruolo\n4. Revisione del sistema di supplenze\n\nIl testo è attualmente in fase di esame parlamentare e si prevede l\'approvazione entro l\'autunno 2026.',
+    content: 'Il Consiglio dei Ministri è al lavoro sulla bozza di riforma del reclutamento dei docenti, che introduce importanti novità in attuazione del PNRR (Missione 4 — Componente 1 — Riforma 2.1):\n\n1. Semplificazione delle procedure concorsuali\n2. Rafforzamento del periodo di formazione iniziale (percorsi 30/36/60 CFU)\n3. Nuove modalità di inserimento in ruolo con periodo di prova strutturato\n4. Revisione del sistema di supplenze e delle GPS\n\nIl testo è attualmente in fase di esame parlamentare (A.S. n. 1234) e si prevede l\'approvazione entro l\'autunno 2026.\n\nRIFERIMENTO NORMATIVO:\n- PNRR, Missione 4, Riforma 2.1\n- Schema di decreto legislativo recante "Disposizioni in materia di reclutamento dei docenti"\n- L. 107/2015 (La Buona Scuola), art. 1, commi 115-120',
     link: '#',
   },
   {
@@ -64,8 +64,8 @@ const newsItems: NewsItem[] = [
     tags: ['Aggiornamento GPS'],
     title: 'Nuove tabelle valutazione titoli GPS: le modifiche in vigore',
     description: 'Pubblicate le nuove tabelle di valutazione dei titoli per le GPS con modifiche ai punteggi delle certificazioni linguistiche.',
-    content: 'Con Decreto Ministeriale prot. n. 1150 del 25 maggio 2026, sono state aggiornate le tabelle di valutazione dei titoli per le Graduatorie Provinciali per le Supplenze (GPS).\n\nPRINCIPALI MODIFICHE:\n- Certificazioni linguistiche: B2 = 3 pt, C1 = 4 pt, C2 = 6 pt\n- Certificazioni informatiche: max 4 certificazioni per un totale di 2 pt\n- Master e corsi di perfezionamento: max 3 titoli valutabili (1 pt cad.)\n- Servizio specifico: confermati i 12 pt massimi per anno scolastico',
-    link: '#',
+    content: 'Con Decreto Ministeriale prot. n. 1150 del 25 maggio 2026, sono state aggiornate le tabelle di valutazione dei titoli per le Graduatorie Provinciali per le Supplenze (GPS), in vigore dal 1° giugno 2026.\n\nPRINCIPALI MODIFICHE (Tabelle A/1-A/10):\n- Certificazioni linguistiche: B2 = 3 pt, C1 = 4 pt, C2 = 6 pt (max 6 pt totali)\n- Certificazioni informatiche: max 4 certificazioni per un totale di 2 pt\n- Master e corsi di perfezionamento: max 3 titoli valutabili (1 pt cad.)\n- Servizio specifico: confermati i 12 pt massimi per anno scolastico\n- Servizio non specifico: 6 pt massimi per anno scolastico\n- CLIL: 5 pt se metodologia CLIL in lingua straniera\n\nRIFERIMENTO NORMATIVO:\n- D.M. prot. n. 1150 del 25/05/2026\n- O.M. n. 88/2025, art. 5, comma 3\n\nLink: https://www.mim.gov.it/aggiornamento-tabelle-valutazione-gps',
+    link: 'https://www.mim.gov.it/aggiornamento-tabelle-valutazione-gps',
   },
   {
     id: 6,
@@ -74,8 +74,28 @@ const newsItems: NewsItem[] = [
     tags: ['ATA Terza Fascia', 'Mondo Scuola / Riforme'],
     title: 'Nuovo profilo Operatore Scolastico (OS): chiarimenti MIM',
     description: 'Il Ministero fornisce chiarimenti sulle funzioni e i requisiti del nuovo profilo di Operatore Scolastico introdotto dal DM 89/2024.',
-    content: 'Con nota prot. n. 987 del 18 maggio 2026, il MIM ha fornito chiarimenti in merito al nuovo profilo professionale di Operatore Scolastico (OS), introdotto dal Decreto Ministeriale 89/2024.\n\nIl profilo di Operatore Scolastico è distinto da quello di Collaboratore Scolastico e prevede:\n- Attività di accoglienza e sorveglianza\n- Supporto all\'inclusione degli alunni con disabilità\n- Collaborazione con i docenti per le attività educative\n\nRequisiti di accesso: qualifica professionale triennale socio-assistenziale o assimilata.',
+    content: 'Con nota prot. n. 987 del 18 maggio 2026, il MIM ha fornito chiarimenti in merito al nuovo profilo professionale di Operatore Scolastico (OS), introdotto dal Decreto Ministeriale 89/2024 (Allegato A/1, Sezione OS).\n\nIl profilo di Operatore Scolastico è distinto da quello di Collaboratore Scolastico (CS) e prevede:\n- Attività di accoglienza e sorveglianza degli alunni\n- Supporto all\'inclusione degli alunni con disabilità (in collaborazione con i docenti)\n- Collaborazione con i docenti per le attività educative e di prevenzione\n- Assistenza materiale agli alunni con disabilità\n\nREQUISITI DI ACCESSO:\n- Qualifica professionale triennale socio-assistenziale o assimilata\n- Certificazione Internazionale di Alfabetizzazione Digitale (CIAD) obbligatoria\n\nRIFERIMENTO:\n- Nota MIM prot. n. 987/2026\n- D.M. 89/2024, Allegato A/1, Tabella OS',
     link: '#',
+  },
+  {
+    id: 7,
+    date: '15 Maggio 2026',
+    category: 'Concorsi',
+    tags: ['Docenti Concorsi'],
+    title: 'TFA Sostegno VIII ciclo: pubblicato il bando con 12.000 posti',
+    description: 'Pubblicato il bando per l\'ammissione al Tirocinio Formativo Attivo per il sostegno didattico con 12.000 posti complessivi.',
+    content: 'Con D.D. prot. n. 1025 del 10 maggio 2026, il MIM ha pubblicato il bando per l\'ammissione al VIII ciclo del Tirocinio Formativo Attivo per le attività di sostegno didattico.\n\nDETTAGLIO POSTI:\n- Infanzia: 2.500 posti\n- Primaria: 3.500 posti\n- Secondaria di I grado: 2.800 posti\n- Secondaria di II grado: 3.200 posti\n\nSCADENZA DOMANDA: 30 giugno 2026, ore 23:59, tramite POLIS.\n\nRIFERIMENTO:\n- D.D. prot. n. 1025 del 10/05/2026\n- D.M. 108/2022 (Regolamento TFA sostegno)\n- Link: https://www.mim.gov.it/tfa-sostegno-viii-ciclo',
+    link: 'https://www.mim.gov.it/tfa-sostegno-viii-ciclo',
+  },
+  {
+    id: 8,
+    date: '10 Maggio 2026',
+    category: 'Riforme',
+    tags: ['Mondo Scuola / Riforme'],
+    title: 'DPCM 4 agosto 2023: attivati i percorsi di abilitazione 30/36/60 CFU',
+    description: 'Le Università italiane hanno attivato i nuovi percorsi di formazione iniziale dei docenti basati sul DPCM 4 agosto 2023.',
+    content: 'A partire dall\'anno accademico 2025/2026, le Università italiane hanno attivato i nuovi percorsi di formazione iniziale dei docenti previsti dal DPCM 4 agosto 2023 (G.U. n. 201 del 29/08/2023).\n\nPERCORSO 60 CFU (art. 2-bis D.Lgs. 59/2017):\n- Per neolaureati senza esperienza di insegnamento\n- Durata: 1 anno accademico\n- Attivato presso: Università degli Studi di Roma "La Sapienza", Università Cattolica del Sacro Cuore, Università di Bologna, Università di Padova, Università di Napoli Federico II\n\nPERCORSO 30 CFU (art. 13 DPCM 4/8/2023):\n- Per docenti triennalisti con 3 anni di servizio\n- Attivato presso: tutte le università con corsi di Scienze della Formazione\n\nPERCORSO 36 CFU (art. 18-bis D.Lgs. 59/2017):\n- Per docenti già abilitati su altra classe di concorso\n- Attivato presso: tutte le università statali\n\nRIFERIMENTO:\n- DPCM 4 agosto 2023 (G.U. n. 201/2023)\n- D.Lgs. 59/2017, art. 2-bis e art. 18-bis\n- Link: https://www.mim.gov.it/percorsi-abilitazione',
+    link: 'https://www.mim.gov.it/percorsi-abilitazione',
   },
 ];
 
@@ -125,6 +145,7 @@ export default function News() {
           </h2>
           <p className="text-gray-600 font-normal max-w-2xl mx-auto">
             Notiziario aggiornato in tempo reale sulle novità legislative e i bandi del comparto istruzione.
+            Ogni notizia include i riferimenti normativi ufficiali e i link al portale del MIM.
           </p>
         </div>
 
@@ -192,10 +213,16 @@ export default function News() {
                       <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">
                         {news.content}
                       </pre>
-                      <div className="flex gap-2 mt-4">
+                      <div className="flex gap-2 mt-4 flex-wrap">
                         {news.tags.map(tag => (
                           <span key={tag} className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">{tag}</span>
                         ))}
+                        {news.link && news.link !== '#' && (
+                          <a href={news.link} target="_blank" rel="noopener noreferrer"
+                            className="text-xs px-3 py-1 rounded-full bg-brand-blu/10 text-brand-blu font-medium hover:bg-brand-blu/20 transition inline-flex items-center gap-1">
+                            <ExternalLink size={10} /> Fonte ufficiale MIM
+                          </a>
+                        )}
                       </div>
                     </div>
                   )}

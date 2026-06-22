@@ -1,4 +1,4 @@
-import { Calculator, Briefcase, ClipboardList, Trophy } from 'lucide-react';
+import { Calculator, ClipboardList, Trophy, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function PunteggioGPS() {
@@ -15,39 +15,43 @@ export default function PunteggioGPS() {
         </div>
 
         <div className="grid gap-8 md:grid-cols-2 mt-12">
-          <div className="bg-white/70 backdrop-blur-md p-8 rounded-3xl shadow-soft hover:shadow-medium transition-all border border-slate-200/60">
+          <div className="bg-white/70 backdrop-blur-md p-8 rounded-3xl shadow-soft hover:shadow-medium transition-all border border-slate-200/60 flex flex-col">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-brand-blu/10 rounded-2xl flex items-center justify-center mr-4">
                 <Calculator className="h-6 w-6 text-brand-blu" />
               </div>
               <h3 className="text-xl font-bold text-[#0F172A]">Punteggio GPS</h3>
             </div>
-            <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+            <p className="text-gray-600 mb-6 text-sm leading-relaxed flex-1">
               Calcola il tuo punteggio per le Graduatorie Provinciali per le Supplenze (GPS) considerando titoli di servizio, certificazioni linguistiche, informatiche e altri titoli valutabili secondo le Tabelle A/1-A/10.
             </p>
             <Link
               to="/calcolo-punteggio"
-              className="inline-flex items-center gap-2 text-brand-verde font-semibold hover:text-brand-verde/80 transition-colors text-sm"
+              className="w-full inline-flex items-center justify-center gap-3 bg-[#1E3A8A] text-white px-6 py-4 rounded-2xl font-bold text-base hover:bg-[#2563EB] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
-              Calcola il tuo punteggio GPS →
+              <Calculator size={20} />
+              Calcola il tuo punteggio GPS
+              <ArrowRight size={18} />
             </Link>
           </div>
 
-          <div className="bg-white/70 backdrop-blur-md p-8 rounded-3xl shadow-soft hover:shadow-medium transition-all border border-slate-200/60">
+          <div className="bg-white/70 backdrop-blur-md p-8 rounded-3xl shadow-soft hover:shadow-medium transition-all border border-slate-200/60 flex flex-col">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-brand-verde/10 rounded-2xl flex items-center justify-center mr-4">
-                <Briefcase className="h-6 w-6 text-brand-verde" />
+                <Calculator className="h-6 w-6 text-brand-verde" />
               </div>
               <h3 className="text-xl font-bold text-[#0F172A]">Punteggio ATA</h3>
             </div>
-            <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+            <p className="text-gray-600 mb-6 text-sm leading-relaxed flex-1">
               Calcola il tuo punteggio per le graduatorie del Personale ATA considerando titoli di servizio, titoli culturali, certificazioni informatiche e altri requisiti specifici per ogni profilo professionale (D.M. 89/2024).
             </p>
             <Link
               to="/calcolo-punteggio"
-              className="inline-flex items-center gap-2 text-brand-verde font-semibold hover:text-brand-verde/80 transition-colors text-sm"
+              className="w-full inline-flex items-center justify-center gap-3 bg-[#064E3B] text-white px-6 py-4 rounded-2xl font-bold text-base hover:bg-[#10B981] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
-              Calcola il tuo punteggio ATA →
+              <Calculator size={20} />
+              Calcola il tuo punteggio ATA
+              <ArrowRight size={18} />
             </Link>
           </div>
         </div>

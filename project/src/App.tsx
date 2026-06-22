@@ -1,13 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './components/Auth/AuthContext';
 import Header from './components/Header';
-import Hero from './components/Hero';
-import PunteggioGPS from './components/PunteggioGPS';
-import AssistantsAI from './components/AssistantsAI';
-import NormativeDocuments from './components/NormativeDocuments';
-import News from './components/News';
-import Deadlines from './components/Deadlines';
-import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 import Breadcrumb from './components/Breadcrumb';
 import HomePage from './pages/HomePage';

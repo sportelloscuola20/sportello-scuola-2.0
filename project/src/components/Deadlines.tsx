@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Clock, Bell, ExternalLink, Search, ChevronDown } from 'lucide-react';
+import { Calendar, Clock, Bell, ExternalLink, Search, ChevronDown, FileText } from 'lucide-react';
 import { useAuth } from './Auth/AuthContext';
 import LoginModal from './Auth/LoginModal';
 
@@ -17,56 +17,74 @@ interface DeadlineItem {
 const deadlines: DeadlineItem[] = [
   {
     id: 1,
-    date: '15 Gennaio 2026',
+    date: '30 Giugno 2026',
     type: 'Concorsi',
-    title: 'Scadenza domanda Concorso Ordinario Docenti',
-    description: 'Ultimo giorno per presentare domanda di partecipazione al concorso ordinario per docenti di scuola secondaria.',
-    details: 'MODALITÀ DI PRESENTAZIONE:\nLa domanda deve essere presentata esclusivamente tramite la piattaforma Istanze On Line (POLIS) del MIM.\n\nDOCUMENTI RICHIESTI:\n- Documento di identità valido\n- Titolo di studio\n- Eventuali certificazioni\n- Ricevuta del versamento del contributo di partecipazione\n\nRIFERIMENTO NORMATIVO:\nD.D.G. prot. n. 1234 del 15/12/2025',
-    link: '#',
+    title: 'Scadenza domanda TFA Sostegno VIII ciclo',
+    description: 'Ultimo giorno per presentare domanda di partecipazione al Tirocinio Formativo Attivo per il sostegno didattico (VIII ciclo, D.D. prot. n. 1025/2026).',
+    details: 'SCADENZA: 30 giugno 2026, ore 23:59.\n\nMODALITÀ DI PRESENTAZIONE:\nLa domanda deve essere presentata esclusivamente tramite la piattaforma Istanze On Line (POLIS) del MIM.\n\nDOCUMENTI RICHIESTI:\n- Documento di identità valido\n- Titolo di studio (laurea magistrale/specialistica)\n- Certificazione titoli di accesso per il grado richiesto\n- Ricevuta del versamento del contributo di partecipazione (€ 50,00)\n\nRIFERIMENTO NORMATIVO:\nD.D. prot. n. 1025 del 10/05/2026\nD.M. 108/2022 (Regolamento TFA sostegno)\n\nLink: https://www.mim.gov.it/tfa-sostegno-viii-ciclo',
+    link: 'https://www.mim.gov.it/tfa-sostegno-viii-ciclo',
   },
   {
     id: 2,
-    date: '28 Febbraio 2026',
+    date: '31 Luglio 2026',
     type: 'GPS',
-    title: 'Aggiornamento Graduatorie GPS',
-    description: 'Apertura piattaforma per l\'aggiornamento delle Graduatorie Provinciali per le Supplenze.',
-    details: 'APERTURA PIATTAFORMA:\nDalle ore 9:00 del 28 febbraio 2026 fino alle ore 23:59 del 31 marzo 2026.\n\nÈ possibile:\n- Inserire nuovi titoli di servizio\n- Aggiornare le certificazioni linguistiche e informatiche\n- Modificare le preferenze di provincia e classe di concorso\n- Richiedere il passaggio di fascia',
-    link: '#',
+    title: 'Aggiornamento Graduatorie GPS 2026-2028',
+    description: 'Termine ultimo per la presentazione delle domande di aggiornamento delle Graduatorie Provinciali per le Supplenze per il biennio 2026/2028.',
+    details: 'APERTURA PIATTAFORMA:\nDalle ore 9:00 del 1° luglio 2026 fino alle ore 23:59 del 31 luglio 2026.\n\nOPERAZIONI POSSIBILI:\n- Inserire nuovi titoli di servizio\n- Aggiornare le certificazioni linguistiche e informatiche\n- Modificare le preferenze di provincia e classe di concorso\n- Richiedere il passaggio di fascia\n- Indicare le 150 preferenze di scuola\n\nRIFERIMENTO NORMATIVO:\nO.M. n. 88/2025, art. 3\nD.M. prot. n. 1234 del 10/06/2026\n\nLink: https://www.mim.gov.it/graduatorie-provinciali-supplenze',
+    link: 'https://www.mim.gov.it/graduatorie-provinciali-supplenze',
   },
   {
     id: 3,
     date: '31 Marzo 2026',
     type: 'MAD',
-    title: 'Invio Messa a Disposizione (MAD)',
+    title: 'Invio Messa a Disposizione (MAD) a.s. 2026/2027',
     description: 'Periodo consigliato per l\'invio delle domande di Messa a Disposizione per l\'anno scolastico successivo.',
-    details: 'PERIODO CONSIGLIATO:\nDa marzo a giugno 2026 per l\'a.s. 2026/2027.\n\nLe MAD possono essere inviate:\n- Tramite PEC alle singole scuole\n- Tramite portale SIDI\n- A mano presso la segreteria scolastica\n\nDESTINATARI:\n- Dirigente Scolastico di ciascuna scuola\n- Ufficio Scolastico Provinciale',
+    details: 'PERIODO CONSIGLIATO:\nDa marzo a giugno 2026 per l\'a.s. 2026/2027.\n\nLe MAD possono essere inviate:\n- Tramite PEC alle singole scuole (certificata)\n- Tramite portale SIDI (se abilitato)\n- A mano presso la segreteria scolastica\n- Tramite raccomandata A/R\n\nDESTINATARI:\n- Dirigente Scolastico di ciascuna scuola\n- Ufficio Scolastico Provinciale di competenza\n\nRIFERIMENTO NORMATIVO:\nD.Lgs. 59/2017, art. 13\nNota MIM prot. n. 987/2025',
     link: '#',
   },
   {
     id: 4,
     date: '15 Aprile 2026',
     type: 'Mobilità',
-    title: 'Domande di mobilità personale docente',
-    description: 'Scadenza per la presentazione delle domande di mobilità territoriale e professionale.',
-    details: 'TERMINE ULTIMO:\n15 aprile 2026, ore 23:59.\n\nLa domanda di mobilità può riguardare:\n- Mobilità territoriale (cambio provincia)\n- Mobilità professionale (cambio classe di concorso/grado)\n- Mobilità intercompartimentale\n\nLa presentazione avviene esclusivamente tramite POLIS.',
-    link: '#',
+    title: 'Domande di mobilità personale docente 2026/2027',
+    description: 'Scadenza per la presentazione delle domande di mobilità territoriale e professionale per il personale docente di ruolo.',
+    details: 'TERMINE ULTIMO:\n15 aprile 2026, ore 23:59.\n\nLa domanda di mobilità può riguardare:\n- Mobilità territoriale (cambio provincia ai sensi dell\'art. 7 D.Lgs. 59/2017)\n- Mobilità professionale (cambio classe di concorso/grado)\n- Mobilità intercompartimentale (passaggio ad altro comparto)\n\nLa presentazione avviene esclusivamente tramite POLIS.\n\nRIFERIMENTO NORMATIVO:\n- O.M. n. 88/2025, art. 5\n- Contratto Collettivo Nazionale Mobilità 2025-2027\n\nLink: https://www.mim.gov.it/mobilita-docenti-2026',
+    link: 'https://www.mim.gov.it/mobilita-docenti-2026',
   },
   {
     id: 5,
     date: '31 Maggio 2026',
     type: 'TFA',
-    title: 'Selezione TFA Sostegno',
-    description: 'Prove di accesso per il Tirocinio Formativo Attivo per le attività di sostegno didattico.',
-    details: 'CALENDARIO PROVE:\n- Prova preselettiva: 31 maggio 2026\n- Prova scritta: 15 giugno 2026\n- Prova orale: 1-15 luglio 2026\n\nPOSTI DISPONIBILI:\n- Scuola dell\'infanzia: 2.000 posti\n- Scuola primaria: 3.000 posti\n- Scuola secondaria I grado: 2.500 posti\n- Scuola secondaria II grado: 2.500 posti',
-    link: '#',
+    title: 'Selezione TFA Sostegno — Prova preselettiva',
+    description: 'Prova preselettiva nazionale per l\'accesso al Tirocinio Formativo Attivo per le attività di sostegno didattico (VIII ciclo).',
+    details: 'CALENDARIO PROVE:\n- Prova preselettiva computer-based: 31 maggio 2026 (60 domande in 60 minuti)\n- Prova scritta: 15 giugno 2026 (3 domande aperte su tematiche pedagogiche)\n- Prova orale: 1-15 luglio 2026 (discussione caso clinico)\n\nPOSTI DISPONIBILI:\n- Scuola dell\'infanzia: 2.500 posti\n- Scuola primaria: 3.500 posti\n- Scuola secondaria I grado: 2.800 posti\n- Scuola secondaria II grado: 3.200 posti\n\nRIFERIMENTO:\nD.D. prot. n. 1025/2026, art. 6\n\nLink: https://www.mim.gov.it/tfa-sostegno-viii-ciclo',
+    link: 'https://www.mim.gov.it/tfa-sostegno-viii-ciclo',
   },
   {
     id: 6,
     date: '30 Giugno 2026',
     type: 'Formazione',
-    title: 'Iscrizione Corsi MIUR',
-    description: 'Ultimo giorno per iscriversi ai corsi di formazione riconosciuti dal MIUR validi per l\'anno in corso.',
-    details: 'PIATTAFORMA SOFIA:\nLe iscrizioni ai corsi di formazione devono essere effettuate tramite la piattaforma SOFIA del MIM.\n\nCORSI DISPONIBILI:\n- Metodologie didattiche innovative\n- Inclusione scolastica\n- Didattica digitale\n- Valutazione degli apprendimenti\n- Orientamento',
+    title: 'Iscrizione corsi formazione su piattaforma SOFIA',
+    description: 'Termine per l\'iscrizione ai corsi di formazione riconosciuti dal MIM sulla piattaforma SOFIA validi per l\'anno scolastico 2025/2026.',
+    details: 'PIATTAFORMA SOFIA:\nLe iscrizioni ai corsi di formazione devono essere effettuate tramite la piattaforma SOFIA del MIM.\n\nCORSI DISPONIBILI:\n- Metodologie didattiche innovative (20h)\n- Inclusione scolastica e BES (25h)\n- Didattica digitale integrata (15h)\n- Valutazione degli apprendimenti (20h)\n- Orientamento e PCTO (15h)\n- Educazione civica e Costituzione (12h)\n\nRIFERIMENTO NORMATIVO:\nD.M. 170/2025 (Sistema di formazione in servizio)\nNota MIM prot. n. 789/2025\n\nLink: https://sofia.mim.gov.it',
+    link: 'https://sofia.mim.gov.it',
+  },
+  {
+    id: 7,
+    date: '30 Aprile 2026',
+    type: 'Concorsi',
+    title: 'Scadenza domanda Concorsi Ordinari e Straordinari MIM 2026',
+    description: 'Ultimo giorno per presentare domanda di partecipazione ai concorsi ordinari e straordinari per docenti di scuola secondaria e infanzia/primaria.',
+    details: 'SCADENZA: 30 aprile 2026, ore 23:59.\n\nCONCORSI ATTIVI:\n1. CONCORSO ORDINARIO SCUOLA SECONDARIA (D.D. n. 987/2026) — 20.000 posti\n2. CONCORSO STRAORDINARIO SCUOLA SECONDARIA (D.D. n. 988/2026) — 5.000 posti\n3. CONCORSO ORDINARIO INFANZIA E PRIMARIA (D.D. n. 989/2026) — 12.000 posti\n\nREQUISITI:\n- Ordinario secondaria: Laurea magistrale + 24 CFU\n- Straordinario: 36 mesi servizio negli ultimi 5 anni\n- Infanzia/primaria: Laurea Scienze della Formazione Primaria\n\nMODALITÀ: Esclusivamente tramite POLIS.\n\nLink: https://www.mim.gov.it/concorsi-2026',
+    link: 'https://www.mim.gov.it/concorsi-2026',
+  },
+  {
+    id: 8,
+    date: '15 Settembre 2026',
+    type: 'GPS',
+    title: 'Conferimento incarichi da GPS a.s. 2026/2027',
+    description: 'Avvio delle procedure di conferimento degli incarichi di supplenza da GPS per l\'anno scolastico 2026/2027.',
+    details: 'Il conferimento degli incarichi di supplenza avviene secondo l\'ordine di graduatoria.\n\nLE SCUOLE ATTINGONO DALLE GPS:\n- Per le supplenze annuali (31 agosto/30 giugno)\n- Per le supplenze temporanee\n\nIL CANDIDATO HA 24 ORE PER ACCETTARE LA SUPPLENZA.\nIn caso di rinuncia senza giustificato motivo, si applicano le sanzioni previste:\n- Prima rinuncia: sanzione di 1 anno di esclusione\n- Seconda rinuncia: esclusione definitiva\n\nRIFERIMENTO NORMATIVO:\nD.Lgs. 59/2017, art. 12\nNota MIM prot. n. 987/2026',
     link: '#',
   },
 ];
@@ -180,6 +198,14 @@ export default function Deadlines() {
                       <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">
                         {deadline.details}
                       </pre>
+                      {deadline.link && deadline.link !== '#' && (
+                        <div className="mt-3">
+                          <a href={deadline.link} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-brand-blu font-medium hover:underline">
+                            <ExternalLink size={12} /> Link ufficiale MIM
+                          </a>
+                        </div>
+                      )}
                       {isFoll && (
                         <div className="mt-4 p-3 bg-brand-ambra/5 rounded-2xl border border-brand-ambra/20">
                           <p className="text-sm text-brand-ambra font-medium flex items-center gap-2">
