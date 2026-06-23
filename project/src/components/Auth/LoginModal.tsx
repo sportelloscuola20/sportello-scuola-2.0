@@ -58,7 +58,15 @@ export default function LoginModal({ onClose }: LoginModalProps) {
 
   const handleSignup = async () => {
     const fullName = `${firstName} ${lastName}`.trim();
-    const { error } = await supabase.auth.signUp({
+
+    console.log('%c[HACKER MODE] 🚀 Pipeline avviata. Payload di registrazione:', 'color: #00ff00; font-weight: bold;', {
+      email,
+      password: `PROTECTED_${password.length}_CHARS`,
+      name: fullName,
+      ruolo,
+    });
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -66,7 +74,19 @@ export default function LoginModal({ onClose }: LoginModalProps) {
         redirectTo: 'https://sportelloscuola2-0.it/area-riservata',
       },
     });
-    if (error) throw error;
+
+    if (signUpError) {
+      console.error('%c[⚠️ CRITICAL ERROR] Supabase ha rifiutato la richiesta!', 'color: #ff0000; font-weight: bold; font-size: 14px;');
+      console.dir(signUpError);
+      throw signUpError;
+    }
+
+    console.log('%c[✓ SUCCESS] Risposta positiva da Supabase Auth:', 'color: #00ff00; font-weight: bold;', data);
+
+    if (data?.user?.identities?.length === 0) {
+      console.warn('%c[⚠️ WARNING] L\'utente esiste già nel database di autenticazione!', 'color: #ffaa00; font-weight: bold;');
+    }
+
     setStatus('success');
   };
 
@@ -81,7 +101,18 @@ export default function LoginModal({ onClose }: LoginModalProps) {
         await handleSignup();
       }
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Errore di connessione al server.');
+      console.error('%c[❌ PIPELINE BLOCKED] Dettagli del fallimento della catena:', 'color: #ff0000; font-weight: bold;', err);
+
+      const msg = err instanceof Error ? err.message : 'Errore imprevisto durante l\'elaborazione dei dati.';
+      let userFriendlyMessage = msg;
+
+      if (msg.includes('SMTP') || msg.includes('smtp')) {
+        userFriendlyMessage = "Errore Server SMTP: Supabase non riesce a connettersi a Resend. Controlla le credenziali in SMTP Settings.";
+      } else if (msg.includes('Email provider is disabled')) {
+        userFriendlyMessage = "Configurazione errata: Il provider Email è disattivato su Supabase (Sign In / Providers).";
+      }
+
+      setErrorMessage(userFriendlyMessage);
       setStatus('error');
     }
   };
