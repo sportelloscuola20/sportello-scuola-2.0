@@ -2,15 +2,6 @@ export type RuoloUtente = 'docente' | 'ata' | 'aspirante';
 export type TipoGraduatoria = 'gps' | 'ata';
 export type Fascia = 'I' | 'II' | 'III';
 
-export interface Profile {
-  id: string;
-  email: string;
-  full_name: string | null;
-  ruolo: RuoloUtente;
-  is_premium: boolean;
-  created_at: string;
-}
-
 export interface UserScore {
   id: string;
   user_id: string;
@@ -188,4 +179,62 @@ export interface UserPreference {
   provincia_preferita: string;
   regione_preferita: string;
   updated_at: string;
+}
+
+export interface Profile {
+  id: string;
+  email: string;
+  full_name: string | null;
+  ruolo: RuoloUtente;
+  is_premium: boolean;
+  onboarded: boolean;
+  preferences: Record<string, unknown>;
+  notification_targets: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Simulation {
+  id: string;
+  user_id: string;
+  tipo_graduatoria: string;
+  punteggio_finale: number;
+  dettagli: Record<string, unknown>;
+  titoli_simulati: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface UserFavorite {
+  id: string;
+  user_id: string;
+  item_type: string;
+  item_id: string;
+  item_data: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface StorageDocument {
+  id: string;
+  name: string;
+  bucket_id: string;
+  owner_id: string;
+  created_at: string;
+  updated_at: string;
+  size: number;
+  mimetype: string;
+}
+
+export interface Bando {
+  id: string;
+  titolo: string;
+  ente: string;
+  tipo: string;
+  data_scadenza: string;
+  data_pubblicazione: string;
+  link: string | null;
+  regione: string | null;
+  provincia: string | null;
+  categoria: string | null;
+  descrizione: string | null;
+  created_at: string;
 }
