@@ -33,10 +33,8 @@ export default function LoginModal({ onClose }: LoginModalProps) {
 
     if (result.error) {
       setError(result.error);
-    } else if (mode === 'signup') {
-      setShowSuccess(true);
     } else {
-      navigate('/dashboard');
+      navigate('/area-riservata', { replace: true });
       onClose();
     }
   };
@@ -95,81 +93,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           <X size={20} />
         </button>
 
-        {showSuccess ? (
-          <div style={{ textAlign: 'center' }}>
-            <div
-              style={{
-                width: 72,
-                height: 72,
-                background: 'linear-gradient(135deg, #1F915E, #2F797E)',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 20px',
-              }}
-            >
-              <CheckCircle style={{ width: 36, height: 36, color: '#ffffff' }} />
-            </div>
-            <h2
-              style={{
-                fontSize: 24,
-                fontWeight: 700,
-                color: '#1F915E',
-                margin: '0 0 8px',
-              }}
-            >
-              Registrazione Completata!
-            </h2>
-            <p style={{ color: '#6B7280', fontSize: 14, lineHeight: '1.6', margin: '0 0 8px' }}>
-              Gentile <strong>{fullName}</strong>, la tua registrazione su Sportello Scuola &egrave; avvenuta con successo.
-              Hai appena sbloccato l&rsquo;accesso alla piattaforma tecnologica pi&ugrave; avanzata per la gestione
-              della tua carriera nel sistema scolastico italiano.
-            </p>
-            <div
-              style={{
-                backgroundColor: '#F3F4F6',
-                border: '2px dashed #D1D5DB',
-                borderRadius: 12,
-                padding: 16,
-                marginTop: 16,
-                textAlign: 'left',
-              }}
-            >
-              <p style={{ fontSize: 13, color: '#374151', margin: '0 0 8px', fontWeight: 600 }}>
-                Riepilogo
-              </p>
-              <p style={{ fontSize: 13, color: '#6B7280', margin: '0 0 4px' }}>
-                <strong>Email:</strong> {email}
-              </p>
-              <p style={{ fontSize: 13, color: '#6B7280', margin: 0 }}>
-                <strong>Password:</strong> [La password da te scelta: **********]
-              </p>
-            </div>
-            <p style={{ color: '#9CA3AF', fontSize: 12, marginTop: 16, lineHeight: '1.5' }}>
-              Ti abbiamo inviato un&rsquo;email di conferma all&rsquo;indirizzo {email}.
-              Verifica la tua casella di posta e clicca sul link di attivazione per completare la procedura.
-            </p>
-            <button
-              onClick={() => { navigate('/dashboard'); onClose(); }}
-              style={{
-                marginTop: 20,
-                width: '100%',
-                padding: '14px 24px',
-                background: 'linear-gradient(135deg, #1F915E, #235377)',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: 12,
-                fontSize: 16,
-                fontWeight: 700,
-                cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(31, 145, 94, 0.3)',
-              }}
-            >
-              Vai all&rsquo;Area Riservata
-            </button>
-          </div>
-        ) : (
+        {false ? null : (
           <>
             <div style={{ textAlign: 'center', marginBottom: 24 }}>
               <div

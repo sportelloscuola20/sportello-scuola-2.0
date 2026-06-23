@@ -61,17 +61,17 @@ export default function AreaRiservataLayout({ children }: { children: React.Reac
 
   useEffect(() => {
     if (user && !checkingAuth) {
-      fetchProfile(user.id).then(() => {
-        setShowOnboarding(true);
-      });
+      fetchProfile(user.id);
     }
   }, [user, checkingAuth, fetchProfile]);
 
   useEffect(() => {
-    if (!checkingAuth && !authLoading && !isAuthenticated) {
-      navigate('/', { state: { showLogin: true }, replace: true });
+    if (profile && profile.onboarded === true) {
+      setShowOnboarding(false);
+    } else if (profile && profile.onboarded === false) {
+      setShowOnboarding(true);
     }
-  }, [checkingAuth, authLoading, isAuthenticated, navigate]);
+  }, [profile]);
 
   useEffect(() => {
     if (profile && profile.onboarded === true) {
