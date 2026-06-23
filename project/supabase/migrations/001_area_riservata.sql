@@ -88,10 +88,10 @@ CREATE POLICY "Anyone can read bandi" ON interpelli_nazionali
 INSERT INTO storage.buckets (id, name, public) VALUES ('user-documents', 'user-documents', false)
 ON CONFLICT (id) DO NOTHING;
 
--- RLS for storage bucket
+-- RLS for storage bucket (cast owner_id::uuid to match auth.uid() type)
 CREATE POLICY "Users can read own documents" ON storage.objects
-  FOR SELECT USING (auth.uid() = owner_id);
+  FOR SELECT USING (auth.uid() = owner_id::uuid);
 CREATE POLICY "Users can upload own documents" ON storage.objects
-  FOR INSERT WITH CHECK (auth.uid() = owner_id AND bucket_id = 'user-documents');
+  FOR INSERT WITH CHECK (auth.uid() = owner_id::uuid AND bucket_id = 'user-documents');
 CREATE POLICY "Users can delete own documents" ON storage.objects
-  FOR DELETE USING (auth.uid() = owner_id AND bucket_id = 'user-documents');
+  FOR DELETE USING (auth.uid() = owner_id::uuid AND bucket_id = 'user-documents');

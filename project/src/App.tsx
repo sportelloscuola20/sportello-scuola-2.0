@@ -24,6 +24,7 @@ import BookmarksPageAR from './pages/BookmarksPageAR';
 import DocumentsPageAR from './pages/DocumentsPageAR';
 import BandiPageAR from './pages/BandiPageAR';
 import SubscriptionPageAR from './pages/SubscriptionPageAR';
+import SettingsPageAR from './pages/SettingsPageAR';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -58,6 +59,7 @@ function App() {
               <Route path="/area-riservata/documenti" element={<AreaRiservataLayout><DocumentsPageAR /></AreaRiservataLayout>} />
               <Route path="/area-riservata/bandi" element={<AreaRiservataLayout><BandiPageAR /></AreaRiservataLayout>} />
               <Route path="/area-riservata/abbonamento" element={<AreaRiservataLayout><SubscriptionPageAR /></AreaRiservataLayout>} />
+              <Route path="/area-riservata/impostazioni" element={<AreaRiservataLayout><SettingsPageAR /></AreaRiservataLayout>} />
             </Routes>
           </div>
           <Footer />

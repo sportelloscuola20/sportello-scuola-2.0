@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
-  LayoutDashboard, TrendingUp, Bookmark, FileText, Bell, CreditCard,
-  LogOut, Sparkles, ChevronRight, Sun, Moon, Cloud, CloudMoon,
+  LayoutDashboard, TrendingUp, Bookmark, FileText, Bell, CreditCard, Settings,
+  LogOut, Sparkles, ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '../Auth/AuthContext';
 import { useProfileStore } from '../../store/useProfileStore';
@@ -23,27 +23,13 @@ const navItems: NavItem[] = [
   { id: 'documenti', label: 'Fascicolo Digitale', path: '/area-riservata/documenti', icon: <FileText size={18} /> },
   { id: 'bandi', label: 'Scadenziario Bandi', path: '/area-riservata/bandi', icon: <Bell size={18} /> },
   { id: 'abbonamento', label: 'Abbonamento', path: '/area-riservata/abbonamento', icon: <CreditCard size={18} /> },
+  { id: 'impostazioni', label: 'Impostazioni', path: '/area-riservata/impostazioni', icon: <Settings size={18} /> },
 ];
-
-const greetings = [
-  { hour: 5, icon: <Moon size={16} />, text: 'Buonanotte' },
-  { hour: 6, icon: <Sun size={16} />, text: 'Buongiorno' },
-  { hour: 12, icon: <Sun size={16} />, text: 'Buon pomeriggio' },
-  { hour: 18, icon: <CloudMoon size={16} />, text: 'Buonasera' },
-  { hour: 22, icon: <Cloud size={16} />, text: 'Buonanotte' },
-];
-
-function getGreeting() {
-  const h = new Date().getHours();
-  const g = greetings.find(g => h >= g.hour);
-  return g || greetings[0];
-}
 
 export default function AreaRiservataLayout({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
-  const { onboarded, fetchProfile, profile } = useProfileStore();
+  const { user, loading: authLoading, logout } = useAuth();
+  const { fetchProfile, profile } = useProfileStore();
   const navigate = useNavigate();
-  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -66,15 +52,9 @@ export default function AreaRiservataLayout({ children }: { children: React.Reac
   }, [user, checkingAuth, fetchProfile]);
 
   useEffect(() => {
-    if (profile && profile.onboarded === true) {
-      setShowOnboarding(false);
-    } else if (profile && profile.onboarded === false) {
+    if (profile?.onboarded === false) {
       setShowOnboarding(true);
-    }
-  }, [profile]);
-
-  useEffect(() => {
-    if (profile && profile.onboarded === true) {
+    } else {
       setShowOnboarding(false);
     }
   }, [profile]);
@@ -89,9 +69,6 @@ export default function AreaRiservataLayout({ children }: { children: React.Reac
       </div>
     );
   }
-
-  const greeting = getGreeting();
-  const activePath = location.pathname;
 
   const handleLogout = async () => {
     await logout();

@@ -1,34 +1,55 @@
-import { useState, useEffect } from 'react';
-import { Sparkles, Bookmark, TrendingUp, Calendar, Sun, Moon, Cloud, CloudMoon } from 'lucide-react';
+import { Bookmark, TrendingUp, Calendar, Sparkles, GraduationCap, Briefcase, User, Bell, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../components/Auth/AuthContext';
 import { useProfileStore } from '../store/useProfileStore';
 import SavedItems from '../components/SavedItems';
 import CalendarWidget from '../components/CalendarWidget';
 
-const greetings = [
-  { hour: 5, icon: <Moon size={16} />, text: 'Buonanotte' },
-  { hour: 6, icon: <Sun size={16} />, text: 'Buongiorno' },
-  { hour: 12, icon: <Sun size={16} />, text: 'Buon pomeriggio' },
-  { hour: 18, icon: <CloudMoon size={16} />, text: 'Buonasera' },
-  { hour: 22, icon: <Cloud size={16} />, text: 'Buonanotte' },
-];
-
-function getGreeting() {
-  const h = new Date().getHours();
-  const g = greetings.find(g => h >= g.hour);
-  return g || greetings[0];
-}
+const ROLE_CONFIG = {
+  docente: {
+    icon: <GraduationCap size={24} />,
+    label: 'Docente',
+    tagline: 'Gestisci la tua carriera nella scuola',
+    highlights: [
+      { label: 'Calcolo GPS', desc: 'Simulazione punteggio aggiornata', path: '/area-riservata/punteggi' },
+      { label: 'Bandi e Interpelli', desc: 'Nuove opportunità per docenti', path: '/area-riservata/bandi' },
+      { label: 'Documenti Utili', desc: 'Contratti, certificazioni, titoli', path: '/area-riservata/documenti' },
+    ],
+  },
+  ata: {
+    icon: <Briefcase size={24} />,
+    label: 'ATA',
+    tagline: 'La tua carriera nel personale scolastico',
+    highlights: [
+      { label: 'Graduatorie ATA', desc: 'Calcolo punteggio 3 fascia e 24 mesi', path: '/area-riservata/punteggi' },
+      { label: 'Scadenze ATA', desc: 'Bandi e utilizzazioni', path: '/area-riservata/bandi' },
+      { label: 'Fascicolo Digitale', desc: 'Carica e gestisci i tuoi documenti', path: '/area-riservata/documenti' },
+    ],
+  },
+  aspirante: {
+    icon: <User size={24} />,
+    label: 'Aspirante',
+    tagline: 'Il primo passo verso la scuola',
+    highlights: [
+      { label: 'Orientamento', desc: 'Guide e risorse per iniziare', path: '/area-riservata/punteggi' },
+      { label: 'Notizie e Scadenze', desc: 'Borse di studio, iscrizioni, bandi', path: '/area-riservata/bandi' },
+      { label: 'Documenti', desc: 'Certificazioni e titoli di studio', path: '/area-riservata/documenti' },
+    ],
+  },
+};
 
 export default function AreaRiservataPage() {
   const { user } = useAuth();
-  const { preferences } = useProfileStore();
-  const greeting = getGreeting();
+  const { profile } = useProfileStore();
+
+  const ruolo = profile?.ruolo || user?.ruolo || 'aspirante';
+  const config = ROLE_CONFIG[ruolo as keyof typeof ROLE_CONFIG] || ROLE_CONFIG.aspirante;
 
   const quickStats = [
-    { label: 'Preferiti salvati', value: '—', icon: <Bookmark size={16} />, color: 'from-amber-400 to-orange-500' },
+    { label: 'Preferiti', value: '—', icon: <Bookmark size={16} />, color: 'from-amber-400 to-orange-500' },
     { label: 'Simulazioni', value: '—', icon: <TrendingUp size={16} />, color: 'from-blue-400 to-indigo-500' },
     { label: 'Bandi seguiti', value: '—', icon: <Calendar size={16} />, color: 'from-green-400 to-emerald-500' },
-    { label: 'Servizio Premium', value: user?.is_premium ? 'ATTIVO' : 'Free', icon: <Sparkles size={16} />, color: 'from-brand-ambra to-orange-500' },
+    { label: 'Premium', value: user?.is_premium ? 'ATTIVO' : 'Free', icon: <Sparkles size={16} />, color: 'from-brand-ambra to-orange-500' },
   ];
 
   return (
@@ -38,15 +59,14 @@ export default function AreaRiservataPage() {
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-brand-blu/10 rounded-full blur-3xl" />
         <div className="relative">
           <div className="flex items-center gap-2 text-white/60 text-sm mb-2">
-            {greeting.icon}
-            <span>{greeting.text}</span>
+            {config.icon}
+            <span className="px-2 py-0.5 rounded-md bg-white/10 text-xs font-medium">{config.label}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-            {greeting.text}, {user?.full_name?.split(' ')[0] || 'Utente'}!
+            {config.tagline}
           </h1>
           <p className="text-white/60 text-sm max-w-xl">
-            Benvenuto nella tua Area Riservata. Monitora punteggi, preferiti, documenti
-            e scadenze in un unico hub di controllo.
+            Controlla punteggi, documenti, bandi e preferiti in un hub personalizzato per il tuo profilo.
           </p>
         </div>
       </div>
@@ -64,11 +84,37 @@ export default function AreaRiservataPage() {
         ))}
       </div>
 
+      <div className="grid sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+        {config.highlights.map(h => (
+          <Link
+            key={h.path}
+            to={h.path}
+            className="group relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-5 hover:bg-white/10 transition"
+          >
+            <div className="relative">
+              <p className="text-white font-semibold text-sm mb-1 group-hover:text-brand-verde transition-colors">
+                {h.label}
+              </p>
+              <p className="text-white/40 text-xs">{h.desc}</p>
+            </div>
+            <ArrowRight size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 group-hover:text-brand-verde group-hover:translate-x-1 transition-all" />
+          </Link>
+        ))}
+      </div>
+
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Bookmark size={16} className="text-brand-ambra" />
+            <h3 className="text-sm font-semibold text-white">Notizie in Evidenza</h3>
+          </div>
           <SavedItems />
         </div>
         <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Bell size={16} className="text-brand-ottanio" />
+            <h3 className="text-sm font-semibold text-white">Scadenze Preferite</h3>
+          </div>
           <CalendarWidget />
         </div>
       </div>
