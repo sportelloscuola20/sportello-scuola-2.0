@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const { data: profile } = await supabase
           .from('profiles')
-          .select('id, email, full_name, ruolo, is_premium')
+          .select('*')
           .eq('id', session.user.id)
           .maybeSingle();
 
@@ -155,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, email, full_name, ruolo, is_premium')
+      .select('*')
       .eq('id', session.user.id)
       .maybeSingle();
 
@@ -203,7 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const userEmail = data.user?.email || email;
           const { data: profile } = await supabase
             .from('profiles')
-            .select('id, email, full_name, ruolo, is_premium')
+            .select('*')
             .eq('id', data.user.id)
             .maybeSingle();
 
@@ -225,7 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.user) {
         const { data: profile, error: profileErr } = await supabase
           .from('profiles')
-          .select('id, email, full_name, ruolo, is_premium')
+          .select('*')
           .eq('id', data.user.id)
           .maybeSingle();
 
