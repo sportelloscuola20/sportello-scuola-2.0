@@ -126,3 +126,67 @@ export const LIVELLO_PRODUZIONE_LABELS: Record<LivelloProduzione, string> = {
   6: 'Cronologia Normativa',
   7: 'Scenari Futuri',
 };
+
+// === Tipi per Monitoraggio Fonti Live ===
+
+export type FonteStato = 'attivo' | 'errore' | 'disabilitato';
+export type FonteTipo = 'web' | 'rss' | 'api';
+
+export interface MonitoredSource {
+  id: string;
+  livello: LivelloFonte;
+  nome: string;
+  url: string;
+  rss_url: string | null;
+  tipo: FonteTipo;
+  frequenza_minuti: number;
+  ultimo_check: string | null;
+  ultimo_etag: string | null;
+  ultimo_last_modified: string | null;
+  ultimo_hash: string | null;
+  stato: FonteStato;
+  errore_msg: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IntelligenceDashboardStats {
+  fonti_attive: number;
+  fonti_totali: number;
+  documenti_da_elaborare: number;
+  documenti_ultime_24h: number;
+  notizie_oggi: number;
+  notizie_attive: number;
+  collegamenti_knowledge_graph: number;
+  scadenze_attive: number;
+  scadenze_imminenti: number;
+  ultimo_monitoraggio: string | null;
+}
+
+export interface KnowledgeLink {
+  id: string;
+  news_id_a: string;
+  news_id_b: string;
+  tipo_relazione: 'normativa_correlata' | 'aggiorna' | 'sostituisce' | 'approfondimento' | 'scadenza_correlata' | 'concorso_correlato' | 'faq_correlata' | 'guida_correlata' | 'stesso_argomento' | 'cronologia';
+  peso: number;
+  created_at: string;
+}
+
+export const RELAZIONE_LABELS: Record<string, string> = {
+  normativa_correlata: 'Normativa Correlata',
+  aggiorna: 'Aggiornamento',
+  sostituisce: 'Sostituisce',
+  approfondimento: 'Approfondimento',
+  scadenza_correlata: 'Scadenza Correlata',
+  concorso_correlato: 'Concorso Correlato',
+  faq_correlata: 'FAQ Correlata',
+  guida_correlata: 'Guida Correlata',
+  stesso_argomento: 'Stesso Argomento',
+  cronologia: 'Cronologia',
+};
+
+export const FONTE_STATO_COLORS: Record<FonteStato, string> = {
+  attivo: 'bg-green-100 text-green-700',
+  errore: 'bg-red-100 text-red-700',
+  disabilitato: 'bg-gray-100 text-gray-500',
+};

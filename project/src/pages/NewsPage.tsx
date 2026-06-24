@@ -1,13 +1,24 @@
-import { useState } from 'react';
-import { Newspaper, CalendarClock, BarChart3, Shield, Activity, Target, AlertTriangle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Newspaper, CalendarClock, Shield, AlertTriangle, RefreshCw, Monitor, Link2 } from 'lucide-react';
 import { LIVELLI_FONTE } from '../types/intelligence';
-import type { LivelloFonte } from '../types/intelligence';
+import type { LivelloFonte, IntelligenceDashboardStats } from '../types/intelligence';
+import { fetchDashboardStats, getDashboardFallbackStats } from '../rag/intelligence-engine';
 import NewsHub from '../components/NewsHub';
+import SourceMonitorDashboard from '../components/SourceMonitorDashboard';
 
 const LIVELLI_ORDINE: LivelloFonte[] = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 export default function NewsPage() {
   const [showSourceMap, setShowSourceMap] = useState(false);
+  const [showMonitor, setShowMonitor] = useState(false);
+  const [stats, setStats] = useState<IntelligenceDashboardStats>(getDashboardFallbackStats());
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardStats().then(s => {
+      if (s) setStats(s);
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
@@ -24,36 +35,78 @@ export default function NewsPage() {
             </p>
           </div>
 
-          {/* Intelligence badges */}
-          <div className="flex flex-wrap gap-3 justify-center mb-6">
-            <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-2xl px-4 py-2">
-              <Shield size={16} className="text-green-600" />
-              <span className="text-xs font-semibold text-green-700">Fonti Primarie (Livello A)</span>
+          {/* Live Dashboard Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+            <div className="bg-white/80 backdrop-blur rounded-2xl border border-slate-200/60 p-3 text-center">
+              <p className="text-2xl font-extrabold text-green-600">{loading ? '...' : stats.fonti_attive}</p>
+              <p className="text-[10px] text-gray-500 flex items-center justify-center gap-1">
+                <Shield size={10} /> Fonti Attive
+              </p>
             </div>
-            <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-2xl px-4 py-2">
-              <Activity size={16} className="text-blue-600" />
-              <span className="text-xs font-semibold text-blue-700">7 Livelli di Produzione</span>
+            <div className="bg-white/80 backdrop-blur rounded-2xl border border-slate-200/60 p-3 text-center">
+              <p className="text-2xl font-extrabold text-blue-600">{loading ? '...' : stats.notizie_attive}</p>
+              <p className="text-[10px] text-gray-500 flex items-center justify-center gap-1">
+                <Newspaper size={10} /> Notizie Intelligence
+              </p>
             </div>
-            <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-2">
-              <Target size={16} className="text-amber-600" />
-              <span className="text-xs font-semibold text-amber-700">Target Personalizzati</span>
+            <div className="bg-white/80 backdrop-blur rounded-2xl border border-slate-200/60 p-3 text-center">
+              <p className="text-2xl font-extrabold text-amber-600">{loading ? '...' : stats.scadenze_attive}</p>
+              <p className="text-[10px] text-gray-500 flex items-center justify-center gap-1">
+                <CalendarClock size={10} /> Scadenze Attive
+              </p>
             </div>
-            <div className="inline-flex items-center gap-2 bg-red-50 border border-red-200 rounded-2xl px-4 py-2">
-              <AlertTriangle size={16} className="text-red-600" />
-              <span className="text-xs font-semibold text-red-700">Sistema di Allerta</span>
+            <div className="bg-white/80 backdrop-blur rounded-2xl border border-slate-200/60 p-3 text-center">
+              <p className="text-2xl font-extrabold text-purple-600">{loading ? '...' : stats.collegamenti_knowledge_graph}</p>
+              <p className="text-[10px] text-gray-500 flex items-center justify-center gap-1">
+                <Link2 size={10} /> Knowledge Graph
+              </p>
             </div>
-            <div className="inline-flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-2xl px-4 py-2">
-              <BarChart3 size={16} className="text-purple-600" />
-              <span className="text-xs font-semibold text-purple-700">Data Journalism</span>
+            <div className="bg-white/80 backdrop-blur rounded-2xl border border-slate-200/60 p-3 text-center">
+              <p className="text-2xl font-extrabold text-red-600">{loading ? '...' : stats.scadenze_imminenti}</p>
+              <p className="text-[10px] text-gray-500 flex items-center justify-center gap-1">
+                <AlertTriangle size={10} /> Scadenze Imminenti
+              </p>
             </div>
           </div>
 
-          {/* Source architecture map */}
-          <button onClick={() => setShowSourceMap(!showSourceMap)}
-            className="mx-auto flex items-center gap-2 text-sm text-brand-blu font-semibold hover:text-brand-blu/80 transition mb-4">
-            <Shield size={14} /> {showSourceMap ? 'Nascondi' : 'Mostra'} Architettura delle Fonti
-          </button>
+          {/* Quick stats */}
+          <div className="flex items-center justify-center gap-2 mb-4 flex-wrap text-xs">
+            <span className="inline-flex items-center gap-1 text-gray-500">
+              <RefreshCw size={11} className={loading ? 'animate-pulse' : ''} />
+              Documenti ultime 24h: {stats.documenti_ultime_24h}
+            </span>
+            {stats.documenti_da_elaborare > 0 && (
+              <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full">
+                {stats.documenti_da_elaborare} da elaborare
+              </span>
+            )}
+            {stats.ultimo_monitoraggio && (
+              <span className="text-gray-400">
+                Ultimo check: {new Date(stats.ultimo_monitoraggio).toLocaleString('it-IT')}
+              </span>
+            )}
+          </div>
 
+          {/* Control buttons */}
+          <div className="flex flex-wrap gap-2 justify-center mb-6">
+            <button onClick={() => setShowMonitor(!showMonitor)}
+              className="inline-flex items-center gap-2 text-sm text-brand-blu font-semibold hover:text-brand-blu/80 transition border border-brand-blu/20 px-4 py-2 rounded-xl hover:bg-brand-blu/5">
+              <Monitor size={14} /> {showMonitor ? 'Nascondi' : 'Mostra'} Monitoraggio Fonti
+            </button>
+            <button onClick={() => setShowSourceMap(!showSourceMap)}
+              className="inline-flex items-center gap-2 text-sm text-brand-blu font-semibold hover:text-brand-blu/80 transition border border-brand-blu/20 px-4 py-2 rounded-xl hover:bg-brand-blu/5">
+              <Shield size={14} /> {showSourceMap ? 'Nascondi' : 'Mostra'} Architettura Fonti
+            </button>
+          </div>
+
+          {/* Source monitor dashboard */}
+          {showMonitor && (
+            <div className="mb-6 animate-fade-in-up">
+              <SourceMonitorDashboard />
+            </div>
+          )}
+
+          {/* Source architecture map */}
           {showSourceMap && (
             <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-slate-200/60 p-6 mb-6 animate-fade-in-up">
               <h3 className="text-lg font-bold text-[#0F172A] mb-4">Architettura delle Fonti — Piramide di Affidabilità</h3>

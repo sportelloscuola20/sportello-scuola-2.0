@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Bell, ExternalLink, Search, ChevronDown, FileText, AlertTriangle, Shield, Target } from 'lucide-react';
+import { Calendar, Clock, Bell, ExternalLink, Search, ChevronDown, FileText, AlertTriangle, Shield, Target, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './Auth/AuthContext';
 import LoginModal from './Auth/LoginModal';
-import { MOCK_SCADENZE_INTELLIGENCE, deriveCriticalita, calcolaGiorniRimasti, formatDataItaliana } from '../rag/intelligence-engine';
-import type { ScadenzaIntelligence, Criticalita } from '../types/intelligence';
+import { supabase } from '../lib/supabaseClient';
+import { MOCK_SCADENZE_INTELLIGENCE, calcolaGiorniRimasti, formatDataItaliana } from '../rag/intelligence-engine';
+import type { ScadenzaIntelligence } from '../types/intelligence';
 import { CRITICALITA_COLORS, IMPATTO_COLORS, TARGET_LABELS } from '../types/intelligence';
 
 const MAX_VISIBLE = 4;
+const REFRESH_INTERVAL_MS = 60000;
 
 function CountdownTimer({ targetDate }: { targetDate: Date }) {
   const [now, setNow] = useState(Date.now());
@@ -52,7 +54,49 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
   const [showAll, setShowAll] = useState(false);
   const [activeType, setActiveType] = useState('Tutte');
   const [filterPriorita, setFilterPriorita] = useState<string>('');
-  const [deadlineItems] = useState<ScadenzaIntelligence[]>(MOCK_SCADENZE_INTELLIGENCE);
+  const [deadlineItems, setDeadlineItems] = useState<ScadenzaIntelligence[]>(MOCK_SCADENZE_INTELLIGENCE);
+  const [ultimoAggiornamento, setUltimoAggiornamento] = useState<Date>(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchDeadlinesFromDB = async () => {
+    setIsRefreshing(true);
+    try {
+      const { data, error } = await supabase
+        .from('intelligence_scadenze')
+        .select('*')
+        .eq('is_conclusa', false)
+        .order('data_scadenza', { ascending: true })
+        .limit(20);
+
+      if (!error && data && data.length > 0) {
+        const mapped: ScadenzaIntelligence[] = (data as any[]).map(d => ({
+          id: d.id,
+          titolo: d.titolo,
+          descrizione: d.descrizione || '',
+          normativa: d.normativa || '',
+          soggettiCoinvolti: d.soggetti_coinvolti || ['docenti'],
+          dataScadenza: d.data_scadenza,
+          priorita: d.priorita || 'media',
+          impatto: d.impatto || 'nazionale',
+          conseguenzeNonAzione: d.conseguenze_non_azione || '',
+          link: d.link || '',
+          tipo: d.tipo || 'generale',
+          guidaOperativa: d.guida_operativa || '',
+          autoGenerata: d.auto_generata,
+          periodicita: d.periodicita,
+        }));
+        setDeadlineItems(mapped);
+      }
+    } catch {}
+    setUltimoAggiornamento(new Date());
+    setIsRefreshing(false);
+  };
+
+  useEffect(() => {
+    fetchDeadlinesFromDB();
+    const interval = setInterval(fetchDeadlinesFromDB, REFRESH_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, []);
 
   const filtered = deadlineItems.filter(d => {
     const matchType = activeType === 'Tutte' || d.tipo === activeType;
@@ -83,7 +127,18 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
               Ogni scadenza include base normativa, conseguenze della non-azione e guida operativa POLIS.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mt-8 mb-8">
+          <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
+            <span className="flex items-center gap-1.5">
+              <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
+              {isRefreshing ? 'Aggiornamento...' : `Ultimo aggiornamento: ${ultimoAggiornamento.toLocaleTimeString('it-IT')}`}
+            </span>
+            <button onClick={fetchDeadlinesFromDB} disabled={isRefreshing}
+              className="flex items-center gap-1 text-brand-ambra font-semibold hover:text-brand-ambra/80 transition disabled:opacity-50">
+              <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
+              Aggiorna
+            </button>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mt-4 mb-8">
             <div className="flex gap-2 flex-wrap">
               {types.map(t => (
                 <button key={t} onClick={() => setActiveType(t)}

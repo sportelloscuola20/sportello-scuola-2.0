@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Calendar, ExternalLink, Star, ChevronDown, Search, FileText, Target, Shield, Activity, BarChart3 } from 'lucide-react';
+import { Calendar, ExternalLink, Star, ChevronDown, Search, FileText, Target, Shield, Activity, BarChart3, RefreshCw, Link2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './Auth/AuthContext';
 import LoginModal from './Auth/LoginModal';
 import { supabase } from '../lib/supabaseClient';
-import { MOCK_NEWS_INTELLIGENCE, generaDatiDataJournalism } from '../rag/intelligence-engine';
+import { MOCK_NEWS_INTELLIGENCE, generaDatiDataJournalism, fetchKnowledgeGraph } from '../rag/intelligence-engine';
 import { formatDataItaliana } from '../rag/intelligence-engine';
-import type { NotiziaIntelligence, LivelloProduzione, SezioneIntelligence } from '../types/intelligence';
-import { CRITICALITA_COLORS, IMPATTO_COLORS, LIVELLI_FONTE, LIVELLO_PRODUZIONE_LABELS, TARGET_LABELS } from '../types/intelligence';
+import type { NotiziaIntelligence, LivelloProduzione, SezioneIntelligence, KnowledgeLink } from '../types/intelligence';
+import { CRITICALITA_COLORS, IMPATTO_COLORS, LIVELLI_FONTE, LIVELLO_PRODUZIONE_LABELS, TARGET_LABELS, RELAZIONE_LABELS } from '../types/intelligence';
 import type { NewsCache } from '../types/database';
 
 const MAX_VISIBLE = 4;
+const REFRESH_INTERVAL_MS = 60000;
 
 function FonteBadge({ livello }: { livello: string }) {
   const info = LIVELLI_FONTE[livello as keyof typeof LIVELLI_FONTE];
@@ -42,44 +43,92 @@ export default function News({ compact = false }: { compact?: boolean }) {
   const [newsItems, setNewsItems] = useState<NotiziaIntelligence[]>([]);
   const [dataJournalism] = useState<SezioneIntelligence[]>(() => generaDatiDataJournalism());
   const [showDataJournalism, setShowDataJournalism] = useState(false);
+  const [knowledgeLinks, setKnowledgeLinks] = useState<Record<string, KnowledgeLink[]>>({});
+  const [ultimoAggiornamento, setUltimoAggiornamento] = useState<Date>(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchNewsFromDB = async (): Promise<NotiziaIntelligence[] | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('intelligence_news')
+        .select('*')
+        .eq('is_archived', false)
+        .order('is_pinned', { ascending: false })
+        .order('data_pubblicazione', { ascending: false })
+        .limit(20);
+
+      if (!error && data && data.length > 0) {
+        return (data as any[]).map(n => ({
+          id: n.id,
+          titolo: n.titolo,
+          descrizione: n.descrizione || '',
+          dataPubblicazione: n.data_pubblicazione || n.created_at,
+          fonte: { livello: n.fonte_livello || 'A', nome: n.fonte_nome || 'MIM', url: n.fonte_url || 'https://www.mim.gov.it', peso: n.fonte_peso || 100 },
+          classifica: {
+            criticita: n.criticita || 'media', impatto: n.impatto || 'nazionale',
+            platea: n.platea || 'ampia', target: n.target || ['docenti'],
+            categoria: n.categoria || 'normativa', livelloFonte: n.fonte_livello || 'A',
+            fontePrimaria: n.fonte_primaria || '', fonteUrl: n.fonte_url_dettaglio || '',
+            dataAcquisizione: n.data_acquisizione || n.created_at,
+          },
+          contenuti: n.produzione_livelli || [{ livello: 1, titolo: 'Notizia', contenuto: n.descrizione || '' }],
+          tag: n.tag || [],
+          link: n.link || '',
+          isPinned: n.is_pinned || false,
+        }));
+      }
+    } catch {}
+    return null;
+  };
+
+  const fetchNewsCache = async (): Promise<NotiziaIntelligence[] | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('news_cache')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (!error && data && data.length > 0) {
+        return (data as NewsCache[]).map(n => ({
+          id: n.id,
+          titolo: n.title,
+          descrizione: (n.content || '').slice(0, 200),
+          dataPubblicazione: n.created_at,
+          fonte: { livello: 'A', nome: 'MIM', url: 'https://www.mim.gov.it', peso: 100 },
+          classifica: {
+            criticita: 'media', impatto: 'nazionale',
+            platea: 'ampia', target: ['docenti'],
+            categoria: 'normativa', livelloFonte: 'A',
+            fontePrimaria: n.source_url || '', fonteUrl: n.source_url || '',
+            dataAcquisizione: n.created_at,
+          },
+          contenuti: [{ livello: 1, titolo: 'Notizia', contenuto: n.content || '' }],
+          tag: [n.category],
+          link: n.source_url || '',
+          isPinned: n.is_pinned,
+        }));
+      }
+    } catch {}
+    return null;
+  };
+
+  const fetchData = async () => {
+    setIsRefreshing(true);
+    let data: NotiziaIntelligence[] | null = await fetchNewsFromDB();
+    if (!data) data = await fetchNewsCache();
+    if (data) {
+      setNewsItems(data);
+    } else {
+      setNewsItems(MOCK_NEWS_INTELLIGENCE);
+    }
+    setUltimoAggiornamento(new Date());
+    setIsRefreshing(false);
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('news_cache')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(20);
-        if (!error && data && data.length > 0) {
-          const mapped: NotiziaIntelligence[] = (data as NewsCache[]).map(n => ({
-            id: n.id,
-            titolo: n.title,
-            descrizione: (n.content || '').slice(0, 200),
-            dataPubblicazione: n.created_at,
-            fonte: { livello: 'A', nome: 'MIM', url: 'https://www.mim.gov.it', peso: 100 },
-            classifica: {
-              criticita: 'media', impatto: 'nazionale',
-              platea: 'ampia', target: ['docenti'],
-              categoria: 'normativa', livelloFonte: 'A',
-              fontePrimaria: n.source_url || '',
-              fonteUrl: n.source_url || '',
-              dataAcquisizione: n.created_at,
-            },
-            contenuti: [
-              { livello: 1, titolo: 'Notizia', contenuto: n.content || '' },
-            ],
-            tag: [n.category],
-            link: n.source_url || '',
-            isPinned: n.is_pinned,
-          }));
-          setNewsItems(mapped);
-          return;
-        }
-      } catch {}
-      setNewsItems(MOCK_NEWS_INTELLIGENCE);
-    };
     fetchData();
+    const interval = setInterval(fetchData, REFRESH_INTERVAL_MS);
+    return () => clearInterval(interval);
   }, []);
 
   const filtered = newsItems.filter(item => {
@@ -97,6 +146,16 @@ export default function News({ compact = false }: { compact?: boolean }) {
   };
 
   const expandedNode = expandedId ? newsItems.find(n => n.id === expandedId) ?? null : null;
+
+  useEffect(() => {
+    if (expandedId && !knowledgeLinks[expandedId]) {
+      fetchKnowledgeGraph(expandedId).then(links => {
+        if (links.length > 0) {
+          setKnowledgeLinks(prev => ({ ...prev, [expandedId!]: links }));
+        }
+      }).catch(() => {});
+    }
+  }, [expandedId]);
 
   const livelloMappa = (l: LivelloProduzione) => {
     const icone: Record<LivelloProduzione, React.ReactNode> = {
@@ -128,7 +187,18 @@ export default function News({ compact = false }: { compact?: boolean }) {
               a 7 livelli: dalla notizia immediata agli scenari futuri.
             </p>
           </div>
-          <div className="flex flex-col gap-4 mt-8 mb-8">
+          <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
+            <span className="flex items-center gap-1.5">
+              <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
+              {isRefreshing ? 'Aggiornamento...' : `Ultimo aggiornamento: ${ultimoAggiornamento.toLocaleTimeString('it-IT')}`}
+            </span>
+            <button onClick={fetchData} disabled={isRefreshing}
+              className="flex items-center gap-1 text-brand-blu font-semibold hover:text-brand-blu/80 transition disabled:opacity-50">
+              <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
+              Aggiorna
+            </button>
+          </div>
+          <div className="flex flex-col gap-4 mt-4 mb-8">
             <div className="flex flex-wrap gap-2 items-center">
               {categorieFiltro.map(cat => (
                 <button key={cat} onClick={() => setActiveCategory(cat)}
@@ -266,6 +336,21 @@ export default function News({ compact = false }: { compact?: boolean }) {
                         </a>
                       )}
                     </div>
+
+                    {knowledgeLinks[news.id] && knowledgeLinks[news.id].length > 0 && (
+                      <div className="bg-purple-50 rounded-2xl p-4 border border-purple-200">
+                        <h4 className="text-xs font-bold text-purple-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <Link2 size={12} /> Knowledge Graph — Contenuti Correlati
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {knowledgeLinks[news.id].map(link => (
+                            <span key={link.id} className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full bg-white border border-purple-200 text-purple-700">
+                              {RELAZIONE_LABELS[link.tipo_relazione] || link.tipo_relazione}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { Newspaper, CalendarClock } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Newspaper, CalendarClock, Shield, Activity } from 'lucide-react';
 import News from './News';
 import Deadlines from './Deadlines';
+import { fetchDashboardStats } from '../rag/intelligence-engine';
+import type { IntelligenceDashboardStats } from '../types/intelligence';
 
 interface NewsHubProps {
   isHomePage?: boolean;
@@ -9,6 +11,11 @@ interface NewsHubProps {
 
 export default function NewsHub({}: NewsHubProps) {
   const [activeTab, setActiveTab] = useState<'notizie' | 'scadenze'>('notizie');
+  const [stats, setStats] = useState<IntelligenceDashboardStats | null>(null);
+
+  useEffect(() => {
+    fetchDashboardStats().then(setStats).catch(() => setStats(null));
+  }, []);
 
   const switchBgClass = 'bg-gray-100/80 backdrop-blur-sm rounded-2xl p-1.5 border border-slate-200/60 shadow-soft';
   const activePillNews = 'bg-brand-blu text-white shadow-md shadow-brand-blu/10';
@@ -29,6 +36,19 @@ export default function NewsHub({}: NewsHubProps) {
           </p>
         </div>
 
+        {stats && (
+          <div className="flex items-center justify-center gap-3 mb-4 flex-wrap">
+            <span className="inline-flex items-center gap-1 text-[10px] bg-green-50 text-green-700 px-2.5 py-1 rounded-full border border-green-200 font-medium">
+              <Shield size={10} /> {stats.fonti_attive}/{stats.fonti_totali} fonti attive
+            </span>
+            <span className="inline-flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full border border-blue-200 font-medium">
+              <Activity size={10} /> {stats.notizie_attive} notizie attive
+            </span>
+            <span className="inline-flex items-center gap-1 text-[10px] bg-red-50 text-red-700 px-2.5 py-1 rounded-full border border-red-200 font-medium">
+              <Activity size={10} /> {stats.scadenze_imminenti} scadenze imminenti
+            </span>
+          </div>
+        )}
         <div className={`flex items-center gap-1 ${switchBgClass} mb-6 max-w-md mx-auto`}>
           <button onClick={() => setActiveTab('notizie')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
