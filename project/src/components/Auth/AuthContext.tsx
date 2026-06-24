@@ -41,90 +41,112 @@ function persistUser(p: UserProfile) {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(getStoredUser);
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    const stored = getStoredUser();
+    if (stored) {
+      const isValid = stored.id && stored.email && stored.ruolo;
+      if (!isValid) {
+        localStorage.removeItem('ss2_user');
+        return null;
+      }
+    }
+    return stored;
+  });
   const [loading, setLoading] = useState(false);
   const isLoggingInRef = useRef(false);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-        localStorage.removeItem('ss2_user');
-        return;
-      }
+      try {
+        if (!mountedRef.current) return;
 
-      if (event !== 'SIGNED_IN' && event !== 'TOKEN_REFRESHED') return;
-      if (!session?.user) {
-        setUser(null);
-        localStorage.removeItem('ss2_user');
-        return;
-      }
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          localStorage.removeItem('ss2_user');
+          return;
+        }
 
-      const existing = getStoredUser();
-      if (existing && existing.id === session.user.id) {
-        setUser(existing);
-        return;
-      }
+        if (event !== 'SIGNED_IN' && event !== 'TOKEN_REFRESHED') return;
+        if (!session?.user) {
+          setUser(null);
+          localStorage.removeItem('ss2_user');
+          return;
+        }
 
-      if (isLoggingInRef.current) return;
+        const existing = getStoredUser();
+        if (existing && existing.id === session.user.id) {
+          setUser(existing);
+          return;
+        }
 
-      const email = session.user.email || '';
-      const full_name = session.user.user_metadata?.full_name as string | undefined;
+        if (isLoggingInRef.current) return;
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, ruolo, is_premium')
-        .eq('id', session.user.id)
-        .maybeSingle();
+        const email = session.user.email || '';
+        const full_name = session.user.user_metadata?.full_name as string | undefined;
 
-      if (profile) {
-        const p: UserProfile = {
-          id: profile.id,
-          email: profile.email,
-          full_name: profile.full_name || full_name || null,
-          ruolo: profile.ruolo,
-          is_premium: profile.is_premium,
-          is_admin: profile.email === CREATOR_EMAIL,
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, email, full_name, ruolo, is_premium')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (!mountedRef.current) return;
+
+        if (profile) {
+          const p: UserProfile = {
+            id: profile.id,
+            email: profile.email,
+            full_name: profile.full_name || full_name || null,
+            ruolo: profile.ruolo,
+            is_premium: profile.is_premium,
+            is_admin: profile.email === CREATOR_EMAIL,
+          };
+          setUser(p);
+          persistUser(p);
+          return;
+        }
+
+        const newProfile: UserProfile = {
+          id: session.user.id,
+          email,
+          full_name: full_name || null,
+          ruolo: (session.user.user_metadata?.ruolo as UserProfile['ruolo']) || 'aspirante',
+          is_premium: false,
+          is_admin: email === CREATOR_EMAIL,
         };
-        setUser(p);
-        persistUser(p);
-        return;
-      }
+        setUser(newProfile);
+        persistUser(newProfile);
 
-      const newProfile: UserProfile = {
-        id: session.user.id,
-        email,
-        full_name: full_name || null,
-        ruolo: (session.user.user_metadata?.ruolo as UserProfile['ruolo']) || 'aspirante',
-        is_premium: false,
-        is_admin: email === CREATOR_EMAIL,
-      };
-      setUser(newProfile);
-      persistUser(newProfile);
-
-      await supabase.from('profiles').insert({
-        id: session.user.id,
-        email,
-        full_name: full_name || null,
-        ruolo: newProfile.ruolo,
-        is_premium: false,
-      }).maybeSingle();
-
-      if (full_name) {
-        sendOnboardingEmail({
-          fullName: full_name,
+        await supabase.from('profiles').insert({
+          id: session.user.id,
           email,
+          full_name: full_name || null,
           ruolo: newProfile.ruolo,
-        }).catch(() => {});
-        sendAdminNotification({
-          uuid: session.user.id,
-          fullName: full_name,
-          email,
-          ruolo: newProfile.ruolo,
-        }).catch(() => {});
+          is_premium: false,
+        }).maybeSingle();
+
+        if (full_name) {
+          sendOnboardingEmail({
+            fullName: full_name,
+            email,
+            ruolo: newProfile.ruolo,
+          }).catch(() => {});
+          sendAdminNotification({
+            uuid: session.user.id,
+            fullName: full_name,
+            email,
+            ruolo: newProfile.ruolo,
+          }).catch(() => {});
+        }
+      } catch (err) {
+        console.warn('[Auth] onAuthStateChange error:', err);
       }
     });
-    return () => subscription?.unsubscribe();
+    return () => {
+      mountedRef.current = false;
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const refreshProfile = useCallback(async () => {
@@ -229,8 +251,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
         setUser(p);
         persistUser(p);
+        return { error: null };
       }
-      return { error: null };
+
+      return { error: 'Errore durante il login. Dati utente non disponibili.' };
     } catch (err) {
       clearTimeout(timeoutId);
       if (err instanceof DOMException && err.name === 'AbortError') {
