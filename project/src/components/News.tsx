@@ -1,142 +1,118 @@
-import { useState } from 'react';
-import { Calendar, ExternalLink, Star, ChevronDown, Search, FileText, RefreshCw } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Calendar, ExternalLink, Star, ChevronDown, Search, FileText, Target, Shield, Activity, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './Auth/AuthContext';
 import LoginModal from './Auth/LoginModal';
-
-interface NewsItem {
-  id: number;
-  date: string;
-  category: string;
-  tags: string[];
-  title: string;
-  description: string;
-  content: string;
-  link: string;
-  isFavorite?: boolean;
-}
-
-const newsItems: NewsItem[] = [
-  {
-    id: 1,
-    date: '15 Giugno 2026',
-    category: 'GPS',
-    tags: ['Aggiornamento GPS', 'Docenti Concorsi'],
-    title: 'Aggiornamento GPS 2026-2028: pubblicata l\'Ordinanza Ministeriale',
-    description: 'Il Ministero dell\'Istruzione e del Merito ha pubblicato l\'ordinanza per l\'aggiornamento delle Graduatorie Provinciali per le Supplenze per il triennio 2026-2028.',
-    content: 'Con Decreto Ministeriale prot. n. 1234 del 10 giugno 2026, il Ministero dell\'Istruzione e del Merito ha approvato l\'Ordinanza Ministeriale concernente le procedure di aggiornamento delle Graduatorie Provinciali per le Supplenze (GPS) per il biennio 2026/2028.\n\nLe domande potranno essere presentate esclusivamente attraverso la piattaforma "Istanze On Line" (POLIS) dalle ore 9:00 del 1° luglio 2026 fino alle ore 23:59 del 31 luglio 2026.\n\nRIFERIMENTI NORMATIVI:\n- D.M. prot. n. 1234 del 10/06/2026\n- Tabelle A/1-A/10 allegate al D.M. 1234/2026\n- D.Lgs. 59/2017 (art. 4, comma 1)\n- O.M. n. 88/2025\n\nLink ufficiale: https://www.mim.gov.it/web/guest/graduatorie-provinciali-supplenze',
-    link: 'https://www.mim.gov.it/web/guest/graduatorie-provinciali-supplenze',
-  },
-  {
-    id: 2,
-    date: '10 Giugno 2026',
-    category: 'Concorsi',
-    tags: ['Docenti Concorsi', 'Immissioni in Ruolo'],
-    title: 'Concorso Docenti 2026: pubblicato il calendario delle prove scritte',
-    description: 'Pubblicate le date ufficiali per il concorso ordinario per docenti di scuola secondaria. Le prove si terranno dal 15 al 25 ottobre 2026.',
-    content: 'Il Ministero dell\'Istruzione e del Merito, con D.D. prot. n. 987 del 12 marzo 2026, ha pubblicato il calendario ufficiale delle prove scritte per il Concorso Ordinario Docenti 2026.\n\nDETTAGLIO PROVE (computer-based):\n- 15 ottobre 2026: Classi di concorso A-11, A-12, A-13\n- 16 ottobre 2026: Classi di concorso A-18, A-19, A-20\n- 17 ottobre 2026: Classi di concorso A-22, A-23, A-24\n- 18 ottobre 2026: Classi di concorso A-26, A-27, A-28\n- 19 ottobre 2026: Sostegno tutti i gradi\n\nRIFERIMENTI NORMATIVI:\n- D.D. prot. n. 987/2026 (G.U. n. 45 del 15/03/2026)\n- D.D. prot. n. 988/2026 (Concorso Straordinario)\n- DPCM 4 agosto 2023 (G.U. n. 201/2023)\n\nLink ufficiale: https://www.mim.gov.it/concorso-ordinario-docenti-2026',
-    link: 'https://www.mim.gov.it/concorso-ordinario-docenti-2026',
-  },
-  {
-    id: 3,
-    date: '5 Giugno 2026',
-    category: 'ATA',
-    tags: ['ATA Terza Fascia'],
-    title: 'D.M. 89/2024: graduatorie ATA terza fascia in fase di pubblicazione',
-    description: 'Gli Uffici Scolastici Provinciali stanno pubblicando le graduatorie definitive di terza fascia del personale ATA per il triennio 2024-2027.',
-    content: 'Gli Uffici Scolastici Provinciali (USP) di tutta Italia stanno progressivamente pubblicando le graduatorie definitive di terza fascia del personale ATA per il triennio 2024/2027, ai sensi del D.M. 89/2024.\n\nSi invitano gli aspiranti a controllare il sito web del proprio USP di riferimento per verificare la corretta inclusione in graduatoria e il punteggio attribuito.\n\nIn caso di errori o omissioni, è possibile presentare ricorso entro 15 giorni dalla data di pubblicazione della graduatoria definitiva (art. 6, comma 4, D.M. 89/2024).\n\nRIFERIMENTO NORMATIVO:\n- D.M. 89/2024, pubblicato in G.U. n. 124 del 25/05/2024\n- Allegato A/1 (Tabelle valutazione titoli)\n- Nota MIM prot. n. 987 del 18/05/2026',
-    link: 'https://www.mim.gov.it/ata-terza-fascia',
-  },
-  {
-    id: 4,
-    date: '1 Giugno 2026',
-    category: 'Riforme',
-    tags: ['Mondo Scuola / Riforme'],
-    title: 'Riforma reclutamento docenti: le novità in arrivo',
-    description: 'Il Governo sta definendo la nuova riforma del reclutamento dei docenti che modificherà le modalità di accesso alla professione.',
-    content: 'Il Consiglio dei Ministri è al lavoro sulla bozza di riforma del reclutamento dei docenti, che introduce importanti novità in attuazione del PNRR (Missione 4 — Componente 1 — Riforma 2.1):\n\n1. Semplificazione delle procedure concorsuali\n2. Rafforzamento del periodo di formazione iniziale (percorsi 30/36/60 CFU)\n3. Nuove modalità di inserimento in ruolo con periodo di prova strutturato\n4. Revisione del sistema di supplenze e delle GPS\n\nIl testo è attualmente in fase di esame parlamentare (A.S. n. 1234) e si prevede l\'approvazione entro l\'autunno 2026.\n\nRIFERIMENTO NORMATIVO:\n- PNRR, Missione 4, Riforma 2.1\n- Schema di decreto legislativo recante "Disposizioni in materia di reclutamento dei docenti"\n- L. 107/2015 (La Buona Scuola), art. 1, commi 115-120',
-    link: '#',
-  },
-  {
-    id: 5,
-    date: '28 Maggio 2026',
-    category: 'GPS',
-    tags: ['Aggiornamento GPS'],
-    title: 'Nuove tabelle valutazione titoli GPS: le modifiche in vigore',
-    description: 'Pubblicate le nuove tabelle di valutazione dei titoli per le GPS con modifiche ai punteggi delle certificazioni linguistiche.',
-    content: 'Con Decreto Ministeriale prot. n. 1150 del 25 maggio 2026, sono state aggiornate le tabelle di valutazione dei titoli per le Graduatorie Provinciali per le Supplenze (GPS), in vigore dal 1° giugno 2026.\n\nPRINCIPALI MODIFICHE (Tabelle A/1-A/10):\n- Certificazioni linguistiche: B2 = 3 pt, C1 = 4 pt, C2 = 6 pt (max 6 pt totali)\n- Certificazioni informatiche: max 4 certificazioni per un totale di 2 pt\n- Master e corsi di perfezionamento: max 3 titoli valutabili (1 pt cad.)\n- Servizio specifico: confermati i 12 pt massimi per anno scolastico\n- Servizio non specifico: 6 pt massimi per anno scolastico\n- CLIL: 5 pt se metodologia CLIL in lingua straniera\n\nRIFERIMENTO NORMATIVO:\n- D.M. prot. n. 1150 del 25/05/2026\n- O.M. n. 88/2025, art. 5, comma 3\n\nLink: https://www.mim.gov.it/aggiornamento-tabelle-valutazione-gps',
-    link: 'https://www.mim.gov.it/aggiornamento-tabelle-valutazione-gps',
-  },
-  {
-    id: 6,
-    date: '20 Maggio 2026',
-    category: 'ATA',
-    tags: ['ATA Terza Fascia', 'Mondo Scuola / Riforme'],
-    title: 'Nuovo profilo Operatore Scolastico (OS): chiarimenti MIM',
-    description: 'Il Ministero fornisce chiarimenti sulle funzioni e i requisiti del nuovo profilo di Operatore Scolastico introdotto dal DM 89/2024.',
-    content: 'Con nota prot. n. 987 del 18 maggio 2026, il MIM ha fornito chiarimenti in merito al nuovo profilo professionale di Operatore Scolastico (OS), introdotto dal Decreto Ministeriale 89/2024 (Allegato A/1, Sezione OS).\n\nIl profilo di Operatore Scolastico è distinto da quello di Collaboratore Scolastico (CS) e prevede:\n- Attività di accoglienza e sorveglianza degli alunni\n- Supporto all\'inclusione degli alunni con disabilità (in collaborazione con i docenti)\n- Collaborazione con i docenti per le attività educative e di prevenzione\n- Assistenza materiale agli alunni con disabilità\n\nREQUISITI DI ACCESSO:\n- Qualifica professionale triennale socio-assistenziale o assimilata\n- Certificazione Internazionale di Alfabetizzazione Digitale (CIAD) obbligatoria\n\nRIFERIMENTO:\n- Nota MIM prot. n. 987/2026\n- D.M. 89/2024, Allegato A/1, Tabella OS',
-    link: '#',
-  },
-  {
-    id: 7,
-    date: '15 Maggio 2026',
-    category: 'Concorsi',
-    tags: ['Docenti Concorsi'],
-    title: 'TFA Sostegno VIII ciclo: pubblicato il bando con 12.000 posti',
-    description: 'Pubblicato il bando per l\'ammissione al Tirocinio Formativo Attivo per il sostegno didattico con 12.000 posti complessivi.',
-    content: 'Con D.D. prot. n. 1025 del 10 maggio 2026, il MIM ha pubblicato il bando per l\'ammissione al VIII ciclo del Tirocinio Formativo Attivo per le attività di sostegno didattico.\n\nDETTAGLIO POSTI:\n- Infanzia: 2.500 posti\n- Primaria: 3.500 posti\n- Secondaria di I grado: 2.800 posti\n- Secondaria di II grado: 3.200 posti\n\nSCADENZA DOMANDA: 30 giugno 2026, ore 23:59, tramite POLIS.\n\nRIFERIMENTO:\n- D.D. prot. n. 1025 del 10/05/2026\n- D.M. 108/2022 (Regolamento TFA sostegno)\n- Link: https://www.mim.gov.it/tfa-sostegno-viii-ciclo',
-    link: 'https://www.mim.gov.it/tfa-sostegno-viii-ciclo',
-  },
-  {
-    id: 8,
-    date: '10 Maggio 2026',
-    category: 'Riforme',
-    tags: ['Mondo Scuola / Riforme'],
-    title: 'DPCM 4 agosto 2023: attivati i percorsi di abilitazione 30/36/60 CFU',
-    description: 'Le Università italiane hanno attivato i nuovi percorsi di formazione iniziale dei docenti basati sul DPCM 4 agosto 2023.',
-    content: 'A partire dall\'anno accademico 2025/2026, le Università italiane hanno attivato i nuovi percorsi di formazione iniziale dei docenti previsti dal DPCM 4 agosto 2023 (G.U. n. 201 del 29/08/2023).\n\nPERCORSO 60 CFU (art. 2-bis D.Lgs. 59/2017):\n- Per neolaureati senza esperienza di insegnamento\n- Durata: 1 anno accademico\n- Attivato presso: Università degli Studi di Roma "La Sapienza", Università Cattolica del Sacro Cuore, Università di Bologna, Università di Padova, Università di Napoli Federico II\n\nPERCORSO 30 CFU (art. 13 DPCM 4/8/2023):\n- Per docenti triennalisti con 3 anni di servizio\n- Attivato presso: tutte le università con corsi di Scienze della Formazione\n\nPERCORSO 36 CFU (art. 18-bis D.Lgs. 59/2017):\n- Per docenti già abilitati su altra classe di concorso\n- Attivato presso: tutte le università statali\n\nRIFERIMENTO:\n- DPCM 4 agosto 2023 (G.U. n. 201/2023)\n- D.Lgs. 59/2017, art. 2-bis e art. 18-bis\n- Link: https://www.mim.gov.it/percorsi-abilitazione',
-    link: 'https://www.mim.gov.it/percorsi-abilitazione',
-  },
-];
-
-const CATEGORIE = ['Tutte', 'Docenti Concorsi', 'Immissioni in Ruolo', 'Aggiornamento GPS', 'ATA Terza Fascia', 'Mondo Scuola / Riforme'];
+import { supabase } from '../lib/supabaseClient';
+import { MOCK_NEWS_INTELLIGENCE, generaDatiDataJournalism } from '../rag/intelligence-engine';
+import { formatDataItaliana } from '../rag/intelligence-engine';
+import type { NotiziaIntelligence, LivelloProduzione, SezioneIntelligence } from '../types/intelligence';
+import { CRITICALITA_COLORS, IMPATTO_COLORS, LIVELLI_FONTE, LIVELLO_PRODUZIONE_LABELS, TARGET_LABELS } from '../types/intelligence';
+import type { NewsCache } from '../types/database';
 
 const MAX_VISIBLE = 4;
+
+function FonteBadge({ livello }: { livello: string }) {
+  const info = LIVELLI_FONTE[livello as keyof typeof LIVELLI_FONTE];
+  if (!info) return null;
+  const colors: Record<string, string> = {
+    A: 'bg-green-100 text-green-700 border-green-200',
+    B: 'bg-blue-100 text-blue-700 border-blue-200',
+    C: 'bg-purple-100 text-purple-700 border-purple-200',
+    D: 'bg-teal-100 text-teal-700 border-teal-200',
+    E: 'bg-amber-100 text-amber-700 border-amber-200',
+    F: 'bg-gray-100 text-gray-600 border-gray-200',
+  };
+  return (
+    <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${colors[livello] || 'bg-gray-100 text-gray-600'}`} title={`${info.nome} — Peso: ${info.peso}/100`}>
+      Livello {livello}
+    </span>
+  );
+}
 
 export default function News({ compact = false }: { compact?: boolean }) {
   const { isAuthenticated } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
-  const [activeCategory, setActiveCategory] = useState('Tutte');
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [favorites, setFavorites] = useState<number[]>([]);
-  const [showAll, setShowAll] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [pingId, setPingId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [showAll, setShowAll] = useState(false);
+  const [filterCriticalita, setFilterCriticalita] = useState<string>('');
+  const [activeCategory, setActiveCategory] = useState('Tutte');
+  const [newsItems, setNewsItems] = useState<NotiziaIntelligence[]>([]);
+  const [dataJournalism] = useState<SezioneIntelligence[]>(() => generaDatiDataJournalism());
+  const [showDataJournalism, setShowDataJournalism] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('news_cache')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(20);
+        if (!error && data && data.length > 0) {
+          const mapped: NotiziaIntelligence[] = (data as NewsCache[]).map(n => ({
+            id: n.id,
+            titolo: n.title,
+            descrizione: (n.content || '').slice(0, 200),
+            dataPubblicazione: n.created_at,
+            fonte: { livello: 'A', nome: 'MIM', url: 'https://www.mim.gov.it', peso: 100 },
+            classifica: {
+              criticita: 'media', impatto: 'nazionale',
+              platea: 'ampia', target: ['docenti'],
+              categoria: 'normativa', livelloFonte: 'A',
+              fontePrimaria: n.source_url || '',
+              fonteUrl: n.source_url || '',
+              dataAcquisizione: n.created_at,
+            },
+            contenuti: [
+              { livello: 1, titolo: 'Notizia', contenuto: n.content || '' },
+            ],
+            tag: [n.category],
+            link: n.source_url || '',
+            isPinned: n.is_pinned,
+          }));
+          setNewsItems(mapped);
+          return;
+        }
+      } catch {}
+      setNewsItems(MOCK_NEWS_INTELLIGENCE);
+    };
+    fetchData();
+  }, []);
 
   const filtered = newsItems.filter(item => {
-    const matchCat = activeCategory === 'Tutte' || item.tags.includes(activeCategory);
-    const matchSearch = !searchQuery || item.title.toLowerCase().includes(searchQuery.toLowerCase()) || item.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchCat && matchSearch;
+    const matchCat = activeCategory === 'Tutte' || item.tag.includes(activeCategory) || item.classifica.categoria === activeCategory.toLowerCase();
+    const matchCrit = !filterCriticalita || item.classifica.criticita === filterCriticalita;
+    const matchSearch = !searchQuery || item.titolo.toLowerCase().includes(searchQuery.toLowerCase()) || item.descrizione.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchCat && matchCrit && matchSearch;
   });
 
   const displayed = showAll ? filtered : filtered.slice(0, MAX_VISIBLE);
 
-  const toggleFavorite = (id: number) => {
-    if (!isAuthenticated) {
-      setShowLogin(true);
-      return;
-    }
-    setPingId(id);
-    setTimeout(() => setPingId(null), 500);
+  const toggleFavorite = (id: string) => {
+    if (!isAuthenticated) { setShowLogin(true); return; }
     setFavorites(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
   };
 
-  const categoryColors: Record<string, string> = {
-    GPS: 'bg-blue-100 text-blue-700',
-    Concorsi: 'bg-red-100 text-red-700',
-    ATA: 'bg-green-100 text-green-700',
-    Riforme: 'bg-purple-100 text-purple-700',
+  const expandedNode = expandedId ? newsItems.find(n => n.id === expandedId) ?? null : null;
+
+  const livelloMappa = (l: LivelloProduzione) => {
+    const icone: Record<LivelloProduzione, React.ReactNode> = {
+      1: <Activity size={12} />,
+      2: <FileText size={12} />,
+      3: <Target size={12} />,
+      4: <FileText size={12} />,
+      5: <FileText size={12} />,
+      6: <FileText size={12} />,
+      7: <Activity size={12} />,
+    };
+    return icone[l];
   };
+
+  const allTags = [...new Set(newsItems.flatMap(n => n.tag))];
+  const categorieFiltro = ['Tutte', ...allTags];
 
   const grid = (
     <>
@@ -144,124 +120,160 @@ export default function News({ compact = false }: { compact?: boolean }) {
         <>
           <div className="text-center mb-6">
             <h2 className="text-4xl font-extrabold text-[#0F172A] mb-4 tracking-tight">
-              Ultime Notizie del Settore Istruzione
+              Notizie Intelligence — Settore Istruzione
             </h2>
-            <p className="text-gray-600 font-normal max-w-2xl mx-auto">
-              Notiziario aggiornato con le novit&agrave; legislative, i bandi e le procedure del comparto istruzione.
-              Ogni notizia include abstract tecnico, quadro normativo con riferimenti ufficiali e guida operativa.
+            <p className="text-gray-600 font-normal max-w-3xl mx-auto">
+              Sistema di monitoraggio normativo e informativo basato su fonti primarie certificate.
+              Ogni notizia è classificata per criticità, impatto, platea e target, con approfondimento
+              a 7 livelli: dalla notizia immediata agli scenari futuri.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mt-8 mb-8">
-            <div className="flex gap-2 flex-wrap">
-              {CATEGORIE.map(cat => (
+          <div className="flex flex-col gap-4 mt-8 mb-8">
+            <div className="flex flex-wrap gap-2 items-center">
+              {categorieFiltro.map(cat => (
                 <button key={cat} onClick={() => setActiveCategory(cat)}
                   className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-all ${
                     activeCategory === cat ? 'bg-brand-blu text-white' : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-blu/30'
                   }`}>{cat}</button>
               ))}
             </div>
-            <div className="relative w-full sm:w-64">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input type="text" placeholder="Cerca notizie..." value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 rounded-2xl border border-slate-200/60 bg-white text-sm focus:ring-2 focus:ring-brand-blu/20 focus:border-brand-blu transition outline-none" />
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative w-full sm:w-64">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="text" placeholder="Cerca notizie..." value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 rounded-2xl border border-slate-200/60 bg-white text-sm focus:ring-2 focus:ring-brand-blu/20 focus:border-brand-blu transition outline-none" />
+              </div>
+              <select value={filterCriticalita} onChange={e => setFilterCriticalita(e.target.value)}
+                className="px-4 py-2 rounded-2xl border border-slate-200/60 bg-white text-sm focus:ring-2 focus:ring-brand-blu/20 outline-none">
+                <option value="">Tutte le criticità</option>
+                <option value="strategica">Strategica</option>
+                <option value="urgente">Urgente</option>
+                <option value="alta">Alta</option>
+                <option value="media">Media</option>
+                <option value="bassa">Bassa</option>
+              </select>
+              <button onClick={() => setShowDataJournalism(!showDataJournalism)}
+                className="flex items-center gap-2 px-4 py-2 rounded-2xl border border-slate-200/60 bg-white text-sm font-semibold text-brand-blu hover:bg-brand-blu/5 transition">
+                <BarChart3 size={16} /> Data Journalism
+              </button>
             </div>
           </div>
         </>
       )}
+
+      {!compact && showDataJournalism && dataJournalism.length > 0 && (
+        <div className="mb-8 space-y-6 animate-fade-in-up">
+          {dataJournalism.map((sezione, si) => (
+            <div key={si} className="bg-gradient-to-r from-brand-blu/5 to-brand-verde/5 rounded-3xl border border-brand-blu/10 p-6">
+              <h3 className="text-lg font-bold text-[#0F172A] mb-1">{sezione.titolo}</h3>
+              <p className="text-sm text-gray-500 mb-4">{sezione.descrizione}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {sezione.dati.map((dato, di) => (
+                  <div key={di} className="bg-white/80 rounded-2xl p-4 border border-slate-200/60">
+                    <p className="text-xs text-gray-500 mb-1">{dato.label}</p>
+                    <p className="text-2xl font-extrabold text-[#0F172A]">{dato.valore}</p>
+                    {dato.trend && (
+                      <p className={`text-xs mt-1 ${dato.trend === 'up' ? 'text-green-600' : dato.trend === 'down' ? 'text-red-600' : 'text-gray-400'}`}>
+                        {dato.confronto}
+                      </p>
+                    )}
+                    <p className="text-[10px] text-gray-400 mt-1">Fonte: {dato.fonte}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="space-y-4">
         {displayed.map((news) => {
           const isExpanded = expandedId === news.id;
           const isFav = favorites.includes(news.id);
+          const { criticita, impatto, target, livelloFonte } = news.classifica;
           return (
-            <div
-              key={news.id}
-              className={`bg-white/70 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-soft transition-all duration-500 ease-in-out overflow-hidden ${
-                isExpanded ? 'border-brand-blu/30 shadow-medium' : 'hover:border-brand-blu/20'
-              }`}
-            >
+            <div key={news.id} className={`bg-white/70 backdrop-blur-md rounded-3xl border transition-all duration-500 ease-in-out overflow-hidden ${
+              isExpanded ? 'border-brand-blu/30 shadow-medium' : 'border-slate-200/60 shadow-soft hover:border-brand-blu/20'
+            }`}>
               <div className="p-6">
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${categoryColors[news.category] || 'bg-gray-100 text-gray-600'}`}>
-                        {news.category}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
+                      <FonteBadge livello={livelloFonte} />
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CRITICALITA_COLORS[criticita]}`}>
+                        {criticita}
+                      </span>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${IMPATTO_COLORS[impatto]}`}>
+                        {impatto}
                       </span>
                       <span className="text-xs text-gray-400 flex items-center gap-1">
-                        <Calendar size={12} /> {news.date}
+                        <Calendar size={12} /> {formatDataItaliana(news.dataPubblicazione)}
                       </span>
                     </div>
-                    <h3 className="text-lg font-bold text-[#0F172A] mb-2">{news.title}</h3>
+                    <h3 className="text-lg font-bold text-[#0F172A] mb-2">{news.titolo}</h3>
                     <p className={`text-gray-600 text-sm leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
-                      {news.description}
+                      {news.descrizione}
                     </p>
+                    {!isExpanded && target.length > 0 && (
+                      <div className="flex gap-1.5 mt-2 flex-wrap">
+                        {target.slice(0, 4).map(t => (
+                          <span key={t} className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                            <Target size={10} />{TARGET_LABELS[t]}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <button
-                    onClick={() => toggleFavorite(news.id)}
-                    className={`ml-4 p-2 rounded-xl transition-all duration-200 flex-shrink-0 ${
+                  <button onClick={() => toggleFavorite(news.id)}
+                    className={`ml-4 p-2 rounded-xl transition-all flex-shrink-0 ${
                       isFav ? 'text-brand-ambra bg-brand-ambra/10' : 'text-gray-300 hover:text-brand-ambra hover:bg-brand-ambra/5'
-                    }`}
-                  >
-                    <Star
-                      size={20}
-                      className={pingId === news.id ? 'animate-ping-once' : ''}
-                      fill={isFav ? '#D97706' : 'none'}
-                      strokeWidth={2}
-                    />
+                    }`}>
+                    <Star size={20} fill={isFav ? '#D97706' : 'none'} strokeWidth={2} />
                   </button>
                 </div>
 
-                {isExpanded && (
+                {isExpanded && expandedNode && (
                   <div className="mt-4 pt-4 border-t border-slate-200/60 animate-fade-in-up space-y-4">
-                    <div>
-                      <h4 className="text-xs font-bold text-brand-blu uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                        <FileText size={12} /> Abstract Tecnico
-                      </h4>
-                      <p className="text-sm text-gray-700 leading-relaxed">{news.description}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {target.map(t => (
+                        <span key={t} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-brand-blu/5 text-brand-blu border border-brand-blu/10">
+                          <Target size={11} />{TARGET_LABELS[t]}
+                        </span>
+                      ))}
                     </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-brand-blu uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                        <FileText size={12} /> Quadro Normativo e Dettagli
-                      </h4>
-                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">
-                        {news.content}
-                      </pre>
+
+                    <div className="grid gap-3">
+                      {expandedNode.contenuti.sort((a, b) => a.livello - b.livello).map(c => (
+                        <div key={c.livello} className="bg-white rounded-2xl border border-slate-200/60 p-4">
+                          <h4 className="text-xs font-bold text-brand-blu uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            {livelloMappa(c.livello)} {LIVELLO_PRODUZIONE_LABELS[c.livello]}
+                          </h4>
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">{c.contenuto}</p>
+                        </div>
+                      ))}
                     </div>
-                    <div className="bg-brand-blu/5 rounded-2xl p-4 border border-brand-blu/10">
-                      <h4 className="text-xs font-bold text-brand-blu uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                        <FileText size={12} /> Guida Operativa
+
+                    <div className="bg-brand-verde/5 rounded-2xl p-4 border border-brand-verde/10">
+                      <h4 className="text-xs font-bold text-brand-verde uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <Shield size={12} /> Fonte Primaria
                       </h4>
-                      <p className="text-sm text-gray-700 leading-relaxed mb-3">
-                        Per presentare domanda &egrave; necessario accedere alla piattaforma POLIS del Ministero dell&rsquo;Istruzione
-                        tramite SPID (Livello 2) o CIE (Carta d&rsquo;Identit&agrave; Elettronica).
-                        Assicurati di avere un dispositivo con lettore NFC o un lettore smartcard USB.
-                      </p>
+                      <p className="text-sm text-gray-700">{news.classifica.fontePrimaria}</p>
                       {news.link && news.link !== '#' && (
-                        <a
-                          href={news.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-blu to-brand-verde text-white rounded-xl text-sm font-semibold hover:opacity-90 transition"
-                        >
-                          <ExternalLink size={14} /> Avvia procedura su POLIS
+                        <a href={news.link} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 mt-2 px-4 py-2 bg-gradient-to-r from-brand-blu to-brand-verde text-white rounded-xl text-sm font-semibold hover:opacity-90 transition">
+                          <ExternalLink size={14} /> Vai alla fonte ufficiale
                         </a>
                       )}
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                      {news.tags.map(tag => (
-                        <span key={tag} className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">{tag}</span>
-                      ))}
                     </div>
                   </div>
                 )}
               </div>
 
               <div className="px-6 pb-4">
-                <button
-                  onClick={() => setExpandedId(isExpanded ? null : news.id)}
-                  className="inline-flex items-center gap-2 text-brand-verde font-semibold hover:text-brand-verde/80 transition-colors text-sm"
-                >
-                  {isExpanded ? 'Riduci' : 'Leggi di pi\u00f9'}
+                <button onClick={() => setExpandedId(isExpanded ? null : news.id)}
+                  className="inline-flex items-center gap-2 text-brand-verde font-semibold hover:text-brand-verde/80 transition-colors text-sm">
+                  {isExpanded ? 'Riduci' : 'Leggi analisi completa'}
                   <ChevronDown size={16} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                 </button>
               </div>
@@ -273,18 +285,14 @@ export default function News({ compact = false }: { compact?: boolean }) {
       {filtered.length > MAX_VISIBLE && !showAll && (
         <div className="text-center mt-8">
           {compact ? (
-            <Link
-              to="/notizie-scadenze"
-              className="inline-flex items-center gap-2 text-brand-blu font-semibold hover:text-brand-blu/80 transition-colors text-sm border border-brand-blu/20 px-5 py-2.5 rounded-xl hover:bg-brand-blu/5"
-            >
+            <Link to="/notizie-scadenze"
+              className="inline-flex items-center gap-2 text-brand-blu font-semibold hover:text-brand-blu/80 transition-colors text-sm border border-brand-blu/20 px-5 py-2.5 rounded-xl hover:bg-brand-blu/5">
               Vedi archivio completo
               <ExternalLink size={14} />
             </Link>
           ) : (
-            <button
-              onClick={() => setShowAll(true)}
-              className="inline-flex items-center gap-2 bg-brand-blu text-white px-8 py-3 rounded-2xl hover:bg-brand-blu/90 transition-colors font-semibold shadow-soft"
-            >
+            <button onClick={() => setShowAll(true)}
+              className="inline-flex items-center gap-2 bg-brand-blu text-white px-8 py-3 rounded-2xl hover:bg-brand-blu/90 transition-colors font-semibold shadow-soft">
               Vedi tutte le notizie ({filtered.length})
               <ExternalLink size={16} />
             </button>

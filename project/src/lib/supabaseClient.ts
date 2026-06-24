@@ -8,10 +8,15 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || SUPABASE_ANON_
 
 let supabaseInstance: SupabaseClient;
 
-if (supabaseUrl && supabaseUrl.startsWith('http') && !supabaseUrl.includes('your_supabase_url_here')) {
-  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
-} else {
-  console.warn('Supabase non configurato. Inizializzazione client mock.');
+try {
+  if (supabaseUrl && supabaseUrl.startsWith('http') && !supabaseUrl.includes('your_supabase_url_here')) {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+  } else {
+    console.warn('Supabase non configurato. Inizializzazione client mock.');
+    supabaseInstance = createMockSupabase() as unknown as SupabaseClient;
+  }
+} catch (e) {
+  console.error('Failed to initialize Supabase client:', e);
   supabaseInstance = createMockSupabase() as unknown as SupabaseClient;
 }
 

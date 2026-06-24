@@ -4,7 +4,7 @@ import { Search, Filter, Mail, BellRing, Lock, Unlock, ExternalLink, CreditCard,
 import { useAuth } from '../components/Auth/AuthContext';
 import LoginModal from '../components/Auth/LoginModal';
 import { supabase } from '../lib/supabaseClient';
-import type { InterpelloNazionale } from '../types/database';
+import type { Bando } from '../types/database';
 
 const PROVINCE = ['AG', 'AL', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AT', 'AV', 'BA', 'BG', 'BI', 'BL', 'BN', 'BO', 'BR', 'BS', 'BT', 'BZ', 'CA', 'CB', 'CE', 'CH', 'CL', 'CN', 'CO', 'CR', 'CS', 'CT', 'CZ', 'EN', 'FC', 'FE', 'FG', 'FI', 'FM', 'FR', 'GE', 'GO', 'GR', 'IM', 'IS', 'KR', 'LC', 'LE', 'LI', 'LO', 'LT', 'LU', 'MB', 'MC', 'ME', 'MI', 'MN', 'MO', 'MS', 'MT', 'NA', 'NO', 'NU', 'OR', 'PA', 'PC', 'PD', 'PE', 'PG', 'PI', 'PN', 'PO', 'PR', 'PU', 'PV', 'PZ', 'RA', 'RC', 'RE', 'RG', 'RI', 'RM', 'RN', 'RO', 'SA', 'SI', 'SO', 'SP', 'SR', 'SS', 'SV', 'TA', 'TE', 'TN', 'TO', 'TP', 'TR', 'TS', 'TV', 'UD', 'VA', 'VB', 'VC', 'VE', 'VI', 'VR', 'VT', 'VV'];
 
@@ -19,17 +19,26 @@ const CLASSI_CONCORSO = [
   'AA', 'AT', 'CS', 'OS', 'CU', 'IF', 'GU',
 ];
 
-const MOCK_INTERPELLI: InterpelloNazionale[] = Array.from({ length: 25 }, (_, i) => ({
-  id: `int-${i + 1}`,
-  ufficio_scolastico_provinciale: PROVINCE[i % PROVINCE.length],
-  scuola_istanza: `IC "${['Marconi', 'Einstein', 'Dante', 'Manzoni', 'Verdi', 'Rossini', 'Galilei', 'Leonardo', 'Fermi', 'Volta'][i % 10]}" - ${PROVINCE[i % PROVINCE.length]}`,
-  classe_di_concorso: CLASSI_CONCORSO[i % CLASSI_CONCORSO.length],
-  tipo_posto: (['comune', 'sostegno', 'ata'] as const)[i % 3],
-  data_pubblicazione: new Date(2026, 5, 1 + i).toISOString().split('T')[0],
-  data_scadenza: new Date(2026, 5, 15 + (i % 10)).toISOString().split('T')[0],
-  link_allegato_pdf: '#',
-  stato: i % 4 === 0 ? 'scaduto' : i % 5 === 0 ? 'assegnato' : 'aperto',
-}));
+function mockBandiFallback(): Bando[] {
+  return Array.from({ length: 25 }, (_, i) => ({
+    id: `mock-${i + 1}`,
+    titolo: `IC "${['Marconi', 'Einstein', 'Dante', 'Manzoni', 'Verdi', 'Rossini', 'Galilei', 'Leonardo', 'Fermi', 'Volta'][i % 10]}" - ${PROVINCE[i % PROVINCE.length]}`,
+    ente: `USP ${PROVINCE[i % PROVINCE.length]}`,
+    tipo: (['comune', 'sostegno', 'ata'] as const)[i % 3],
+    data_pubblicazione: new Date(2026, 5, 1 + i).toISOString().split('T')[0],
+    data_scadenza: new Date(2026, 5, 15 + (i % 10)).toISOString().split('T')[0],
+    link: '#',
+    regione: '',
+    provincia: PROVINCE[i % PROVINCE.length],
+    categoria: CLASSI_CONCORSO[i % CLASSI_CONCORSO.length],
+    descrizione: '',
+    created_at: new Date().toISOString(),
+  }));
+}
+
+function deriveStato(dataScadenza: string): 'aperto' | 'scaduto' {
+  return new Date(dataScadenza) > new Date() ? 'aperto' : 'scaduto';
+}
 
 export default function InterpelliPage() {
   const { user, isAuthenticated, refreshProfile } = useAuth();
@@ -42,10 +51,12 @@ export default function InterpelliPage() {
   const [subscriptionSuccess, setSubscriptionSuccess] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
 
+  const [tuttiInterpelli, setTuttiInterpelli] = useState<Bando[]>([]);
+  const [fetching, setFetching] = useState(true);
   const [filtroProvincia, setFiltroProvincia] = useState('');
   const [filtroClasse, setFiltroClasse] = useState('');
   const [filtroTipoPosto, setFiltroTipoPosto] = useState('');
-  const [risultati, setRisultati] = useState<InterpelloNazionale[]>([]);
+  const [risultati, setRisultati] = useState<Bando[]>([]);
   const [mostraRisultati, setMostraRisultati] = useState(false);
   const [pagina, setPagina] = useState(1);
   const risultatiPerPagina = 5;
@@ -60,6 +71,26 @@ export default function InterpelliPage() {
       return () => clearTimeout(timer);
     }
   }, [searchParams, setSearchParams, refreshProfile]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setFetching(true);
+      try {
+        const { data, error } = await supabase
+          .from('interpelli_nazionali')
+          .select('*')
+          .order('data_scadenza', { ascending: true })
+          .limit(100);
+        if (error) throw error;
+        setTuttiInterpelli(data || []);
+      } catch {
+        setTuttiInterpelli(mockBandiFallback());
+      } finally {
+        setFetching(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const canSearch = isAuthenticated ? true : searchCount < 3;
   const isPremium = user?.is_premium || false;
@@ -93,23 +124,22 @@ export default function InterpelliPage() {
     setLoading(true);
     setSearchCount(prev => prev + 1);
     setTimeout(() => {
-      let filtered = [...MOCK_INTERPELLI];
-      if (filtroProvincia) filtered = filtered.filter(r => r.ufficio_scolastico_provinciale === filtroProvincia);
-      if (filtroClasse) filtered = filtered.filter(r => r.classe_di_concorso === filtroClasse);
-      if (filtroTipoPosto) filtered = filtered.filter(r => r.tipo_posto === filtroTipoPosto);
+      let filtered = [...tuttiInterpelli];
+      if (filtroProvincia) filtered = filtered.filter(r => r.provincia === filtroProvincia);
+      if (filtroClasse) filtered = filtered.filter(r => r.categoria === filtroClasse);
+      if (filtroTipoPosto) filtered = filtered.filter(r => r.tipo === filtroTipoPosto);
       setRisultati(filtered);
       setMostraRisultati(true);
       setPagina(1);
       setLoading(false);
     }, 600);
-  }, [canSearch, isAuthenticated, filtroProvincia, filtroClasse, filtroTipoPosto, searchCount]);
+  }, [canSearch, isAuthenticated, filtroProvincia, filtroClasse, filtroTipoPosto, tuttiInterpelli, searchCount]);
 
   const paginatedResults = risultati.slice(0, pagina * risultatiPerPagina);
 
   const statoBadge: Record<string, string> = {
     aperto: 'bg-green-100 text-green-700',
     scaduto: 'bg-red-100 text-red-700',
-    assegnato: 'bg-gray-100 text-gray-600',
   };
 
   return (
@@ -204,19 +234,20 @@ export default function InterpelliPage() {
 
             <div className="space-y-4">
               {paginatedResults.map(r => {
-                const isScaduto = r.stato === 'scaduto' || r.stato === 'assegnato';
+                const stato = deriveStato(r.data_scadenza);
+                const isScaduto = stato === 'scaduto';
                 return (
                   <div key={r.id} className={`p-4 rounded-2xl border transition-all ${isScaduto ? 'border-slate-200 bg-gray-50' : 'border-slate-200/60 hover:border-brand-blu/30 bg-white/50'}`}>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statoBadge[r.stato]}`}>{r.stato}</span>
-                          <span className="text-xs font-medium text-brand-blu">{r.ufficio_scolastico_provinciale}</span>
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{r.tipo_posto}</span>
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statoBadge[stato]}`}>{stato}</span>
+                          <span className="text-xs font-medium text-brand-blu">{r.provincia || r.ente}</span>
+                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{r.tipo}</span>
                         </div>
-                        <h3 className="font-semibold text-[#0F172A]">{r.scuola_istanza}</h3>
+                        <h3 className="font-semibold text-[#0F172A]">{r.titolo}</h3>
                         <p className="text-sm text-gray-500 mt-1">
-                          Classe: <strong>{r.classe_di_concorso}</strong> | Pubb: {r.data_pubblicazione} | Scad: {r.data_scadenza}
+                          {r.categoria ? <>Classe: <strong>{r.categoria}</strong> | </> : ''}Pubb: {r.data_pubblicazione?.split('T')[0]} | Scad: {r.data_scadenza?.split('T')[0]}
                         </p>
                       </div>
                       <div className="ml-4">
@@ -225,7 +256,7 @@ export default function InterpelliPage() {
                             <Lock size={18} />
                           </button>
                         ) : (
-                          <a href={r.link_allegato_pdf} target="_blank" rel="noopener noreferrer"
+                          <a href={r.link || '#'} target="_blank" rel="noopener noreferrer"
                             className="p-2 bg-brand-verde/10 text-brand-verde rounded-xl hover:bg-brand-verde/20 transition inline-block" title="Candidati ora">
                             <Unlock size={18} />
                           </a>
