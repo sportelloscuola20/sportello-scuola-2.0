@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { sendAdminNotification } from '../../lib/emailService';
-
 const CREATOR_EMAIL = import.meta.env.VITE_CREATOR_EMAIL || 'sportelloscuola2.0@gmail.com';
 
 export interface UserProfile {
