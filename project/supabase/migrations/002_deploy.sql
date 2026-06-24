@@ -1,10 +1,13 @@
+-- FIX: search_path = '' non trova `net` (schema di pg_net). Usa 'net, public, extensions'
+-- FIX: body NON va castato a ::text — net.http_post accetta jsonb
+
 CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
 
 CREATE OR REPLACE FUNCTION public.handle_new_profile()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = ''
+SET search_path TO 'net, public, extensions'
 AS $$
 BEGIN
   PERFORM
@@ -35,7 +38,7 @@ BEGIN
           '<p style="font-size:12px;color:#9ca3af;margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb">' ||
           'Inviato automaticamente da Sportello Scuola 2.0</p>' ||
           '</div></div>'
-      )::text
+      )
     );
   RETURN NEW;
 END;

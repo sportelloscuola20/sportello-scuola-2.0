@@ -1,15 +1,12 @@
--- 002_admin_notification_trigger.sql
--- Invia notifica admin via Edge Function quando un nuovo profilo viene creato
--- FIX: search_path = '' non trova `net` (schema di pg_net). Usa 'net, public, extensions'
--- FIX: body NON va castato a ::text — net.http_post accetta jsonb
-
-CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
+-- 003_fix_trigger_searchpath.sql
+-- Fix: search_path = '' non trova `net` (in schema extensions)
+-- Fix: usa extensions.net.http_post() invece di net.http_post()
 
 CREATE OR REPLACE FUNCTION public.handle_new_profile()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path TO 'net, public, extensions'
+SET search_path = 'extensions, public'
 AS $$
 BEGIN
   PERFORM
@@ -40,15 +37,8 @@ BEGIN
           '<p style="font-size:12px;color:#9ca3af;margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb">' ||
           'Inviato automaticamente da Sportello Scuola 2.0</p>' ||
           '</div></div>'
-      )
+      )::text
     );
   RETURN NEW;
 END;
 $$;
-
-DROP TRIGGER IF EXISTS on_profile_created ON public.profiles;
-
-CREATE TRIGGER on_profile_created
-  AFTER INSERT ON public.profiles
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_profile();

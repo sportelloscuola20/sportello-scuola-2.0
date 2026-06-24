@@ -15,8 +15,6 @@ import FAQPage from './pages/FAQPage';
 import ContactPage from './pages/ContactPage';
 import ServicesPage from './pages/ServicesPage';
 import InterpelliPage from './pages/InterpelliPage';
-import DashboardPage from './pages/DashboardPage';
-import ProtectedRoute from './components/ProtectedRoute';
 import AreaRiservataLayout from './components/AreaRiservata/AreaRiservataLayout';
 import AreaRiservataPage from './pages/AreaRiservataPage';
 import ScorePageAR from './pages/ScorePageAR';
@@ -52,7 +50,6 @@ function App() {
               <Route path="/contatti" element={<ContactPage />} />
               <Route path="/servizi" element={<ServicesPage />} />
               <Route path="/interpelli" element={<InterpelliPage />} />
-              <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
               <Route path="/area-riservata" element={<AreaRiservataLayout><AreaRiservataPage /></AreaRiservataLayout>} />
               <Route path="/area-riservata/punteggi" element={<AreaRiservataLayout><ScorePageAR /></AreaRiservataLayout>} />
               <Route path="/area-riservata/preferiti" element={<AreaRiservataLayout><BookmarksPageAR /></AreaRiservataLayout>} />

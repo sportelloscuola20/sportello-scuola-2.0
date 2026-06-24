@@ -16,3 +16,6 @@ project/.env
 project/dist/
 *.log
 logs/
+
+# Local Netlify folder
+.netlify

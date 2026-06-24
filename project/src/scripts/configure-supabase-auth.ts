@@ -58,15 +58,15 @@ async function configureAuthTemplates() {
     // 2. Configure auth settings: sender, site URL, redirect URLs
     console.log('\nConfiguring auth settings...');
     const configRes = await api('/config/auth', 'PATCH', {
-      SITE_URL: 'https://sportelloscuola2-0.it',
-      ADDITIONAL_REDIRECT_URLS: [
+      site_url: 'https://sportelloscuola2-0.it',
+      uri_allow_list: JSON.stringify([
         'https://sportelloscuola2-0.it/area-riservata',
         'http://localhost:5173/area-riservata',
         'http://localhost:5173/**',
-      ],
-      MAILER_SENDER_NAME: 'Sportello Scuola 2.0',
-      MAILER_SENDER: 'assistenza@sportelloscuola2-0.it',
-      SMTP_ADMIN_EMAIL: 'assistenza@sportelloscuola2-0.it',
+      ]),
+      rate_limit_email_sent: 30,
+      smtp_sender_name: 'Sportello Scuola 2.0',
+      smtp_admin_email: 'assistenza@sportelloscuola2-0.it',
     });
 
     if (configRes.ok) {

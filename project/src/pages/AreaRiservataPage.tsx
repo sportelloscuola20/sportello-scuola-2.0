@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Bookmark, TrendingUp, Calendar, Sparkles, GraduationCap, Briefcase, User, Bell, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/Auth/AuthContext';
 import { useProfileStore } from '../store/useProfileStore';
 import SavedItems from '../components/SavedItems';
@@ -41,20 +43,36 @@ const ROLE_CONFIG = {
 export default function AreaRiservataPage() {
   const { user } = useAuth();
   const { profile } = useProfileStore();
+  const [preferitiCount, setPreferitiCount] = useState<number | null>(null);
+  const [simulazioniCount, setSimulazioniCount] = useState<number | null>(null);
+  const [bandiCount, setBandiCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    Promise.all([
+      supabase.from('saved_items').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+      supabase.from('simulations').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+      supabase.from('user_favorites').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+    ]).then(([saved, sims, favs]) => {
+      if (saved.count !== null) setPreferitiCount(saved.count);
+      if (sims.count !== null) setSimulazioniCount(sims.count);
+      if (favs.count !== null) setBandiCount(favs.count);
+    });
+  }, [user]);
 
   const ruolo = profile?.ruolo || user?.ruolo || 'aspirante';
   const config = ROLE_CONFIG[ruolo as keyof typeof ROLE_CONFIG] || ROLE_CONFIG.aspirante;
 
   const quickStats = [
-    { label: 'Preferiti', value: '—', icon: <Bookmark size={16} />, color: 'from-amber-400 to-orange-500' },
-    { label: 'Simulazioni', value: '—', icon: <TrendingUp size={16} />, color: 'from-blue-400 to-indigo-500' },
-    { label: 'Bandi seguiti', value: '—', icon: <Calendar size={16} />, color: 'from-green-400 to-emerald-500' },
+    { label: 'Preferiti', value: preferitiCount ?? '—', icon: <Bookmark size={16} />, color: 'from-amber-400 to-orange-500' },
+    { label: 'Simulazioni', value: simulazioniCount ?? '—', icon: <TrendingUp size={16} />, color: 'from-blue-400 to-indigo-500' },
+    { label: 'Bandi seguiti', value: bandiCount ?? '—', icon: <Calendar size={16} />, color: 'from-green-400 to-emerald-500' },
     { label: 'Premium', value: user?.is_premium ? 'ATTIVO' : 'Free', icon: <Sparkles size={16} />, color: 'from-brand-ambra to-orange-500' },
   ];
 
   return (
-    <div>
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-blu/20 via-brand-verde/10 to-brand-ottanio/20 border border-white/10 p-6 sm:p-10 mb-6">
+    <div className="grid grid-cols-12 gap-6">
+      <div className="col-span-12 relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-blu/20 via-brand-verde/10 to-brand-ottanio/20 border border-white/10 p-6 sm:p-10">
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand-verde/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-brand-blu/10 rounded-full blur-3xl" />
         <div className="relative">
@@ -71,52 +89,46 @@ export default function AreaRiservataPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
-        {quickStats.map(stat => (
-          <div key={stat.label} className="relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-4 hover:bg-white/10 transition group">
-            <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-br ${stat.color} transition-opacity`} />
-            <div className="relative">
-              <div className="text-white/60 mb-2">{stat.icon}</div>
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
-              <p className="text-xs text-white/40 mt-1">{stat.label}</p>
-            </div>
+      {quickStats.map(stat => (
+        <div key={stat.label} className="col-span-12 sm:col-span-6 lg:col-span-3 relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-6 hover:bg-white/10 transition group">
+          <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-br ${stat.color} transition-opacity`} />
+          <div className="relative">
+            <div className="text-white/60 mb-3">{stat.icon}</div>
+            <p className="text-2xl font-bold text-white">{stat.value}</p>
+            <p className="text-xs text-white/40 mt-1">{stat.label}</p>
           </div>
-        ))}
-      </div>
-
-      <div className="grid sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-        {config.highlights.map(h => (
-          <Link
-            key={h.path}
-            to={h.path}
-            className="group relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-5 hover:bg-white/10 transition"
-          >
-            <div className="relative">
-              <p className="text-white font-semibold text-sm mb-1 group-hover:text-brand-verde transition-colors">
-                {h.label}
-              </p>
-              <p className="text-white/40 text-xs">{h.desc}</p>
-            </div>
-            <ArrowRight size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 group-hover:text-brand-verde group-hover:translate-x-1 transition-all" />
-          </Link>
-        ))}
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Bookmark size={16} className="text-brand-ambra" />
-            <h3 className="text-sm font-semibold text-white">Notizie in Evidenza</h3>
-          </div>
-          <SavedItems />
         </div>
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Bell size={16} className="text-brand-ottanio" />
-            <h3 className="text-sm font-semibold text-white">Scadenze Preferite</h3>
+      ))}
+
+      {config.highlights.map(h => (
+        <Link
+          key={h.path}
+          to={h.path}
+          className="col-span-12 sm:col-span-6 lg:col-span-4 group relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-6 hover:bg-white/10 transition"
+        >
+          <div className="relative">
+            <p className="text-white font-semibold text-sm mb-1 group-hover:text-brand-verde transition-colors">
+              {h.label}
+            </p>
+            <p className="text-white/40 text-xs">{h.desc}</p>
           </div>
-          <CalendarWidget />
+          <ArrowRight size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 group-hover:text-brand-verde group-hover:translate-x-1 transition-all" />
+        </Link>
+      ))}
+
+      <div className="col-span-12 lg:col-span-6 rounded-2xl bg-white/5 border border-white/10 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Bookmark size={16} className="text-brand-ambra" />
+          <h3 className="text-sm font-semibold text-white">Notizie in Evidenza</h3>
         </div>
+        <SavedItems />
+      </div>
+      <div className="col-span-12 lg:col-span-6 rounded-2xl bg-white/5 border border-white/10 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Bell size={16} className="text-brand-ottanio" />
+          <h3 className="text-sm font-semibold text-white">Scadenze Preferite</h3>
+        </div>
+        <CalendarWidget />
       </div>
     </div>
   );

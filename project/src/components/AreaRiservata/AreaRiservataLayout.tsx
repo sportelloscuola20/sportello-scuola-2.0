@@ -36,14 +36,25 @@ export default function AreaRiservataLayout({ children }: { children: React.Reac
 
   useEffect(() => {
     if (authLoading) return;
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate('/', { state: { showLogin: true }, replace: true });
-      } else {
+    if (user) {
+      setCheckingAuth(false);
+    } else {
+      const authTimeout = setTimeout(() => {
         setCheckingAuth(false);
-      }
-    });
-  }, [authLoading, navigate]);
+      }, 15000);
+
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        clearTimeout(authTimeout);
+        if (!session) {
+          navigate('/', { state: { showLogin: true }, replace: true });
+        } else {
+          setCheckingAuth(false);
+        }
+      });
+
+      return () => clearTimeout(authTimeout);
+    }
+  }, [authLoading, navigate, user]);
 
   useEffect(() => {
     if (user && !checkingAuth) {

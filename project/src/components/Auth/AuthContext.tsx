@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { sendAdminNotification } from '../../lib/emailService';
+import { sendOnboardingEmail, sendAdminNotification } from '../../lib/emailService';
 const CREATOR_EMAIL = import.meta.env.VITE_CREATOR_EMAIL || 'sportelloscuola2.0@gmail.com';
 
 export interface UserProfile {
@@ -43,69 +43,85 @@ function persistUser(p: UserProfile) {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(getStoredUser);
   const [loading, setLoading] = useState(false);
+  const isLoggingInRef = useRef(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
         setUser(null);
         localStorage.removeItem('ss2_user');
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        if (!session?.user) return;
+        return;
+      }
 
-        const existing = getStoredUser();
-        if (existing && existing.id === session.user.id) {
-          setUser(existing);
-          return;
-        }
+      if (event !== 'SIGNED_IN' && event !== 'TOKEN_REFRESHED') return;
+      if (!session?.user) {
+        setUser(null);
+        localStorage.removeItem('ss2_user');
+        return;
+      }
 
-        const email = session.user.email || '';
-        const full_name = session.user.user_metadata?.full_name as string | undefined;
+      const existing = getStoredUser();
+      if (existing && existing.id === session.user.id) {
+        setUser(existing);
+        return;
+      }
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id, email, full_name, ruolo, is_premium')
-          .eq('id', session.user.id)
-          .maybeSingle();
+      if (isLoggingInRef.current) return;
 
-        if (profile) {
-          setUser({
-            id: profile.id,
-            email: profile.email,
-            full_name: profile.full_name || full_name || null,
-            ruolo: profile.ruolo,
-            is_premium: profile.is_premium,
-            is_admin: profile.email === CREATOR_EMAIL,
-          });
-          return;
-        }
+      const email = session.user.email || '';
+      const full_name = session.user.user_metadata?.full_name as string | undefined;
 
-        const newProfile: UserProfile = {
-          id: session.user.id,
-          email,
-          full_name: full_name || null,
-          ruolo: (session.user.user_metadata?.ruolo as UserProfile['ruolo']) || 'aspirante',
-          is_premium: false,
-          is_admin: email === CREATOR_EMAIL,
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, ruolo, is_premium')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (profile) {
+        const p: UserProfile = {
+          id: profile.id,
+          email: profile.email,
+          full_name: profile.full_name || full_name || null,
+          ruolo: profile.ruolo,
+          is_premium: profile.is_premium,
+          is_admin: profile.email === CREATOR_EMAIL,
         };
-        setUser(newProfile);
-        persistUser(newProfile);
+        setUser(p);
+        persistUser(p);
+        return;
+      }
 
-        await supabase.from('profiles').insert({
-          id: session.user.id,
+      const newProfile: UserProfile = {
+        id: session.user.id,
+        email,
+        full_name: full_name || null,
+        ruolo: (session.user.user_metadata?.ruolo as UserProfile['ruolo']) || 'aspirante',
+        is_premium: false,
+        is_admin: email === CREATOR_EMAIL,
+      };
+      setUser(newProfile);
+      persistUser(newProfile);
+
+      await supabase.from('profiles').insert({
+        id: session.user.id,
+        email,
+        full_name: full_name || null,
+        ruolo: newProfile.ruolo,
+        is_premium: false,
+      }).maybeSingle();
+
+      if (full_name) {
+        sendOnboardingEmail({
+          fullName: full_name,
           email,
-          full_name: full_name || null,
           ruolo: newProfile.ruolo,
-          is_premium: false,
-        }).maybeSingle();
-
-        if (full_name) {
-          sendAdminNotification({
-            uuid: session.user.id,
-            fullName: full_name,
-            email,
-            ruolo: newProfile.ruolo,
-          }).catch(() => {});
-        }
+        }).catch(() => {});
+        sendAdminNotification({
+          uuid: session.user.id,
+          fullName: full_name,
+          email,
+          ruolo: newProfile.ruolo,
+        }).catch(() => {});
       }
     });
     return () => subscription?.unsubscribe();
@@ -119,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from('profiles')
       .select('id, email, full_name, ruolo, is_premium')
       .eq('id', session.user.id)
-      .single();
+      .maybeSingle();
 
     if (profile) {
       const updated: UserProfile = {
@@ -137,22 +153,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     setLoading(true);
+    isLoggingInRef.current = true;
+
+    const controller = new AbortController();
+    const TIMEOUT_MS = 20000;
+
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) return { error: error.message };
+      const signInPromise = supabase.auth.signInWithPassword({ email, password });
+
+      const { data, error } = await signInPromise;
+      clearTimeout(timeoutId);
+
+      if (error) {
+        if (error.message?.includes('Invalid login credentials')) {
+          return { error: 'Email o password errate. Riprova.' };
+        }
+        if (error.message?.includes('Email not confirmed')) {
+          return { error: 'Email non ancora verificata. Controlla la tua casella di posta (anche Spam) e clicca sul link di attivazione.' };
+        }
+        return { error: error.message };
+      }
 
       if (!data.user?.email_confirmed_at) {
-        return { error: 'Email non ancora verificata. Controlla la tua casella di posta e clicca sul link di conferma.' };
+        if (data.session) {
+          const userEmail = data.user?.email || email;
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, email, full_name, ruolo, is_premium')
+            .eq('id', data.user.id)
+            .maybeSingle();
+
+          const p: UserProfile = {
+            id: data.user.id,
+            email: userEmail,
+            full_name: profile?.full_name || data.user.user_metadata?.full_name || null,
+            ruolo: profile?.ruolo || data.user.user_metadata?.ruolo || 'aspirante',
+            is_premium: profile?.is_premium || false,
+            is_admin: userEmail === CREATOR_EMAIL,
+          };
+          setUser(p);
+          persistUser(p);
+          return { error: null };
+        }
+        return { error: 'Email non ancora verificata. Controlla la tua casella di posta (anche Spam) e clicca sul link di attivazione.' };
       }
 
       if (data.user) {
-        const { data: profile } = await supabase
+        const { data: profile, error: profileErr } = await supabase
           .from('profiles')
           .select('id, email, full_name, ruolo, is_premium')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
 
         const userEmail = data.user.email || email;
+
+        if (!profile && !profileErr) {
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            email: userEmail,
+            full_name: data.user.user_metadata?.full_name || null,
+            ruolo: data.user.user_metadata?.ruolo || 'aspirante',
+            is_premium: false,
+          }).maybeSingle();
+        }
+
         const p: UserProfile = {
           id: data.user.id,
           email: userEmail,
@@ -166,8 +232,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return { error: null };
     } catch (err) {
-      return { error: err instanceof Error ? err.message : 'Errore di connessione' };
+      clearTimeout(timeoutId);
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return { error: 'Richiesta scaduta. Il server non risponde. Verifica la connessione e riprova.' };
+      }
+      return { error: err instanceof Error ? err.message : 'Errore di connessione. Controlla la rete e riprova.' };
     } finally {
+      clearTimeout(timeoutId);
+      isLoggingInRef.current = false;
       setLoading(false);
     }
   }, []);

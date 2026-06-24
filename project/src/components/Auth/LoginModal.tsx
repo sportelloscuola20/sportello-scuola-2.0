@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { X, Mail, Lock, User, Eye, EyeOff, Loader2, CheckCircle } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { supabase } from '../../lib/supabaseClient';
+import { sendOnboardingEmail, sendAdminNotification } from '../../lib/emailService';
 
 interface LoginModalProps {
   onClose: () => void;
@@ -47,13 +48,19 @@ export default function LoginModal({ onClose }: LoginModalProps) {
 
   const handleLogin = async () => {
     const result = await login(email, password);
+
     if (result.error) {
       setErrorMessage(result.error);
       setStatus('error');
-    } else {
-      navigate('/area-riservata', { replace: true });
-      onClose();
+      return;
     }
+
+    try {
+      navigate('/area-riservata', { replace: true });
+    } catch {
+      window.location.href = '/area-riservata';
+    }
+    onClose();
   };
 
   const handleSignup = async () => {
@@ -87,12 +94,35 @@ export default function LoginModal({ onClose }: LoginModalProps) {
       console.warn('%c[⚠️ WARNING] L\'utente esiste già nel database di autenticazione!', 'color: #ffaa00; font-weight: bold;');
     }
 
+    // Invia email di benvenuto al nuovo utente
+    sendOnboardingEmail({
+      fullName,
+      email,
+      ruolo,
+    }).catch(() => {});
+
+    // Notifica immediata all'admin della nuova registrazione
+    if (data?.user?.id) {
+      sendAdminNotification({
+        uuid: data.user.id,
+        fullName,
+        email,
+        ruolo,
+      }).catch(() => {});
+    }
+
     setStatus('success');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
+
+    const loginTimeout = setTimeout(() => {
+      setErrorMessage('Richiesta troppo lunga. Il server non risponde. Verifica la connessione e riprova.');
+      setStatus('error');
+    }, 25000);
+
     setStatus('loading');
     try {
       if (mode === 'login') {
@@ -100,16 +130,21 @@ export default function LoginModal({ onClose }: LoginModalProps) {
       } else {
         await handleSignup();
       }
+      clearTimeout(loginTimeout);
     } catch (err) {
-      console.error('%c[❌ PIPELINE BLOCKED] Dettagli del fallimento della catena:', 'color: #ff0000; font-weight: bold;', err);
+      clearTimeout(loginTimeout);
+      console.error('%c[❌ PIPELINE BLOCKED]', 'color: #ff0000; font-weight: bold;', err);
 
-      const msg = err instanceof Error ? err.message : 'Errore imprevisto durante l\'elaborazione dei dati.';
+      let msg = err instanceof Error ? err.message : "Errore imprevisto.";
+      if (!msg || msg === "{}") msg = "Errore di rete o timeout del server Supabase.";
+
       let userFriendlyMessage = msg;
-
       if (msg.includes('SMTP') || msg.includes('smtp')) {
-        userFriendlyMessage = "Errore Server SMTP: Supabase non riesce a connettersi a Resend. Controlla le credenziali in SMTP Settings.";
+        userFriendlyMessage = "Errore Server SMTP. Controlla le credenziali Supabase.";
       } else if (msg.includes('Email provider is disabled')) {
-        userFriendlyMessage = "Configurazione errata: Il provider Email è disattivato su Supabase (Sign In / Providers).";
+        userFriendlyMessage = "Provider Email disattivato su Supabase.";
+      } else if ((err as Record<string, unknown>).name === 'AuthRetryableFetchError') {
+        userFriendlyMessage = "Impossibile contattare il server. Controlla la connessione.";
       }
 
       setErrorMessage(userFriendlyMessage);
