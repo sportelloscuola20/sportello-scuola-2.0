@@ -28,20 +28,52 @@ interface MonitoredSource {
   stato: string;
 }
 
-async function fetchWithUA(url: string): Promise<{ text: string; etag?: string; lastModified?: string }> {
-  const resp = await fetch(url, {
-    headers: {
-      'User-Agent': CHROME_UA,
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8',
-    },
-  });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${url}`);
-  return {
-    text: await resp.text(),
-    etag: resp.headers.get('etag') || undefined,
-    lastModified: resp.headers.get('last-modified') || undefined,
+async function fetchWithUA(url: string, referer?: string): Promise<{ text: string; etag?: string; lastModified?: string }> {
+  // Headers browser reali completi + anti-cache forzato per bypassare firewall/404 aggregati
+  const headers: Record<string, string> = {
+    'User-Agent': CHROME_UA,
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8,en-US;q=0.7',
+    'Connection': 'keep-alive',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
   };
+  if (referer) {
+    headers['Referer'] = referer;
+  }
+  // Tentativo con retry una volta per errori di rete transitori (firewall USR)
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt > 0) {
+      const backoff = 2000 * attempt;
+      console.log(`Retry ${attempt + 1}/${2} per ${url} dopo ${backoff}ms...`);
+      await new Promise(r => setTimeout(r, backoff));
+    }
+    try {
+      const resp = await fetch(url, { headers });
+      if (resp.ok) {
+        return {
+          text: await resp.text(),
+          etag: resp.headers.get('etag') || undefined,
+          lastModified: resp.headers.get('last-modified') || undefined,
+        };
+      }
+      // HTTP 503/502/504 (temporaneo) → retry
+      if ([502, 503, 504].includes(resp.status) && attempt === 0) {
+        lastError = new Error(`HTTP ${resp.status} (temporaneo): ${url}`);
+        continue;
+      }
+      throw new Error(`HTTP ${resp.status}: ${url}`);
+    } catch (e) {
+      lastError = e instanceof Error ? e : new Error(String(e));
+      if (attempt === 0 && (lastError.message.includes('timed out') || lastError.message.includes('eof'))) {
+        continue; // retry per timeout / EOF
+      }
+      throw lastError;
+    }
+  }
+  throw lastError || new Error(`Fallimento fetch dopo retry: ${url}`);
 }
 
 function parseRSSItems(xml: string): Array<{ title: string; link: string; description: string; pubDate: string }> {
@@ -211,7 +243,12 @@ Deno.serve(async (req) => {
 
         } else if (source.tipo === 'web') {
           // --- SCRAPING WEB (con parsing HTML per keyword, specialmente USR) ---
-          const { text: html } = await fetchWithUA(source.url);
+          // Referer = root del dominio USR per emulare navigazione browser reale
+          let referer: string | undefined;
+          if (source.nome.startsWith('USR')) {
+            try { referer = new URL(source.url).origin + '/'; } catch {}
+          }
+          const { text: html } = await fetchWithUA(source.url, referer);
           const pageTitle = extractPageTitle(html);
           let nuovi = 0;
 
@@ -220,7 +257,34 @@ Deno.serve(async (req) => {
 
           if (isUSR) {
             // Scraping mirato: estrai link con keyword specifiche
-            const links = parseHTMLLinks(html, USR_KEYWORDS);
+            let links = parseHTMLLinks(html, USR_KEYWORDS);
+
+            // Se nessun link con keyword trovato: tenta su tutta la pagina (fallback esteso)
+            if (links.length === 0) {
+              console.log(`${source.nome}: nessun link keyword, tentativo fallback completo...`);
+              // Estrai TUTTI i link dalla homepage
+              const allLinks = parseHTMLLinks(html, ['.*']); // passa regex sempre true
+              // Oppure usa il metodo standard senza keyword filter
+              const linkRegex = /<a[^>]*href=["'](.*?)["'][^>]*>(.*?)<\/a>/gi;
+              let match;
+              const seen = new Set<string>();
+              while ((match = linkRegex.exec(html)) !== null) {
+                let href = match[1].trim();
+                const text = match[2].replace(/<[^>]*>/g, '').trim();
+                if (!href || !text || href.startsWith('#') || href.startsWith('javascript:') || seen.has(href)) continue;
+                if (href.startsWith('//')) href = 'https:' + href;
+                // Risolvi URL relativi
+                try { href = new URL(href, source.url).href; } catch { continue; }
+                seen.add(href);
+                // Filtra solo link che sembrano pagine di notizie/circolari (non navigazione principale)
+                if (href.includes(source.url) && text.length > 10 &&
+                    !['home', 'contatti', 'chi siamo', 'newsletter', 'privacy', 'cookie'].some(w => text.toLowerCase().includes(w))) {
+                  links.push({ title: text, link: href, description: `Link da ${source.nome} (fallback)` });
+                }
+              }
+              // Limita a 10 link
+              links = links.slice(0, 10);
+            }
 
             for (const link of links.slice(0, 15)) {
               const contentToHash = link.title + link.link + (link.description || '');
@@ -247,8 +311,9 @@ Deno.serve(async (req) => {
               }
             }
 
-            // Se non sono stati trovati link con keyword, salva l'intera pagina come documento
+            // Se non sono stati trovati link (neppure nel fallback), salva l'intera pagina come documento
             if (nuovi === 0) {
+              console.log(`${source.nome}: zero link trovati, salvataggio full-page come fallback finale...`);
               const fullText = extractTextContent(html);
               if (fullText.length > 100) {
                 const hash = simpleHash(fullText.slice(0, 1000));

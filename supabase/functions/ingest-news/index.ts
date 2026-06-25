@@ -413,11 +413,11 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Leggi parametri: batch opzionale via body (default 5)
-    let batchSize = 5;
+    // Leggi parametri: batch opzionale via body (default 10, max 50 per smaltimento code)
+    let batchSize = 10;
     try {
       const body = await req.json().catch(() => ({}));
-      if (body.batch && typeof body.batch === 'number' && body.batch > 0 && body.batch <= 20) {
+      if (body.batch && typeof body.batch === 'number' && body.batch > 0 && body.batch <= 50) {
         batchSize = body.batch;
       }
     } catch {}
@@ -444,8 +444,9 @@ Deno.serve(async (req) => {
 
     console.log(`Avvio elaborazione ${documents.length} documenti...`);
 
-    // --- 2. Elabora ogni documento con rate limiting ---
+    // --- 2. Elabora ogni documento con rate limiting e timeout atomico per-documento ---
     const results: Array<{ titolo: string; status: string; error?: string }> = [];
+    const DOC_TIMEOUT_MS = 25_000; // 25s per singolo doc (Edge Function max 60s, batch=10 → 10*25=250s no, 60/10≈6s... usiamo 15s per doc)
 
     for (let i = 0; i < documents.length; i++) {
       const doc = documents[i] as SourceDocument;
@@ -453,84 +454,96 @@ Deno.serve(async (req) => {
 
       // Pausa tra un documento e l'altro (anche se il rate limiter già gestisce)
       if (i > 0) {
-        const pause = Math.min(2000, 60_000 / MAX_REQUESTS_PER_MINUTE);
+        const pause = Math.min(1000, 60_000 / MAX_REQUESTS_PER_MINUTE);
         await new Promise(r => setTimeout(r, pause));
       }
 
       try {
         console.log(`${progress} Analisi documento: ${doc.titolo?.slice(0, 80)}...`);
-        const sourceName = doc.source_id || 'Fonte Automatica';
-        const sourceUrl = doc.url || '';
-        const prompt = buildPrompt(doc.titolo || '', doc.contenuto_raw || '', sourceName, sourceUrl);
-        const aiResult: GeminiResponse = await callGemini(geminiApiKey, prompt);
 
-        // Se il contenuto non è pertinente, salta
-        if (aiResult.categoria === 'nessuna' || !aiResult.titolo) {
-          await supabase.from('source_documents').update({ elaborato: true }).eq('id', doc.id);
-          results.push({ titolo: doc.titolo, status: 'skipped' });
-          console.log(`${progress} SKIPPED (non pertinente): ${doc.titolo?.slice(0, 60)}`);
-          continue;
-        }
+        // Timeout atomico per singolo documento — impedisce che un doc blocchi l'intero batch
+        const processingPromise = (async () => {
+          const sourceName = doc.source_id || 'Fonte Automatica';
+          const sourceUrl = doc.url || '';
+          const prompt = buildPrompt(doc.titolo || '', doc.contenuto_raw || '', sourceName, sourceUrl);
+          const aiResult: GeminiResponse = await callGemini(geminiApiKey, prompt);
 
-        // --- 3. Inserisci notizia intelligence ---
-        const { data: news, error: newsError } = await supabase
-          .from('intelligence_news')
-          .insert({
-            titolo: aiResult.titolo,
-            descrizione: aiResult.descrizione || '',
-            data_pubblicazione: new Date().toISOString(),
-            fonte_livello: aiResult.fonte_livello || 'F',
-            fonte_nome: aiResult.fonte_nome || 'Fonte Automatica',
-            fonte_url: aiResult.fonte_url || doc.url,
-            fonte_peso: 100,
-            criticita: aiResult.criticita || 'media',
-            impatto: aiResult.impatto || 'nazionale',
-            platea: aiResult.platea || 'ampia',
-            target: aiResult.target || ['docenti'],
-            categoria: aiResult.categoria || 'normativa',
-            fonte_primaria: aiResult.fonte_primaria || '',
-            fonte_url_dettaglio: doc.url,
-            produzione_livelli: aiResult.produzione_livelli || [],
-            tag: aiResult.tag || [],
-            link: aiResult.link || doc.url || '',
-            is_pinned: aiResult.is_pinned || false,
-            is_archived: false,
-            source_document_id: doc.id,
-            ultimo_aggiornamento: new Date().toISOString(),
-          })
-          .select()
-          .single();
+          // Se il contenuto non è pertinente, salta
+          if (aiResult.categoria === 'nessuna' || !aiResult.titolo) {
+            await supabase.from('source_documents').update({ elaborato: true }).eq('id', doc.id);
+            results.push({ titolo: doc.titolo, status: 'skipped' });
+            console.log(`${progress} SKIPPED (non pertinente): ${doc.titolo?.slice(0, 60)}`);
+            return;
+          }
 
-        if (newsError) {
-          throw new Error(`Errore insert DB: ${newsError.message}`);
-        }
+          // --- 3. Inserisci notizia intelligence ---
+          const { data: news, error: newsError } = await supabase
+            .from('intelligence_news')
+            .insert({
+              titolo: aiResult.titolo,
+              descrizione: aiResult.descrizione || '',
+              data_pubblicazione: new Date().toISOString(),
+              fonte_livello: aiResult.fonte_livello || 'F',
+              fonte_nome: aiResult.fonte_nome || 'Fonte Automatica',
+              fonte_url: aiResult.fonte_url || doc.url,
+              fonte_peso: 100,
+              criticita: aiResult.criticita || 'media',
+              impatto: aiResult.impatto || 'nazionale',
+              platea: aiResult.platea || 'ampia',
+              target: aiResult.target || ['docenti'],
+              categoria: aiResult.categoria || 'normativa',
+              fonte_primaria: aiResult.fonte_primaria || '',
+              fonte_url_dettaglio: doc.url,
+              produzione_livelli: aiResult.produzione_livelli || [],
+              tag: aiResult.tag || [],
+              link: aiResult.link || doc.url || '',
+              is_pinned: aiResult.is_pinned || false,
+              is_archived: false,
+              source_document_id: doc.id,
+              ultimo_aggiornamento: new Date().toISOString(),
+            })
+            .select()
+            .single();
 
-        // --- 4. Marca documento come elaborato ---
-        await supabase.from('source_documents').update({
-          elaborato: true,
-          news_generata_id: news.id,
-        }).eq('id', doc.id);
+          if (newsError) {
+            throw new Error(`Errore insert DB: ${newsError.message}`);
+          }
 
-        // --- 5. Crea knowledge links (async, non bloccante) ---
-        createKnowledgeLinks(supabase, news.id, aiResult.categoria).catch(e =>
-          console.warn(`Knowledge links fallito per ${news.id}:`, e.message)
+          // --- 4. Marca documento come elaborato ---
+          await supabase.from('source_documents').update({
+            elaborato: true,
+            news_generata_id: news.id,
+          }).eq('id', doc.id);
+
+          // --- 5. Crea knowledge links (async, non bloccante) ---
+          createKnowledgeLinks(supabase, news.id, aiResult.categoria).catch(e =>
+            console.warn(`Knowledge links fallito per ${news.id}:`, e.message)
+          );
+
+          // --- 6. Crea scadenze (async, non bloccante) ---
+          createScadenze(supabase, news.id, aiResult).catch(e =>
+            console.warn(`Scadenze fallito per ${news.id}:`, e.message)
+          );
+
+          results.push({ titolo: aiResult.titolo, status: 'created' });
+          console.log(`${progress} CREATO: ${aiResult.titolo?.slice(0, 60)}`);
+        })();
+
+        // Timeout race — se il documento impiega troppo, viene saltato
+        const timeoutPromise = new Promise<void>((_, reject) =>
+          setTimeout(() => reject(new Error(`TIMEOUT ${DOC_TIMEOUT_MS}ms — documento saltato`)), DOC_TIMEOUT_MS)
         );
 
-        // --- 6. Crea scadenze (async, non bloccante) ---
-        createScadenze(supabase, news.id, aiResult).catch(e =>
-          console.warn(`Scadenze fallito per ${news.id}:`, e.message)
-        );
-
-        results.push({ titolo: aiResult.titolo, status: 'created' });
-        console.log(`${progress} CREATO: ${aiResult.titolo?.slice(0, 60)}`);
+        await Promise.race([processingPromise, timeoutPromise]);
 
       } catch (err) {
-        console.error(`${progress} ERRORE elaborazione documento ${doc.id}:`, err.message);
+        const errMsg = err instanceof Error ? err.message : String(err);
+        console.error(`${progress} ERRORE elaborazione documento ${doc.id}: ${errMsg}`);
         // Marca come processato anche in errore per evitare cicli infiniti
         await supabase.from('source_documents').update({
           elaborato: true,
         }).eq('id', doc.id);
-        results.push({ titolo: doc.titolo, status: 'error', error: err.message });
+        results.push({ titolo: doc.titolo, status: 'error', error: errMsg });
       }
     }
 

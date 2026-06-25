@@ -1,17 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Newspaper, CalendarClock, Shield, Activity } from 'lucide-react';
+import { Newspaper, CalendarClock, Shield, Activity, Search } from 'lucide-react';
 import News from './News';
 import Deadlines from './Deadlines';
 import { fetchDashboardStats } from '../rag/intelligence-engine';
-import type { IntelligenceDashboardStats } from '../types/intelligence';
+import type { IntelligenceDashboardStats, CategoriaUtente } from '../types/intelligence';
+import { CATEGORIE_UTENTE, CATEGORIE_SCADENZA, REGIONI_ITALIA } from '../types/intelligence';
 
 interface NewsHubProps {
   isHomePage?: boolean;
 }
 
-export default function NewsHub({}: NewsHubProps) {
+export default function NewsHub({ isHomePage = true }: NewsHubProps) {
   const [activeTab, setActiveTab] = useState<'notizie' | 'scadenze'>('notizie');
   const [stats, setStats] = useState<IntelligenceDashboardStats | null>(null);
+
+  // Stato filtri condivisi per homepage
+  const [newsCategory, setNewsCategory] = useState<CategoriaUtente | 'Tutte'>('Tutte');
+  const [newsSearch, setNewsSearch] = useState('');
+  const [newsCriticalita, setNewsCriticalita] = useState('');
+
+  const [deadlineCategory, setDeadlineCategory] = useState<string>('Tutte');
+  const [deadlineSearch, setDeadlineSearch] = useState('');
+  const [deadlineRegione, setDeadlineRegione] = useState('');
 
   useEffect(() => {
     fetchDashboardStats().then(setStats).catch(() => setStats(null));
@@ -64,7 +74,76 @@ export default function NewsHub({}: NewsHubProps) {
           </button>
         </div>
 
-        {activeTab === 'notizie' ? <News compact /> : <Deadlines compact />}
+        {/* Filtri homepage — visibili sempre sopra le liste */}
+        {isHomePage && activeTab === 'notizie' && (
+          <div className="flex flex-col gap-3 mb-6">
+            <div className="flex flex-wrap gap-2 items-center">
+              <button key="Tutte" onClick={() => setNewsCategory('Tutte')}
+                className={`px-3 py-1.5 rounded-2xl text-xs font-semibold transition-all ${
+                  newsCategory === 'Tutte' ? 'bg-brand-blu text-white' : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-blu/30'
+                }`}>Tutte</button>
+              {CATEGORIE_UTENTE.map(cat => (
+                <button key={cat} onClick={() => setNewsCategory(cat)}
+                  className={`px-3 py-1.5 rounded-2xl text-xs font-semibold transition-all ${
+                    newsCategory === cat ? 'bg-brand-blu text-white' : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-blu/30'
+                  }`}>{cat}</button>
+              ))}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative w-full sm:w-56">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="text" placeholder="Cerca notizie..." value={newsSearch}
+                  onChange={e => setNewsSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-1.5 rounded-2xl border border-slate-200/60 bg-white text-xs focus:ring-2 focus:ring-brand-blu/20 outline-none" />
+              </div>
+            </div>
+          </div>
+        )}
+        {isHomePage && activeTab === 'scadenze' && (
+          <div className="flex flex-col gap-3 mb-6">
+            <div className="flex flex-wrap gap-2 items-center">
+              {['Tutte', ...CATEGORIE_SCADENZA].map(t => (
+                <button key={t} onClick={() => setDeadlineCategory(t)}
+                  className={`px-3 py-1.5 rounded-2xl text-xs font-semibold transition-all ${
+                    deadlineCategory === t ? 'bg-brand-ambra text-white' : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-ambra/30'
+                  }`}>{t}</button>
+              ))}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative w-full sm:w-56">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="text" placeholder="Cerca scadenze..." value={deadlineSearch}
+                  onChange={e => setDeadlineSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-1.5 rounded-2xl border border-slate-200/60 bg-white text-xs focus:ring-2 focus:ring-brand-ambra/20 outline-none" />
+              </div>
+              <select value={deadlineRegione} onChange={e => setDeadlineRegione(e.target.value)}
+                className="px-3 py-1.5 rounded-2xl border border-slate-200/60 bg-white text-xs focus:ring-2 focus:ring-brand-ambra/20 outline-none">
+                <option value="">Tutte le regioni</option>
+                {REGIONI_ITALIA.map(r => <option key={r.codice} value={r.codice}>{r.nome}</option>)}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'notizie' ? (
+          <News compact filters={{
+            activeCategory: newsCategory,
+            searchQuery: newsSearch,
+            filterCriticalita: newsCriticalita,
+            onCategoryChange: setNewsCategory,
+            onSearchChange: setNewsSearch,
+            onCriticalitaChange: setNewsCriticalita,
+          }} />
+        ) : (
+          <Deadlines compact filters={{
+            activeCategory: deadlineCategory,
+            searchQuery: deadlineSearch,
+            filterRegione: deadlineRegione,
+            onCategoryChange: setDeadlineCategory,
+            onSearchChange: setDeadlineSearch,
+            onRegioneChange: setDeadlineRegione,
+          }} />
+        )}
       </div>
     </section>
   );

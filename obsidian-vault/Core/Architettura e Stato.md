@@ -1,77 +1,87 @@
 ---
-title: "Architettura e Stato dell'Applicazione"
-aliases: ["Architettura", "Stato App", "Mappa Codice"]
-tags: [core, architettura, codice, routing]
-date: 2026-06-24
+title: "Architettura e Stato dell'Applicazione (v2)"
+aliases: ["Architettura", "Stato App", "Mappa Codice", "Architettura Intelligence"]
+tags: [core, architettura, codice, routing, intelligence, fonti, edge-functions]
+date: 2026-06-25
 status: published
 ---
 
 # 🏗️ Architettura e Stato dell'Applicazione
 
-Questo documento descrive la struttura del codice, il funzionamento del routing (navigazione) e il flusso di dati (RAG) all'interno di **Sportello Scuola 2.0**.
+Questo documento descrive la struttura del codice, il routing e il flusso di dati intelligence all'interno di **Sportello Scuola 2.0** (commit 079ff7c).
 
 ---
 
-## 📂 Struttura Cartelle del Progetto
+## 📂 Struttura Cartelle
 
-Il progetto frontend è basato su React + TypeScript + Vite, organizzato come segue:
-
-*   `src/App.tsx` — Componente principale contenente la definizione delle rotte.
-*   `src/main.tsx` — Entry point dell'applicazione React.
-*   `src/index.css` — Foglio di stile principale con le variabili di design (colori, font).
-*   `src/components/` — Componenti UI riutilizzabili (header, footer, bottoni, schede, breadcrumb, ecc.).
-*   `src/pages/` — Componenti pagina caricati in base alla rotta corrente.
-*   `src/rag/` — Logica di integrazione per l'AI, database Supabase e OpenRouter.
-
----
-
-## 🗺️ Mappa delle Pagine e Rotte (`App.tsx`)
-
-L'applicazione usa `react-router-dom` per gestire la navigazione client-side:
-
-| Percorso (Route) | Pagina React (`src/pages/`) | Componente principale (`src/components/`) | Descrizione |
-| :--- | :--- | :--- | :--- |
-| `/` | `HomePage.tsx` | `Hero`, `PlatformUsers`, `News`, `Deadlines` | Homepage del portale |
-| `/assistente/*` | `AssistantPage.tsx` | `AIChatContainer`, `AssistantsAI` | Pagina dei chatbot AI (RAG) |
-| `/calcolo-punteggio` | `ScorePage.tsx` | `PunteggioGPS` | Calcolatore interattivo del punteggio |
-| `/normative` | `NormativePage.tsx` | `NormativeDocuments` | Raccolta e ricerca delle normative |
-| `/notizie` | `NewsPage.tsx` | `News` | Archivio notizie MIM |
-| `/scadenze` | `DeadlinesPage.tsx` | `Deadlines` | Scadenziario scolastico |
-| `/faq` | `FAQPage.tsx` | `FAQ` | Domande frequenti |
-| `/contatti` | `ContactPage.tsx` | `Contact` | Modulo di contatto e supporto |
-| `/area-riservata/*` | `AreaRiservata.tsx` (layout in `AreaRiservataLayout.tsx`) | `BandiWatch`, `UserDashboard`, `FavoritesManager` | Area riservata (protegge auth autonomamente via `supabase.auth.getSession()`) |
-| `/interpelli` | `InterpelliPage.tsx` | filtri integrati (provincia, classe, tipo posto), paginazione, paywall premium | Centro Interpelli Nazionale |
-
----
-
-## 🧠 Flusso Dati dell'Assistente AI (RAG)
-
-Il sistema RAG (Retrieval-Augmented Generation) risponde alle domande degli utenti basandosi sulle normative scolastiche caricate a database:
-
-```mermaid
-graph TD
-    User([Domanda Utente]) --> ChatUI[src/components/AIChatContainer.tsx]
-    ChatUI --> EmbedService[src/rag/openrouter.ts - generateEmbedding]
-    EmbedService -->|Richiesta Vettore| OpenRouter[API OpenRouter]
-    OpenRouter -->|Ritorna Vettore 1536d| EmbedService
-    EmbedService --> MatchDB[src/rag/retrieval.ts - match_embeddings]
-    MatchDB -->|Query Cosine Similarity| Supabase[(Database Supabase)]
-    Supabase -->|Ritorna Chunks Rilevanti| MatchDB
-    MatchDB --> PromptBuilder[Costruzione Prompt con Contesto delle Normative]
-    PromptBuilder --> ChatAPI[src/rag/openrouter.ts - completeChat]
-    ChatAPI -->|Invia Prompt + Contesto| OpenRouter
-    OpenRouter -->|Ritorna Risposta Testuale| ChatAPI
-    ChatAPI --> ChatUI
-    ChatUI --> User
+```
+project/
+├── src/
+│   ├── App.tsx — Rotte (react-router-dom v7)
+│   ├── components/ — UI: News, Deadlines, NewsHub, Simulatori, AI Chat, Header, Footer
+│   ├── pages/ — HomePage, NewsPage, ArchivePage, InterpelliPage, ScorePage, ecc.
+│   ├── rag/ — intelligence-engine.ts (FONT_REGISTRY, helper, mock), retrieval.ts, knowledge-base.ts
+│   └── types/ — intelligence.ts (8 categorie, target, scadenze, regioni)
+supabase/
+├── functions/ — ingest-news (v3), monitor-sources (v2), stripe-webhook, create-checkout, send-email
+└── migrations/ — 001-009 (schema + intelligence + tassonomia + URL fonti)
 ```
 
-1.  **Generazione dell'Embedding**: La domanda dell'utente viene convertita in un vettore numerico (tramite l'API Embeddings di OpenRouter).
-2.  **Ricerca Semantica (Supabase)**: Il database confronta questo vettore con quelli dei documenti salvati (`embeddings` e `document_chunks`) usando la similitudine del coseno per trovare i frammenti più coerenti con la domanda.
-3.  **Generazione della Risposta**: L'agente unisce la domanda dell'utente ai frammenti di testo trovati nel database e invia il tutto a un LLM (via OpenRouter) affinché risponda usando solo fonti verificate.
+## 🗺️ Rotte
 
----
+| Route | Pagina | Descrizione |
+|---|---|---|
+| `/` | HomePage | Hero, NewsHub (tab notizie/scadenze), servizi |
+| `/assistente/*` | AssistantPage | Chat AI Sindacalista |
+| `/calcolo-punteggio` | ScorePage | Simulatore GPS/ATA |
+| `/normative` | NormativePage | Archivio documenti normativi |
+| `/notizie-scadenze` | **NewsPage** | Dashboard intelligence con live stats, legenda 8 categorie, NewsHub |
+| `/notizie-scadenze/archivio` | **ArchivePage** | Archivio completo con tabelle, sorting, filtro, ricerca, `?tab=` context-aware |
+| `/interpelli` | InterpelliPage | Centro Nazionale Interpelli con filtri e paywall |
+| `/area-riservata/*` | AreaRiservataLayout | Punteggi, preferiti, documenti, bandi, abbonamento, impostazioni |
+| `/faq`, `/contatti`, `/servizi` | Static pages | FAQ, contatti, servizi |
+
+## 🧠 Pipeline Intelligence (AI — Gemini 2.5 Flash)
+
+```
+46 Fonti (RSS/Web/USR)
+    │ cron-job.org ogni 60min
+    ▼
+monitor-sources (Edge Function v2)
+    ├── Fonti RSS → parse RSS/Atom → source_documents
+    ├── Fonti Web non-USR → extractTextContent → source_documents
+    └── Fonti USR → parseHTMLLinks(keyword: GPS/Graduatorie/Decreto/Nomine/Ruoli/Immissioni) → source_documents
+    │
+    │ cron-job.org ogni 3min (batch=3)
+    ▼
+ingest-news (Edge Function v3)
+    ├── Prende documenti non elaborati da source_documents
+    ├── Chiama Gemini 2.5 Flash con prompt (8 categorie utente + 8 categorie scadenze)
+    ├── Rate limiter: 14 rpm / 1450 rpd
+    ├── Crea record in intelligence_news (7 livelli produzione)
+    ├── Crea knowledge_links (grafo relazionale)
+    └── Crea intelligence_scadenze (solo con campi obbligatori pieni)
+    │
+    ▼
+Frontend (React)
+    ├── News.tsx — Notizie con filtro 8 categorie, criticità, target, 7 livelli, knowledge graph
+    ├── Deadlines.tsx — Scadenze con countdown, badge categoria, norma, conseguenze, guida, regione
+    ├── ArchivePage.tsx — Tabelle ordinabili, filtro categoria, ricerca, sorting data/criticita/categoria
+    └── NewsHub.tsx — Tab switcher Notizie/Scadenze con badge live stats
+```
+
+## ⚙️ Edge Functions
+
+| Funzione | Versione | Descrizione | Schedulazione |
+|---|---|---|---|
+| `monitor-sources` | v2 | Scraping 46 fonti con User-Agent Chrome, parsing RSS/Atom/HTML, keyword extraction USR | cron-job.org ogni 60min |
+| `ingest-news` | v3 | Classificazione Gemini + estrazione scadenze con rate limiter, validazione campi | cron-job.org ogni 3min (batch=3) |
+| `create-checkout-session` | - | Stripe checkout session |
+| `stripe-webhook` | - | Webhook pagamenti Stripe |
+| `send-email` | - | Invio email newsletter/alert |
 
 ## 🔗 Link Correlati
-- Vedi lo **[[Competenze/Schema Database|Schema Database]]** per le tabelle coinvolte
-- Consulta le **[[Competenze/Linee Guida Agenti|Linee Guida Agenti]]** per integrare le modifiche visive
-- Torna alla **[[Benvenuto|Pagina Iniziale]]**
+- [[Sezioni/Notizie e Scadenze]] — Dettaglio intelligence
+- [[Competenze/Architettura delle Fonti]] — Repository 46 fonti
+- [[Diari/Attività Aperte (To-Do)]] — Prossimi step
+- [[Benvenuto|Pagina Iniziale]]**

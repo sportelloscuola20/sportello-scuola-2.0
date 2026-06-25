@@ -2,7 +2,7 @@
 title: "Mappa Generale delle Note (MOC)"
 aliases: ["Map of Content", "Indice Generale", "MOC"]
 tags: [core, indice, mappa]
-date: 2026-06-24
+date: 2026-06-25
 status: published
 ---
 

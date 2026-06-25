@@ -1,56 +1,43 @@
 ---
-title: "Architettura delle Fonti — Knowledge Source Architecture"
-aliases: ["Fonti", "Knowledge Sources", "Source Architecture", "Repository Fonti"]
-tags: [competenze, fonti, verifica, intelligence, monitoraggio]
-date: 2026-06-24
+title: "Architettura delle Fonti — Knowledge Source Architecture (v2)"
+aliases: ["Fonti", "Knowledge Sources", "Source Architecture", "Repository Fonti", "46 Fonti"]
+tags: [competenze, fonti, verifica, intelligence, monitoraggio, scraping]
+date: 2026-06-25
 status: published
 ---
 
-# 🏛️ Architettura delle Fonti — Knowledge Source Architecture
+# 🏛️ Architettura delle Fonti — Knowledge Source Architecture (v2)
 
 ## Obiettivo
 
-Costruire il più avanzato motore di intelligence scolastica italiana.
+Monitorare continuamente 46 fonti istituzionali e sindacali tramite `monitor-sources` v2 (Edge Function) schedulato ogni 60 min via cron-job.org.
 
-Monitorare continuamente:
-- nuove norme, modifiche normative, concorsi, graduatorie
-- sentenze, finanziamenti, bandi, circolari, note ministeriali
-- aggiornamenti europei, innovazioni didattiche, trend internazionali
-
-Ogni informazione deve essere associata a: fonte, URL, data pubblicazione, data acquisizione, autore, livello affidabilità, livello impatto, categoria.
+Ogni informazione associata a: fonte, URL, data pubblicazione, data acquisizione, livello affidabilità.
 
 ---
 
-## Livello A — Fonti Primarie Assolute
-**Peso affidabilità: 100/100**
-
-*Qualsiasi informazione da queste fonti prevale su ogni altra.*
+## Livello A — Fonti Primarie Assolute (100/100)
 
 ### Gazzetta Ufficiale
 https://www.gazzettaufficiale.it
 
-Monitorare: Serie Generale, Concorsi ed Esami, Contratti Pubblici, Corte Costituzionale, Unione Europea
-
-### Normattiva (Testo Vigente)
+### Normattiva
 https://www.normattiva.it
 
-Monitorare: modifiche legislative, consolidamenti normativi, abrogazioni, nuovi testi vigenti
+### Ministero dell'Istruzione e del Merito (MIM)
+https://miur.gov.it/web/guest/home
 
-### Ministero dell'Istruzione e del Merito
-https://www.mim.gov.it
+Sottosezioni:
+- https://miur.gov.it/atti-generali
+- https://miur.gov.it/rassegna-normativa
+- https://miur.gov.it/web/guest/normativa
+- https://miur.gov.it/web/guest/comunicazioni
 
-Monitorare: homepage, atti e normativa, comunicazioni, reclutamento, inclusione, PNRR, concorsi, open data, statistiche, newsletter
-
-Sottosezioni critiche:
-- https://www.mim.gov.it/atti-generali
-- https://www.mim.gov.it/rassegna-normativa
-- https://mim.gov.it/web/guest/normativa
-- https://mim.gov.it/web/guest/comunicazioni
+### MIM — Comunicazioni RSS
+https://miur.gov.it/feed/rss/comunicazioni
 
 ### Parlamento Italiano
 https://www.parlamento.it
-
-Monitorare: disegni di legge, interrogazioni, commissioni istruzione, audizioni
 
 ### Camera dei Deputati
 https://www.camera.it
@@ -61,141 +48,129 @@ https://www.senato.it
 ### Dipartimento Funzione Pubblica
 https://www.funzionepubblica.gov.it
 
-Monitorare: circolari, orientamenti, personale PA
-
 ### ARAN
 https://www.aranagenzia.it
 
-Monitorare: CCNL, orientamenti applicativi, contrattazione
-
 ### INPS
-https://www.inps.it
-
-Monitorare: circolari, messaggi, pensioni, congedi, TFS, TFR, previdenza
-
-Area prioritaria: https://www.inps.it/it/it/inps-comunica/atti.html
+https://www.inps.it + https://www.inps.it/it/it/inps-comunica/atti.html
 
 ---
 
-## Livello B — Governance e Sistema Scuola
-**Peso affidabilità: 95/100**
+## Livello B — Governance e Sistema Scuola (95/100)
 
 ### INVALSI
-https://www.invalsi.it
-
-Monitorare: rapporti nazionali, prove, statistiche
+https://www.invalsicloud.it
 
 ### INDIRE
 https://www.indire.it
 
-Monitorare: ricerca educativa, innovazione, formazione docenti
-
 ### ISTAT
 https://www.istat.it
 
-Monitorare: istruzione, dispersione scolastica, popolazione scolastica, trend demografici
-
 ---
 
-## Livello C — Giurisprudenza
-**Peso affidabilità: 98/100**
+## Livello C — Giurisprudenza (98/100)
 
-### Giustizia Amministrativa (TAR + Consiglio di Stato)
+### Giustizia Amministrativa
 https://www.giustizia-amministrativa.it
 
 ### Corte Costituzionale
 https://www.cortecostituzionale.it
 
-Monitorare: sentenze, comunicati
-
 ### Corte di Cassazione
 https://www.cortedicassazione.it
 
-Monitorare: orientamenti, decisioni rilevanti
-
 ---
 
-## Livello D — Osservatorio Europeo e Internazionale
-**Peso affidabilità: 95/100**
+## Livello D — Osservatorio Europeo e Internazionale (95/100)
 
 ### Commissione Europea — Istruzione
 https://education.ec.europa.eu
 
-Monitorare: istruzione, Erasmus+, competenze
-
 ### OECD — Education
 https://www.oecd.org/education
-
-Monitorare: Education at a Glance, PISA, rapporti strategici
 
 ### UNESCO — Education
 https://www.unesco.org/en/education
 
-Monitorare: inclusione, innovazione, educazione globale
-
 ### WHO
 https://www.who.int
 
-Monitorare: salute scolastica, benessere studenti
-
 ---
 
-## Livello E — Ricerca Scientifica
-**Peso affidabilità: 90/100**
+## Livello E — Ricerca Scientifica (90/100)
 
 - ERIC: https://eric.ed.gov
 - PubMed: https://pubmed.ncbi.nlm.nih.gov
 - Google Scholar: https://scholar.google.com
 
-Monitorare: inclusione, neuroscienze, didattica, apprendimento, tecnologie educative
-
 ---
 
-## Livello F — Intelligence di Settore (Allerta Precoce)
-**Peso affidabilità: 60/100**
-
-*Utilizzare solo come sistema di allerta precoce. Mai come fonte definitiva.*
+## Livello F — Intelligence di Settore / Allerta Precoce (60/100)
 
 - Orizzonte Scuola: https://www.orizzontescuola.it
 - Tecnica della Scuola: https://www.tecnicadellascuola.it
 - Tuttoscuola: https://www.tuttoscuola.com
-- FLC CGIL: https://www.flcgil.it
-- CISL Scuola: https://www.cislscuola.it
-- UIL Scuola: https://www.uilscuola.it
+- FLC CGIL: https://www.flcgcgil.it — RSS: https://www.flcgcgil.it/feed
+- CISL Scuola: https://www.cislscuola.it — RSS: https://www.cislscuola.it/feed
+- UIL Scuola: https://www.uilscuola.it — RSS: https://www.uilscuola.it/rss
 - SNALS: https://www.snals.it
 - ANIEF: https://www.anief.org
 
 ---
 
-## Regola di Validazione (6 Passi)
+## Uffici Scolastici Regionali (USR) — 18 fonti
 
-Prima della pubblicazione:
-1. Cercare la notizia nelle **fonti di livello F** (allerta)
-2. **Verificarla** nelle **fonti di livello A** (fonte primaria)
-3. Verificarne gli **effetti** nelle **fonti di livello B** (governance)
-4. Verificare **impatti giuridici** nelle **fonti di livello C** (giurisprudenza)
-5. Verificare **impatti europei** nelle **fonti di livello D** (EU/OECD)
-6. Cercare **letteratura scientifica** correlata nel **livello E** (ricerca)
+Monitorati con scraping mirato (keyword: GPS/Graduatorie/Decreto/Nomine/Ruoli/Immissioni). Frequenza: 240 min. User-Agent Chrome obbligatorio. Fallback full-page se zero risultati.
 
-**Nessuna notizia può essere pubblicata se manca almeno una fonte primaria verificabile.**
+URL endpoint su dominio MIM:
+- Abruzzo: https://abruzzo.miur.gov.it
+- Basilicata: https://basilicata.miur.gov.it
+- Calabria: https://www.usrcalabria.it
+- Campania: https://campania.miur.gov.it
+- Emilia-Romagna: https://istruzioneer.gov.it
+- FVG: https://fvg.miur.gov.it
+- Lazio: https://lazio.miur.gov.it
+- Liguria: https://liguria.miur.gov.it
+- Lombardia: https://lombardia.miur.gov.it
+- Marche: https://marche.miur.gov.it
+- Molise: https://molise.miur.gov.it
+- Piemonte: https://www.istruzionepiemonte.it
+- Puglia: https://puglia.miur.gov.it
+- Sardegna: https://sardegna.miur.gov.it
+- Sicilia: https://www.istruzione.sicilia.it
+- Toscana: https://toscana.miur.gov.it
+- Trentino-Alto Adige: https://www.provincia.tn.it/istruzione
+- Umbria: https://www.istruzione.umbria.it
+- Valle d'Aosta: https://www.regione.vda.it/istruzione
+- Veneto: https://www.istruzioneveneto.it
+
+---
+
+## Regola di Validazione (astratta — non più mostrata in UI)
+
+Il sistema si basa su:
+1. Allerta precoce da fonti livello F
+2. Verifica su fonte primaria (livello A — MIM, G.U., Normattiva)
+3. Effetti su livello B (INVALSI, INDIRE, ISTAT)
+4. Impatti giuridici su livello C
+5. Impatti europei su livello D
+6. Letteratura scientifica su livello E
+
+**Nessuna notizia senza fonte primaria verificabile.**
 
 ---
 
 ## Principio di Verità
 
-Nessuna informazione può essere pubblicata se:
-- ❌ non è verificata
-- ❌ non è attribuita
-- ❌ non è contestualizzata
-- ❌ non è aggiornata
+Nessuna informazione pubblicata se:
+- ❌ non verificata / non attribuita / non contestualizzata / non aggiornata
 
 ---
 
 ## Regola CEO
 
 L'obiettivo non è essere il primo a pubblicare. È essere la fonte che tutti gli altri citano.
-
-Ogni contenuto deve essere abbastanza autorevole da poter essere utilizzato da: dirigenti scolastici, DSGA, docenti, personale ATA, sindacati, giornalisti, consulenti scolastici, enti pubblici.
 
 **Conflitto velocità vs accuratezza** → accuratezza
 **Conflitto opinione vs fonte primaria** → fonte primaria
@@ -205,5 +180,6 @@ Ogni contenuto deve essere abbastanza autorevole da poter essere utilizzato da: 
 
 ## 🔗 Collegamenti
 
-- [[Modello Editoriale e CEO]] — Playbook editoriale
+- [[Sezioni/Notizie e Scadenze]] — Pipeline intelligence
+- [[Core/Architettura e Stato]] — Infrastruttura
 - [[Benvenuto|Pagina Iniziale]]

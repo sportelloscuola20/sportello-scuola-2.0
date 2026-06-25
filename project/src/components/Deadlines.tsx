@@ -11,6 +11,15 @@ import { CRITICALITA_COLORS, IMPATTO_COLORS, TARGET_LABELS, CATEGORIE_UTENTE_COL
 const MAX_VISIBLE = 4;
 const REFRESH_INTERVAL_MS = 60000;
 
+interface DeadlinesFilters {
+  activeCategory: string;
+  searchQuery: string;
+  filterRegione: string;
+  onCategoryChange: (cat: string) => void;
+  onSearchChange: (q: string) => void;
+  onRegioneChange: (r: string) => void;
+}
+
 function CountdownTimer({ targetDate }: { targetDate: Date }) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -45,19 +54,28 @@ function CountdownTimer({ targetDate }: { targetDate: Date }) {
   );
 }
 
-export default function Deadlines({ compact = false }: { compact?: boolean }) {
+export default function Deadlines({ compact = false, filters }: { compact?: boolean; filters?: DeadlinesFilters }) {
   const { isAuthenticated } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [followed, setFollowed] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(filters?.searchQuery ?? '');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<string>('Tutte');
+  const [activeCategory, setActiveCategory] = useState<string>(filters?.activeCategory ?? 'Tutte');
   const [filterPriorita, setFilterPriorita] = useState<string>('');
-  const [filterRegione, setFilterRegione] = useState<string>('');
+  const [filterRegione, setFilterRegione] = useState<string>(filters?.filterRegione ?? '');
   const [deadlineItems, setDeadlineItems] = useState<ScadenzaIntelligence[]>(MOCK_SCADENZE_INTELLIGENCE);
   const [ultimoAggiornamento, setUltimoAggiornamento] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Sincronizza stato esterno quando fornito (NewsHub gestisce filtri)
+  useEffect(() => {
+    if (filters) {
+      setActiveCategory(filters.activeCategory);
+      setSearchQuery(filters.searchQuery);
+      setFilterRegione(filters.filterRegione);
+    }
+  }, [filters?.activeCategory, filters?.searchQuery, filters?.filterRegione]);
 
   const fetchDeadlinesFromDB = async () => {
     setIsRefreshing(true);
@@ -144,7 +162,7 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
           <div className="flex flex-col gap-4 mt-4 mb-8">
             <div className="flex gap-2 flex-wrap">
               {types.map(t => (
-                <button key={t} onClick={() => setActiveCategory(t)}
+                <button key={t} onClick={() => { setActiveCategory(t); filters?.onCategoryChange(t); }}
                   className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-all ${
                     activeCategory === t ? 'bg-brand-ambra text-white' : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-ambra/30'
                   }`}>{t}</button>
@@ -154,7 +172,7 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
               <div className="relative w-full sm:w-56">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input type="text" placeholder="Cerca scadenze..." value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
+                  onChange={e => { setSearchQuery(e.target.value); filters?.onSearchChange(e.target.value); }}
                   className="w-full pl-9 pr-4 py-2 rounded-2xl border border-slate-200/60 bg-white text-sm focus:ring-2 focus:ring-brand-ambra/20 outline-none" />
               </div>
               <select value={filterPriorita} onChange={e => setFilterPriorita(e.target.value)}
@@ -165,7 +183,7 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
                 <option value="media">Media</option>
                 <option value="bassa">Bassa</option>
               </select>
-              <select value={filterRegione} onChange={e => setFilterRegione(e.target.value)}
+              <select value={filterRegione} onChange={e => { setFilterRegione(e.target.value); filters?.onRegioneChange(e.target.value); }}
                 className="px-4 py-2 rounded-2xl border border-slate-200/60 bg-white text-sm focus:ring-2 focus:ring-brand-ambra/20 outline-none">
                 <option value="">Tutte le regioni</option>
                 {REGIONI_ITALIA.map(r => <option key={r.codice} value={r.codice}>{r.nome}</option>)}

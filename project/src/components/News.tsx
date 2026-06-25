@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Star, ChevronDown, Search, FileText, Target, Shield, Activity, BarChart3, RefreshCw, Link2 } from 'lucide-react';
+import { Calendar, Clock, Star, ChevronDown, Search, FileText, Target, Shield, Activity, BarChart3, RefreshCw, Link2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './Auth/AuthContext';
 import LoginModal from './Auth/LoginModal';
@@ -13,21 +13,39 @@ import type { NewsCache } from '../types/database';
 const MAX_VISIBLE = 4;
 const REFRESH_INTERVAL_MS = 60000;
 
-export default function News({ compact = false }: { compact?: boolean }) {
+interface NewsFilters {
+  activeCategory: CategoriaUtente | 'Tutte';
+  searchQuery: string;
+  filterCriticalita: string;
+  onCategoryChange: (cat: CategoriaUtente | 'Tutte') => void;
+  onSearchChange: (q: string) => void;
+  onCriticalitaChange: (c: string) => void;
+}
+
+export default function News({ compact = false, filters }: { compact?: boolean; filters?: NewsFilters }) {
   const { isAuthenticated } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(filters?.searchQuery ?? '');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showAll, setShowAll] = useState(false);
-  const [filterCriticalita, setFilterCriticalita] = useState<string>('');
-  const [activeCategory, setActiveCategory] = useState<CategoriaUtente | 'Tutte'>('Tutte');
+  const [filterCriticalita, setFilterCriticalita] = useState(filters?.filterCriticalita ?? '');
+  const [activeCategory, setActiveCategory] = useState<CategoriaUtente | 'Tutte'>(filters?.activeCategory ?? 'Tutte');
   const [newsItems, setNewsItems] = useState<NotiziaIntelligence[]>([]);
   const [dataJournalism] = useState<SezioneIntelligence[]>(() => generaDatiDataJournalism());
   const [showDataJournalism, setShowDataJournalism] = useState(false);
   const [knowledgeLinks, setKnowledgeLinks] = useState<Record<string, KnowledgeLink[]>>({});
   const [ultimoAggiornamento, setUltimoAggiornamento] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Sincronizza stato esterno quando fornito (NewsHub gestisce filtri)
+  useEffect(() => {
+    if (filters) {
+      setActiveCategory(filters.activeCategory);
+      setSearchQuery(filters.searchQuery);
+      setFilterCriticalita(filters.filterCriticalita);
+    }
+  }, [filters?.activeCategory, filters?.searchQuery, filters?.filterCriticalita]);
 
   const fetchNewsFromDB = async (): Promise<NotiziaIntelligence[] | null> => {
     try {
@@ -179,12 +197,12 @@ export default function News({ compact = false }: { compact?: boolean }) {
           </div>
           <div className="flex flex-col gap-4 mt-4 mb-8">
             <div className="flex flex-wrap gap-2 items-center">
-              <button key="Tutte" onClick={() => setActiveCategory('Tutte')}
+              <button key="Tutte" onClick={() => { setActiveCategory('Tutte'); filters?.onCategoryChange('Tutte'); }}
                 className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-all ${
                   activeCategory === 'Tutte' ? 'bg-brand-blu text-white' : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-blu/30'
                 }`}>Tutte</button>
               {CATEGORIE_UTENTE.map(cat => (
-                <button key={cat} onClick={() => setActiveCategory(cat)}
+                <button key={cat} onClick={() => { setActiveCategory(cat); filters?.onCategoryChange(cat); }}
                   className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-all ${
                     activeCategory === cat ? 'bg-brand-blu text-white' : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-blu/30'
                   }`}>{cat}</button>
@@ -194,10 +212,10 @@ export default function News({ compact = false }: { compact?: boolean }) {
               <div className="relative w-full sm:w-64">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input type="text" placeholder="Cerca notizie..." value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
+                  onChange={e => { setSearchQuery(e.target.value); filters?.onSearchChange(e.target.value); }}
                   className="w-full pl-9 pr-4 py-2 rounded-2xl border border-slate-200/60 bg-white text-sm focus:ring-2 focus:ring-brand-blu/20 focus:border-brand-blu transition outline-none" />
               </div>
-              <select value={filterCriticalita} onChange={e => setFilterCriticalita(e.target.value)}
+              <select value={filterCriticalita} onChange={e => { setFilterCriticalita(e.target.value); filters?.onCriticalitaChange(e.target.value); }}
                 className="px-4 py-2 rounded-2xl border border-slate-200/60 bg-white text-sm focus:ring-2 focus:ring-brand-blu/20 outline-none">
                 <option value="">Tutte le criticità</option>
                 <option value="strategica">Strategica</option>
@@ -264,6 +282,14 @@ export default function News({ compact = false }: { compact?: boolean }) {
                       </span>
                       <span className="text-xs text-gray-400 flex items-center gap-1">
                         <Calendar size={12} /> {formatDataItaliana(news.dataPubblicazione)}
+                        {(() => {
+                          try {
+                            const d = new Date(news.dataPubblicazione);
+                            return isNaN(d.getTime()) ? '' : (
+                              <> <span className="text-gray-300">|</span> <Clock size={10} /> {d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</>
+                            );
+                          } catch { return ''; }
+                        })()}
                       </span>
                     </div>
                     <h3 className="text-lg font-bold text-[#0F172A] mb-2">{news.titolo}</h3>
