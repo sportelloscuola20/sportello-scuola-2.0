@@ -1,3 +1,11 @@
+---
+title: "Centro Nazionale Interpelli"
+aliases: ["Interpelli", "Centro Interpelli", "Sportello Interpelli"]
+tags: [sezioni, interpelli, supplenze, reclutamento]
+date: 2026-06-24
+status: published
+---
+
 # 📬 Centro Nazionale Interpelli — Specifiche Istituzionali
 
 Il **Centro Nazionale Interpelli** è lo sportello unico digitale progettato per centralizzare il monitoraggio e la candidatura per le supplenze temporanee pubblicate dalle istituzioni scolastiche italiane.
@@ -37,11 +45,10 @@ Ogni scheda rappresenta un bando attivo e include:
 
 ## 💻 Mappa dei Componenti e File di Riferimento
 
-*   `src/components/InterpelliFilters.tsx` — Pannello di selezione e filtri.
-*   `src/components/InterpelliCard.tsx` — Singolo bando con azioni smart e integrazione prompt AI.
-*   `src/components/InterpelliList.tsx` — Flusso di visualizzazione e gestione dello stato dei filtri.
-*   `src/components/InterpelliAlertManager.tsx` — Gestione preferenze utente salvate a database.
-*   `src/pages/InterpelliPage.tsx` — Pagina contenitore collegata alla rotta `/interpelli`.
+*   `src/pages/InterpelliPage.tsx` — Pagina contenitore (rotta `/interpelli`). Contiene filtri (provincia, classe concorso, tipo posto), risultati con paginazione, paywall premium, modale checkout Stripe.
+*   `src/components/CentroInterpelli.tsx` — Componente teaser per la homepage con ricerca rapida e link a `/interpelli`.
+*   `src/components/AreaRiservata/BandiWatch.tsx` — Monitoraggio bandi nell'area riservata (legge da `interpelli_nazionali`).
+*   `src/types/database.ts` — Tipo `Bando` (mappa la tabella `interpelli_nazionali`) e `UtenteAbbonatoInterpelli`.
 
 ---
 
@@ -51,8 +58,21 @@ Ogni scheda rappresenta un bando attivo e include:
 *   **`brandkit`**: Colori coordinati per i vari stati di scadenza (es. Rosso scuro istituzionale per bandi in scadenza entro 24 ore).
 *   **`soft-skill`**: Formulazione formale dei testi esplicativi per l'utente non esperto.
 
+## 🗄️ Stato Implementazione (24 Giugno 2026)
+
+- **Fase 1 (Database & Router)**: ✅ Completata
+  - Tabella `interpelli_nazionali` in `supabase/migrations/001_area_riservata.sql` (CREATE + RLS anonima in lettura)
+  - Rotta `/interpelli` in `src/App.tsx`
+  - Pagina `src/pages/InterpelliPage.tsx` con filtri, risultati, paginazione, paywall premium Stripe
+- **Fase 2 (Dati Reali)**: ✅ Completata
+  - `InterpelliPage.tsx` ora esegue `supabase.from('interpelli_nazionali').select('*')` all'avvio
+  - Fallback automatico a mock data se Supabase non risponde
+  - Tipo `Bando` allineato con lo schema DB esistente
+  - `deriveStato()` computa stato `aperto`/`scaduto` dalla data
+
 ---
 
 ## 🔗 Riferimenti Istituzionali
-*   Torna alla **[[00 - Benvenuto|Pagina Iniziale]]**.
-*   Consulta lo **[[Schema Database]]** per le tabelle `interpelli` e `interpelli_alerts`.
+- Torna alla **[[Benvenuto|Pagina Iniziale]]**
+- Consulta lo **[[Competenze/Schema Database|Schema Database]]** per la tabella `interpelli_nazionali` (implementata) e `interpelli_alerts`
+- Vedi lo stato di sviluppo in **[[Diari/Attività Aperte (To-Do)|Attività Aperte]]**

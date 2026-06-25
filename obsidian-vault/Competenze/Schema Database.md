@@ -1,3 +1,11 @@
+---
+title: "Schema Database (Supabase)"
+aliases: ["Schema DB", "DB Schema", "Tabelle Database", "PostgreSQL"]
+tags: [competenze, database, supabase, sql, schema]
+date: 2026-06-24
+status: published
+---
+
 # 🗄️ Schema Database (Supabase)
 
 Il database di **Sportello Scuola 2.0** è ospitato su **Supabase** (PostgreSQL) e include il supporto per i vettori tramite l'estensione `pgvector` per consentire le funzionalità di RAG (AI basata sui documenti caricati).
@@ -45,42 +53,45 @@ Il database di **Sportello Scuola 2.0** è ospitato su **Supabase** (PostgreSQL)
 
 ---
 
-## 🚀 Nuove Tabelle da Creare per il "Centro Interpelli"
+## 🚀 Tabelle per il "Centro Interpelli" (IMPLEMENTATE)
 
-Per implementare la nuova funzionalità, aggiungeremo le seguenti tabelle in `src/rag/database.sql`:
-
-### 📬 `interpelli`
-Memorizza tutti gli interpelli pubblicati dalle scuole.
+### 📬 `interpelli_nazionali` — già in `supabase/migrations/001_area_riservata.sql`
+Memorizza tutti gli interpelli pubblicati dalle scuole. Leggibile da utenti anonimi (RLS: `FOR SELECT USING (true)`).
 ```sql
-CREATE TABLE interpelli (
+CREATE TABLE IF NOT EXISTS interpelli_nazionali (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  titolo TEXT NOT NULL,
-  scuola TEXT NOT NULL,
-  regione TEXT NOT NULL,
-  provincia TEXT NOT NULL,
-  classe_concorso TEXT NOT NULL, -- es. A022, A012, ADSS
-  tipologia_posto TEXT NOT NULL, -- es. Comune, Sostegno
+  titolo TEXT NOT NULL,                    -- nome scuola / titolo bando
+  ente TEXT NOT NULL DEFAULT '',           -- USP o ente pubblicante
+  tipo TEXT DEFAULT '',                    -- 'comune' | 'sostegno' | 'ata'
+  data_scadenza TIMESTAMPTZ NOT NULL,
+  data_pubblicazione TIMESTAMPTZ DEFAULT now(),
+  link TEXT,                               -- link al bando/albo pretorio
+  regione TEXT,
+  provincia TEXT,                          -- sigla provincia (es. RM, MI)
+  categoria TEXT,                          -- classe di concorso (es. A-22, A-12)
   descrizione TEXT,
-  link_fonte TEXT, -- Link all'albo pretorio della scuola
-  data_pubblicazione TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  scadenza TIMESTAMP WITH TIME ZONE NOT NULL,
-  creato_il TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 ```
+**Tipo TypeScript associato**: `Bando` in `src/types/database.ts`.
 
-### 🔔 `interpelli_alerts`
-Memorizza i codici delle classi di concorso per cui un utente ha richiesto di ricevere notifiche email/app.
+### 🔔 `interpelli_alerts` — già in `supabase_schema.sql`
+Memorizza le preferenze di notifica degli utenti abbonati.
 ```sql
-CREATE TABLE interpelli_alerts (
+CREATE TABLE IF NOT EXISTS interpelli_alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  codici_interpello TEXT[] NOT NULL, -- es. ['A012', 'A022', 'ADSS']
-  creato_il TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  regione TEXT NOT NULL,
+  provincia TEXT NOT NULL,
+  classe_concorso_area TEXT NOT NULL,
+  active BOOLEAN NOT NULL DEFAULT true,
+  stripe_subscription_id TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ```
 
 ---
 
 ## 🔗 Link Correlati
-*   Vedi i requisiti del **[[Centro Interpelli Nazionale]]**.
-*   Torna alla **[[00 - Benvenuto|Pagina Iniziale]]**.
+- Vedi i requisiti del **[[Sezioni/Centro Nazionale Interpelli|Centro Interpelli Nazionale]]**
+- Torna alla **[[Benvenuto|Pagina Iniziale]]**

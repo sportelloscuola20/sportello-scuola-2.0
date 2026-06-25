@@ -67,7 +67,7 @@ class RateLimiter {
 const rateLimiter = new RateLimiter();
 
 // --- MODELLO GEMINI ---
-const GEMINI_MODEL = 'gemini-1.5-flash';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 // --- TIPI ---
@@ -113,7 +113,7 @@ interface GeminiResponse {
   }>;
 }
 
-// --- PROMPT DI SISTEMA per Gemini ---
+// --- PROMPT DI SISTEMA per Gemini (tassonomia 8 categorie utente) ---
 function buildPrompt(titolo: string, contenuto: string): string {
   return `Sei un giornalista specializzato in istruzione scolastica italiana. Analizza il documento grezzo fornito e genera un contenuto editoriale originale seguendo il modello a 7 livelli di produzione.
 
@@ -127,7 +127,15 @@ REGOLE ASSOLUTE:
 - impatto: locale | regionale | nazionale
 - platea: limitata | ampia | intero_sistema
 - target: scegli tra [docenti, aspiranti_docenti, sostegno, ata, amministrativi, collaboratori, dsga, dirigenti, educatori, pedagogisti, formatori, universita, sindacati, famiglie, studenti, decisori_pubblici]
-- categoria: normativa | reclutamento | personale | inclusione | innovazione | governance
+- categoria: SCEGLI UNA E UNA SOLA tra queste 8 categorie orientate all'utente:
+  1. "Bandi, Concorsi e Selezioni" — concorsi, bandi, selezioni pubbliche, TFA, PAS
+  2. "Didattica, Formazione e Innovazione" — formazione docenti, innovazione didattica, PNRR scuola, progetti
+  3. "Graduatorie (GPS, GAE, d'Istituto)" — GPS, GAE, graduatorie d'istituto, terza fascia ATA
+  4. "Contratti, Salari e Personale ATA" — rinnovo CCNL, stipendi, aumenti, arretrati, personale ATA
+  5. "Pensioni, Previdenza e Welfare" — pensioni, previdenza, TFR, buonuscita, welfare scuola
+  6. "Normative, Note e Circolari Ministeriali" — leggi, decreti, circolari, note MIM, ordini del giorno
+  7. "Mobilità, Assegnazioni e Utilizzazioni" — mobilità docenti/ATA, assegnazioni provvisorie, utilizzazioni
+  8. "Esami di Stato e Valutazioni (INVALSI)" — esami di Stato, maturità, INVALSI, valutazioni
 - fonte_livello: A | B | C | D | E | F
 - Se il contenuto non riguarda l'istruzione scolastica, imposta "categoria" come "nessuna" e produzione_livelli vuoto.
 
@@ -142,7 +150,7 @@ Rispondi ESCLUSIVAMENTE con un JSON valido, senza markdown, senza spiegazioni, s
   "impatto": "nazionale",
   "platea": "ampia",
   "target": ["docenti", "aspiranti_docenti"],
-  "categoria": "reclutamento",
+  "categoria": "Graduatorie (GPS, GAE, d'Istituto)",
   "fonte_primaria": "Riferimento normativo esatto",
   "tag": ["tag1", "tag2"],
   "link": "https://...",
@@ -176,7 +184,7 @@ async function callGemini(apiKey: string, prompt: string): Promise<GeminiRespons
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: 4096,
+        maxOutputTokens: 8192,
         responseMimeType: 'application/json',
       },
       safetySettings: [
@@ -215,34 +223,43 @@ async function callGemini(apiKey: string, prompt: string): Promise<GeminiRespons
   if (data.promptFeedback?.blockReason) {
     console.warn(`Contenuto bloccato da Gemini: ${data.promptFeedback.blockReason}`);
     return {
-      titolo: '',
-      descrizione: '',
-      fonte_livello: 'F',
-      fonte_nome: 'Fonte Automatica',
-      fonte_url: '',
-      criticita: 'media',
-      impatto: 'nazionale',
-      platea: 'ampia',
-      target: ['docenti'],
-      categoria: 'nessuna',
-      fonte_primaria: '',
-      tag: [],
-      link: '',
-      is_pinned: false,
-      produzione_livelli: [],
-      scadenze: [],
+      titolo: '', descrizione: '', fonte_livello: 'F',
+      fonte_nome: 'Fonte Automatica', fonte_url: '',
+      criticita: 'media', impatto: 'nazionale', platea: 'ampia',
+      target: ['docenti'], categoria: 'nessuna', fonte_primaria: '',
+      tag: [], link: '', is_pinned: false,
+      produzione_livelli: [], scadenze: [],
     };
   }
 
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) return JSON.parse(jsonMatch[0]);
-    return JSON.parse(text);
-  } catch {
-    throw new Error(`Risposta Gemini non valida: ${text.slice(0, 300)}`);
+  // Tentativi multipli di parsing JSON
+  const tryParse = (s: string): GeminiResponse | null => {
+    try {
+      // 1. Prova rimuovendo markdown code block
+      const cleaned = s.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '').trim();
+      // 2. Estrai oggetto JSON
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (jsonMatch) return JSON.parse(jsonMatch[0]);
+      // 3. Fallback: parse diretto
+      return JSON.parse(cleaned);
+    } catch {
+      return null;
+    }
+  };
+
+  const parsed = tryParse(text);
+
+  if (!parsed) {
+    // Ultimo tentativo: rimuovi caratteri non stampabili
+    const sanitized = text.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+    const retry = tryParse(sanitized);
+    if (retry) return retry;
+    throw new Error(`Risposta Gemini non valida (${text.length} chars): ${text.slice(0, 200)}`);
   }
+
+  return parsed;
 }
 
 // --- FUNZIONE PER CREARE KNOWLEDGE LINKS ---

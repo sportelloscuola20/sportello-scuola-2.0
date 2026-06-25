@@ -47,7 +47,7 @@ function SourceGroup({ livello, fonti }: SourceGroupProps) {
     <div className={`rounded-2xl border ${colorBorder[livello]} ${colorBg[livello]} p-4`}>
       <div className="flex items-center justify-between mb-3">
         <div>
-          <span className="text-sm font-bold">Livello {livello} — {info?.nome}</span>
+          <span className="text-sm font-bold">{info?.nome}</span>
           <span className="text-xs text-gray-500 ml-2">Peso: {info?.peso}/100</span>
         </div>
         <div className="flex items-center gap-2 text-xs">

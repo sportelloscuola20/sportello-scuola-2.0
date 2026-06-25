@@ -1,3 +1,11 @@
+---
+title: "Sportello Scuola 2.0 — Panoramica"
+aliases: ["Panoramica Progetto", "Sportello Scuola"]
+tags: [core, progetto, panoramica]
+date: 2026-06-24
+status: published
+---
+
 # 🏫 Sportello Scuola 2.0 — Panoramica Progetto
 
 **Sportello Scuola 2.0** è una piattaforma web innovativa definita come **"Il copilota AI per Docenti, ATA e Dirigenti"**. Aiuta il personale scolastico italiano a orientarsi tra graduatorie, punteggi, interpelli, scadenze e normative ministeriali complesse.
@@ -36,6 +44,6 @@ La piattaforma si suddivide in diverse sezioni chiave:
 ---
 
 ## 🔗 Link Correlati
-*   Torna alla **[[00 - Benvenuto|Pagina Iniziale]]**
-*   Vedi i dettagli sul **[[Centro Interpelli Nazionale]]**
-*   Vedi l'**[[Architettura e Stato]]** tecnica del sistema.
+- Torna alla **[[Benvenuto|Pagina Iniziale]]**
+- Vedi i dettagli sul **[[Sezioni/Centro Nazionale Interpelli|Centro Interpelli Nazionale]]**
+- Vedi l'**[[Core/Architettura e Stato|Architettura e Stato]]** tecnica del sistema

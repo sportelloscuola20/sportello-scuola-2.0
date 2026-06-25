@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "00 - Benvenuto.md",
+                "file": "Benvenuto.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "00 - Benvenuto"
+              "title": "Benvenuto"
             }
           },
           {
@@ -27,7 +27,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01 - Sezioni/Notizie e Scadenze.md",
+                "file": "Sezioni/Notizie e Scadenze.md",
                 "mode": "source",
                 "source": false
               },
@@ -109,7 +109,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01 - Sezioni/Notizie e Scadenze.md",
+                "file": "Sezioni/Notizie e Scadenze.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -128,7 +128,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "01 - Sezioni/Notizie e Scadenze.md",
+                "file": "Sezioni/Notizie e Scadenze.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -171,7 +171,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "01 - Sezioni/Notizie e Scadenze.md",
+                "file": "Sezioni/Notizie e Scadenze.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -200,28 +200,28 @@
   },
   "active": "34c8f3823e5ce351",
   "lastOpenFiles": [
-    "00 - Benvenuto.md",
-    "Centro Interpelli Nazionale.md",
-    "02 - Competenze e Strumenti/Schema Database.md",
-    "03 - Diari e Atti/Attività Aperte (To-Do).md",
-    "03 - Diari e Atti/Diario del Progetto.md",
-    "04 - Risorse/Comandi Utili.md",
-    "01 - Sezioni/Centro Nazionale Interpelli.md",
-    "01 - Sezioni/Notizie e Scadenze.md",
-    "01 - Sezioni/Home Page.md",
-    "02 - Competenze e Strumenti/Architettura e Stato.md",
-    "02 - Competenze e Strumenti/Linee Guida Agenti.md",
-    "01 - Sezioni/Sportello Scuola 2.0.md",
-    "03 - Diari e Atti/Registro degli Atti Ufficiali.md",
-    "03 - Diari e Atti",
-    "02 - Competenze e Strumenti/Integrazione GitHub.md",
-    "02 - Competenze e Strumenti/Integrazione Supabase.md",
-    "02 - Competenze e Strumenti/Mappatura delle Competenze (Skills).md",
-    "02 - Competenze e Strumenti",
-    "01 - Sezioni/Simulatore GPS e ATA.md",
-    "01 - Sezioni/Newsletter.md",
-    "01 - Sezioni/Sezione Documenti (RAG).md",
-    "01 - Sezioni/Agente IA Sindacalista.md",
-    "01 - Sezioni"
+    "Benvenuto.md",
+    "Sezioni/Centro Nazionale Interpelli.md",
+    "Competenze/Schema Database.md",
+    "Diari/Attività Aperte (To-Do).md",
+    "Diari/Diario del Progetto.md",
+    "Risorse/Comandi Utili.md",
+    "Sezioni/Centro Nazionale Interpelli.md",
+    "Sezioni/Notizie e Scadenze.md",
+    "Sezioni/Home Page.md",
+    "Competenze/Architettura e Stato.md",
+    "Competenze/Linee Guida Agenti.md",
+    "Sezioni/Sportello Scuola 2.0.md",
+    "Diari/Registro degli Atti Ufficiali.md",
+    "Diari",
+    "Competenze/Integrazione GitHub.md",
+    "Competenze/Integrazione Supabase.md",
+    "Competenze/Mappatura delle Competenze (Skills).md",
+    "Competenze",
+    "Sezioni/Simulatore GPS e ATA.md",
+    "Sezioni/Newsletter.md",
+    "Sezioni/Sezione Documenti (RAG).md",
+    "Sezioni/Agente IA Sindacalista.md",
+    "Sezioni"
   ]
 }

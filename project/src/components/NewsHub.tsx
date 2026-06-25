@@ -30,8 +30,8 @@ export default function NewsHub({}: NewsHubProps) {
             Intelligence — Notizie e Scadenze
           </h2>
           <p className="text-gray-600 font-normal max-w-3xl mx-auto">
-            Sistema di monitoraggio normativo con classificazione intelligence: fonti primarie certificate,
-            criticità, impatto, target specifici. Ogni contenuto segue il modello di produzione a 7 livelli:
+            Sistema di monitoraggio normativo con classificazione per categoria, criticità, impatto e target specifici.
+            Ogni contenuto segue il modello di produzione a 7 livelli di approfondimento:
             dalla notizia immediata agli scenari futuri.
           </p>
         </div>

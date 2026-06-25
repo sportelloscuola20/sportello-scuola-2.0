@@ -1,3 +1,11 @@
+---
+title: "Registro degli Atti Ufficiali e Fonti Normative"
+aliases: ["Atti Ufficiali", "Registro Atti", "Fonti Normative", "Decreti"]
+tags: [diari, norme, decreti, ccnl, legislazione]
+date: 2026-06-24
+status: published
+---
+
 # ⚖️ Registro degli Atti Ufficiali e delle Fonti Normative
 
 Questo registro cataloga cronologicamente le leggi dello Stato, i decreti ministeriali e i contratti collettivi nazionali che costituiscono la **fonte primaria di verità** per l'algoritmo del portale, per i calcolatori di punteggio e per le risposte fornite dall'Agente IA Sindacalista.
@@ -41,10 +49,10 @@ Questo registro cataloga cronologicamente le leggi dello Stato, i decreti minist
 
 Ogni volta che un nuovo documento normativo viene pubblicato nella Gazzetta Ufficiale della Repubblica Italiana o sul sito istituzionale del MIM:
 1.  **Inserimento nel Registro**: Viene aggiunta una scheda descrittiva in questo documento.
-2.  **Indicizzazione (RAG)**: Il file PDF del decreto viene inserito a database tramite la pipeline descrittiva in **[[Sezione Documenti (RAG)]]** per consentire agli assistenti di rispondere aggiornati all'ultima legge vigente.
+2.  **Indicizzazione (RAG)**: Il file PDF del decreto viene inserito a database tramite la pipeline descrittiva in **[[Sezioni/Sezione Documenti (RAG)|Sezione Documenti (RAG)]]** per consentire agli assistenti di rispondere aggiornati all'ultima legge vigente.
 
 ---
 
 ## 🔗 Riferimenti Istituzionali
-*   Torna alla **[[00 - Benvenuto|Pagina Iniziale]]**.
-*   Consulta la scheda dell'assistente contrattuale in **[[Agente IA Sindacalista]]**.
+- Torna alla **[[Benvenuto|Pagina Iniziale]]**
+- Consulta la scheda dell'assistente contrattuale in **[[Sezioni/Agente IA Sindacalista|Agente IA Sindacalista]]**

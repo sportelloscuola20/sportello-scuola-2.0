@@ -1,6 +1,6 @@
 import type {
   FonteInfo, LivelloFonte,
-  Criticalita, TargetUtente,
+  Criticalita, TargetUtente, CategoriaUtente,
   NotiziaIntelligence, ScadenzaIntelligence,
   SezioneIntelligence,
   MonitoredSource, IntelligenceDashboardStats, KnowledgeLink,
@@ -10,6 +10,7 @@ import { supabase } from '../lib/supabaseClient';
 export const FONT_REGISTRY: Record<LivelloFonte, FonteInfo[]> = {
   A: [
     { livello: 'A', nome: 'Gazzetta Ufficiale', url: 'https://www.gazzettaufficiale.it', peso: 100 },
+    { livello: 'A', nome: 'Gazzetta Ufficiale — Concorsi', url: 'https://www.gazzettaufficiale.it', peso: 100 },
     { livello: 'A', nome: 'Normattiva', url: 'https://www.normattiva.it', peso: 100 },
     { livello: 'A', nome: 'MIM', url: 'https://www.mim.gov.it', peso: 100 },
     { livello: 'A', nome: 'Parlamento Italiano', url: 'https://www.parlamento.it', peso: 100 },
@@ -23,6 +24,24 @@ export const FONT_REGISTRY: Record<LivelloFonte, FonteInfo[]> = {
     { livello: 'B', nome: 'INVALSI', url: 'https://www.invalsi.it', peso: 95 },
     { livello: 'B', nome: 'INDIRE', url: 'https://www.indire.it', peso: 95 },
     { livello: 'B', nome: 'ISTAT', url: 'https://www.istat.it', peso: 95 },
+    { livello: 'B', nome: 'USR Abruzzo', url: 'https://www.ch.usr.abruzzo.it', peso: 90 },
+    { livello: 'B', nome: 'USR Basilicata', url: 'http://www.basilicata.istruzione.it', peso: 90 },
+    { livello: 'B', nome: 'USR Calabria', url: 'http://www.istruzione.calabria.it', peso: 90 },
+    { livello: 'B', nome: 'USR Campania', url: 'http://www.campania.istruzione.it', peso: 90 },
+    { livello: 'B', nome: 'USR Emilia-Romagna', url: 'https://istruzioneer.gov.it', peso: 90 },
+    { livello: 'B', nome: 'USR Friuli-Venezia Giulia', url: 'http://www.scuola.fvg.it', peso: 90 },
+    { livello: 'B', nome: 'USR Lazio', url: 'https://www.usrlazio.it', peso: 90 },
+    { livello: 'B', nome: 'USR Liguria', url: 'http://www.istruzione.liguria.it', peso: 90 },
+    { livello: 'B', nome: 'USR Lombardia', url: 'https://usr.misuola.lombardia.gov.it', peso: 90 },
+    { livello: 'B', nome: 'USR Marche', url: 'http://www.marche.istruzione.it', peso: 90 },
+    { livello: 'B', nome: 'USR Molise', url: 'http://www.usr.molise.istruzione.it', peso: 90 },
+    { livello: 'B', nome: 'USR Piemonte', url: 'http://www.istruzionepiemonte.it', peso: 90 },
+    { livello: 'B', nome: 'USR Puglia', url: 'http://www.pugliausr.gov.it', peso: 90 },
+    { livello: 'B', nome: 'USR Sardegna', url: 'http://www.sardegna.istruzione.it', peso: 90 },
+    { livello: 'B', nome: 'USR Sicilia', url: 'http://www.usr.sicilia.it', peso: 90 },
+    { livello: 'B', nome: 'USR Toscana', url: 'http://www.toscana.istruzione.it', peso: 90 },
+    { livello: 'B', nome: 'USR Umbria', url: 'http://www.istruzione.umbria.it', peso: 90 },
+    { livello: 'B', nome: 'USR Veneto', url: 'https://istruzioneveneto.gov.it', peso: 90 },
   ],
   C: [
     { livello: 'C', nome: 'Giustizia Amministrativa', url: 'https://www.giustizia-amministrativa.it', peso: 98 },
@@ -87,15 +106,15 @@ export function deriveCriticalita(dataScadenza: string): Criticalita {
 export const MOCK_NEWS_INTELLIGENCE: NotiziaIntelligence[] = [
   {
     id: 'intel-news-1',
-    titolo: 'Pubblicata l\'Ordinanza Ministeriale per l\'aggiornamento GPS 2026-2028',
-    descrizione: 'Il MIM ha pubblicato l\'OM per l\'aggiornamento biennale delle Graduatorie Provinciali per le Supplenze. Domande dal 1° al 31 luglio 2026 tramite POLIS.',
+    titolo: "Pubblicata l'Ordinanza Ministeriale per l'aggiornamento GPS 2026-2028",
+    descrizione: "Il MIM ha pubblicato l'OM per l'aggiornamento biennale delle Graduatorie Provinciali per le Supplenze. Domande dal 1° al 31 luglio 2026 tramite POLIS.",
     dataPubblicazione: '2026-06-15',
     fonte: { livello: 'A', nome: 'MIM', url: 'https://www.mim.gov.it', peso: 100 },
     classifica: {
       criticita: 'alta', impatto: 'nazionale',
       platea: 'intero_sistema',
       target: ['docenti', 'aspiranti_docenti', 'sostegno'],
-      categoria: 'reclutamento', livelloFonte: 'A',
+      categoria: 'Graduatorie (GPS, GAE, d\'Istituto)', livelloFonte: 'A',
       fontePrimaria: 'D.M. prot. n. 1234 del 10/06/2026',
       fonteUrl: 'https://www.mim.gov.it/web/guest/graduatorie-provinciali-supplenze',
       dataAcquisizione: new Date().toISOString(),
@@ -123,7 +142,7 @@ export const MOCK_NEWS_INTELLIGENCE: NotiziaIntelligence[] = [
       criticita: 'alta', impatto: 'nazionale',
       platea: 'ampia',
       target: ['docenti', 'aspiranti_docenti', 'sostegno'],
-      categoria: 'reclutamento', livelloFonte: 'A',
+      categoria: 'Bandi, Concorsi e Selezioni', livelloFonte: 'A',
       fontePrimaria: 'D.D. prot. n. 987 del 12/03/2026',
       fonteUrl: 'https://www.mim.gov.it/concorso-ordinario-docenti-2026',
       dataAcquisizione: new Date().toISOString(),
@@ -151,7 +170,7 @@ export const MOCK_NEWS_INTELLIGENCE: NotiziaIntelligence[] = [
       criticita: 'alta', impatto: 'nazionale',
       platea: 'ampia',
       target: ['ata', 'amministrativi', 'collaboratori'],
-      categoria: 'reclutamento', livelloFonte: 'A',
+      categoria: 'Graduatorie (GPS, GAE, d\'Istituto)', livelloFonte: 'A',
       fontePrimaria: 'D.M. 89/2024, G.U. n. 124 del 25/05/2024',
       fonteUrl: 'https://www.mim.gov.it/ata-terza-fascia',
       dataAcquisizione: new Date().toISOString(),
@@ -179,7 +198,7 @@ export const MOCK_NEWS_INTELLIGENCE: NotiziaIntelligence[] = [
       criticita: 'urgente', impatto: 'nazionale',
       platea: 'ampia',
       target: ['docenti', 'aspiranti_docenti', 'sostegno'],
-      categoria: 'reclutamento', livelloFonte: 'A',
+      categoria: 'Bandi, Concorsi e Selezioni', livelloFonte: 'A',
       fontePrimaria: 'D.D. prot. n. 1025 del 10/05/2026',
       fonteUrl: 'https://www.mim.gov.it/tfa-sostegno-viii-ciclo',
       dataAcquisizione: new Date().toISOString(),
@@ -205,7 +224,7 @@ export const MOCK_NEWS_INTELLIGENCE: NotiziaIntelligence[] = [
       criticita: 'media', impatto: 'nazionale',
       platea: 'intero_sistema',
       target: ['docenti', 'aspiranti_docenti', 'sostegno'],
-      categoria: 'reclutamento', livelloFonte: 'A',
+      categoria: 'Graduatorie (GPS, GAE, d\'Istituto)', livelloFonte: 'A',
       fontePrimaria: 'D.M. prot. n. 1150 del 25/05/2026',
       fonteUrl: 'https://www.mim.gov.it/aggiornamento-tabelle-valutazione-gps',
       dataAcquisizione: new Date().toISOString(),
@@ -229,7 +248,7 @@ export const MOCK_NEWS_INTELLIGENCE: NotiziaIntelligence[] = [
       criticita: 'media', impatto: 'nazionale',
       platea: 'intero_sistema',
       target: ['docenti', 'aspiranti_docenti', 'universita'],
-      categoria: 'normativa', livelloFonte: 'A',
+      categoria: 'Normative, Note e Circolari Ministeriali', livelloFonte: 'A',
       fontePrimaria: 'DPCM 4 agosto 2023, G.U. n. 201 del 29/08/2023',
       fonteUrl: 'https://www.mim.gov.it/percorsi-abilitazione',
       dataAcquisizione: new Date().toISOString(),
@@ -257,7 +276,7 @@ export const MOCK_SCADENZE_INTELLIGENCE: ScadenzaIntelligence[] = [
     impatto: 'nazionale',
     conseguenzeNonAzione: 'Mancata presentazione entro il termine comporta l\'esclusione dalla selezione. Non è prevista riapertura dei termini.',
     link: 'https://www.mim.gov.it/tfa-sostegno-viii-ciclo',
-    tipo: 'TFA',
+    tipo: 'Bandi, Concorsi e Selezioni',
     guidaOperativa: 'Accedere a POLIS con SPID/CIE. Completare il modulo di domanda. Allegare i documenti richiesti. Effettuare il pagamento del contributo di € 50,00 tramite PagoPA.',
   },
   {
@@ -271,7 +290,7 @@ export const MOCK_SCADENZE_INTELLIGENCE: ScadenzaIntelligence[] = [
     impatto: 'nazionale',
     conseguenzeNonAzione: 'Il mancato aggiornamento comporta la permanenza in graduatoria con il punteggio precedente, senza possibilità di beneficiare delle nuove tabelle di valutazione.',
     link: 'https://www.mim.gov.it/graduatorie-provinciali-supplenze',
-    tipo: 'GPS',
+    tipo: 'Graduatorie (GPS, GAE, d\'Istituto)',
     guidaOperativa: 'Accedere a POLIS. Selezionare le operazioni di aggiornamento desiderate. Caricare i nuovi titoli in formato PDF. Confermare la domanda entro le 23:59 del 31/07/2026.',
   },
   {
@@ -285,7 +304,7 @@ export const MOCK_SCADENZE_INTELLIGENCE: ScadenzaIntelligence[] = [
     impatto: 'nazionale',
     conseguenzeNonAzione: 'Non sarà possibile partecipare ai concorsi. I posti non assegnati verranno coperti tramite scorrimento GPS o nuovi bandi.',
     link: 'https://www.mim.gov.it/concorsi-2026',
-    tipo: 'Concorsi',
+    tipo: 'Bandi, Concorsi e Selezioni',
     guidaOperativa: 'Verificare requisiti sul bando. Preparare documentazione. Accedere a POLIS. Compilare domanda scegliendo le classi di concorso.',
   },
   {
@@ -299,7 +318,7 @@ export const MOCK_SCADENZE_INTELLIGENCE: ScadenzaIntelligence[] = [
     impatto: 'nazionale',
     conseguenzeNonAzione: 'Mancata formazione: il docente non matura il credito formativo annuale obbligatorio. Possibili riflessi sulla progressione di carriera.',
     link: 'https://sofia.mim.gov.it',
-    tipo: 'Formazione',
+    tipo: 'Didattica, Formazione e Innovazione',
     guidaOperativa: 'Accedere a SOFIA con SPID. Scegliere il corso. Iscriversi. Completare il percorso formativo entro la scadenza indicata.',
   },
   {
@@ -313,7 +332,7 @@ export const MOCK_SCADENZE_INTELLIGENCE: ScadenzaIntelligence[] = [
     impatto: 'nazionale',
     conseguenzeNonAzione: 'Il candidato ha 24 ore per accettare. La rinuncia senza giustificato motivo comporta: prima rinuncia = 1 anno di esclusione; seconda rinuncia = esclusione definitiva.',
     link: '',
-    tipo: 'GPS',
+    tipo: 'Graduatorie (GPS, GAE, d\'Istituto)',
     guidaOperativa: 'Mantenere aggiornato il recapito telefonico e l\'indirizzo PEC. Rispondere alla convocazione entro 24 ore. Verificare la documentazione richiesta.',
   },
 ];
@@ -344,17 +363,14 @@ export function generaDatiDataJournalism(): SezioneIntelligence[] {
 
 export function getTargetFromCategory(cat: string): TargetUtente[] {
   const map: Record<string, TargetUtente[]> = {
-    GPS: ['docenti', 'aspiranti_docenti', 'sostegno'],
-    Concorsi: ['docenti', 'aspiranti_docenti'],
-    ATA: ['ata', 'amministrativi', 'collaboratori'],
-    Riforme: ['docenti', 'dirigenti', 'dsga', 'universita'],
-    TFA: ['docenti', 'aspiranti_docenti', 'sostegno'],
-    Formazione: ['docenti', 'ata', 'educatori'],
-    MAD: ['aspiranti_docenti'],
-    Mobilità: ['docenti', 'ata', 'dirigenti'],
-    Docenti: ['docenti', 'aspiranti_docenti'],
-    Bandi: ['ata', 'docenti', 'amministrativi', 'dsga'],
-    Inclusione: ['sostegno', 'docenti', 'educatori', 'famiglie'],
+    'Bandi, Concorsi e Selezioni': ['docenti', 'aspiranti_docenti'],
+    'Didattica, Formazione e Innovazione': ['docenti', 'ata', 'educatori', 'universita'],
+    'Graduatorie (GPS, GAE, d\'Istituto)': ['docenti', 'aspiranti_docenti', 'sostegno', 'ata'],
+    'Contratti, Salari e Personale ATA': ['ata', 'docenti', 'amministrativi', 'collaboratori', 'dsga', 'sindacati'],
+    'Pensioni, Previdenza e Welfare': ['docenti', 'ata', 'dsga', 'dirigenti'],
+    'Normative, Note e Circolari Ministeriali': ['docenti', 'dirigenti', 'dsga', 'universita', 'decisori_pubblici'],
+    'Mobilità, Assegnazioni e Utilizzazioni': ['docenti', 'ata', 'dirigenti'],
+    'Esami di Stato e Valutazioni (INVALSI)': ['docenti', 'studenti', 'famiglie', 'dirigenti'],
   };
   return map[cat] || ['docenti'];
 }
@@ -388,8 +404,8 @@ export async function fetchDashboardStats(): Promise<IntelligenceDashboardStats 
 
 export function getDashboardFallbackStats(): IntelligenceDashboardStats {
   return {
-    fonti_attive: 28,
-    fonti_totali: 28,
+    fonti_attive: 48,
+    fonti_totali: 48,
     documenti_da_elaborare: 0,
     documenti_ultime_24h: 0,
     notizie_oggi: 0,

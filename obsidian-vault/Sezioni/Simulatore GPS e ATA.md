@@ -1,3 +1,11 @@
+---
+title: "Simulatore Punteggi GPS e ATA"
+aliases: ["Simulatore GPS", "Calcolo Punteggio", "GPS ATA"]
+tags: [sezioni, simulatore, gps, ata, punteggi]
+date: 2026-06-24
+status: published
+---
+
 # 📊 Simulatore Punteggi GPS e ATA
 
 I simulatori consentono agli aspiranti docenti e al personale ATA di calcolare in modo rapido e formale il punteggio spettante nelle graduatorie scolastiche sulla base dei titoli di studio, delle certificazioni e dei servizi svolti.
@@ -47,5 +55,5 @@ Calcolo dei giorni o mesi di supplenza svolti.
 ---
 
 ## 🔗 Riferimenti Istituzionali
-*   Torna alla **[[00 - Benvenuto|Pagina Iniziale]]**.
-*   Vedi l'elenco dei decreti nel **[[Registro degli Atti Ufficiali]]**.
+- Torna alla **[[Benvenuto|Pagina Iniziale]]**
+- Vedi l'elenco dei decreti nel **[[Diari/Registro degli Atti Ufficiali|Registro degli Atti Ufficiali]]**

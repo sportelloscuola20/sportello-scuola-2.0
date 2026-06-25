@@ -1,3 +1,11 @@
+---
+title: "Comandi Utili per il Progetto"
+aliases: ["Comandi", "Terminal Commands", "Script"]
+tags: [risorse, comandi, sviluppo, terminale]
+date: 2026-06-24
+status: published
+---
+
 # 💻 Comandi Utili per il Progetto
 
 Di seguito trovi una raccolta dei comandi più comuni che puoi usare per gestire il progetto Sportello Scuola 2.0.
@@ -53,5 +61,5 @@ npx supabase migration new nome_migrazione
 ---
 
 ## 🔗 Link Correlati
-*   Leggi il **[[Manuale Utente]]** per capire come far funzionare l'applicazione.
-*   Torna alla **[[00 - Benvenuto|Pagina Iniziale]]**.
+- Leggi il **[[Risorse/Manuale Utente|Manuale Utente]]** per capire come far funzionare l'applicazione
+- Torna alla **[[Benvenuto|Pagina Iniziale]]**

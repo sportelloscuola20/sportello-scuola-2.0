@@ -1,3 +1,11 @@
+---
+title: "Sezione Documenti e Architettura RAG"
+aliases: ["RAG", "Documenti", "Ricerca Semantica", "Indicizzazione"]
+tags: [sezioni, rag, documenti, ai, vettori]
+date: 2026-06-24
+status: published
+---
+
 # 📄 Sezione Documenti e Architettura RAG
 
 La **Sezione Documenti** gestisce il patrimonio informativo del portale. Consente di indicizzare leggi, decreti e contratti della scuola e permette al motore di ricerca semantica (RAG) di attingere a fonti ufficiali in tempo reale.
@@ -56,5 +64,5 @@ flowchart LR
 ---
 
 ## 🔗 Riferimenti Istituzionali
-*   Torna alla **[[00 - Benvenuto|Pagina Iniziale]]**.
-*   Consulta lo **[[Schema Database]]** per le query SQL dei vettori.
+- Torna alla **[[Benvenuto|Pagina Iniziale]]**
+- Consulta lo **[[Competenze/Schema Database|Schema Database]]** per le query SQL dei vettori

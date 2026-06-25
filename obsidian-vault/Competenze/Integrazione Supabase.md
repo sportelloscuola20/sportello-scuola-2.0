@@ -1,3 +1,11 @@
+---
+title: "Integrazione Supabase"
+aliases: ["Supabase", "Database Config", "Connessione DB"]
+tags: [competenze, supabase, database, backend, auth]
+date: 2026-06-24
+status: published
+---
+
 # 🗄️ Integrazione Supabase (Database & Sicurezza)
 
 Questa nota documenta i parametri di connessione, la gestione dell'autenticazione e il comportamento del client Supabase all'interno del codebase.
@@ -13,9 +21,11 @@ La connessione tra l'applicazione frontend React e il database Postgres di Supab
 
 ---
 
-## 🛡️ Gestione della Connessione e Client Mock (`supabaseClient.ts`)
+## 🛡️ Gestione della Connessione e Client Mock (`lib/supabaseClient.ts`)
 
-Per garantire che l'applicazione funzioni sempre senza errori bloccanti, anche se non hai configurato le credenziali di Supabase, il client implementa un sistema di **Fallback Mock** (Simulazione) in `src/rag/supabaseClient.ts`:
+**Unificazione**: `src/rag/supabaseClient.ts` ora è un re-export di `src/lib/supabaseClient.ts`. Il client reale è in `lib/`.
+
+Per garantire che l'applicazione funzioni sempre senza errori bloccanti, anche se non hai configurato le credenziali di Supabase, il client implementa un sistema di **Fallback Mock** (Simulazione) in `src/lib/supabaseClient.ts`:
 
 1.  **Verifica Parametri**: Il client controlla se `VITE_SUPABASE_URL` contiene un indirizzo valido e non segnaposto.
 2.  **Inizializzazione Sicura**: Se le chiavi sono mancanti o errate, l'app avvisa nella console di sviluppo:
@@ -28,7 +38,7 @@ Per garantire che l'applicazione funzioni sempre senza errori bloccanti, anche s
 
 Nelle tabelle di Supabase (es. per il salvataggio dei punteggi calcolati o le notifiche alert degli interpelli) è obbligatorio attivare le policy RLS:
 *   **Lettura / Scrittura**: Un utente autenticato può accedere solo alle righe dove `user_id` è uguale al proprio `auth.uid()`.
-*   **Tabelle Pubbliche**: La tabella `interpelli` e i `document_chunks` delle normative sono leggibili pubblicamente (anonimi), ma modificabili esclusivamente dall'utente amministratore (`role = 'admin'`).
+*   **Tabelle Pubbliche**: La tabella `interpelli_nazionali` e i `document_chunks` delle normative sono leggibili pubblicamente (anonimi), ma modificabili esclusivamente dall'utente amministratore (`role = 'admin'`).
 
 ---
 
@@ -40,5 +50,5 @@ Nelle tabelle di Supabase (es. per il salvataggio dei punteggi calcolati o le no
 ---
 
 ## 🔗 Riferimenti Istituzionali
-*   Torna alla **[[00 - Benvenuto|Pagina Iniziale]]**.
-*   Consulta la mappa delle tabelle su **[[Schema Database]]**.
+- Torna alla **[[Benvenuto|Pagina Iniziale]]**
+- Consulta la mappa delle tabelle su **[[Competenze/Schema Database|Schema Database]]**

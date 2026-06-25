@@ -1,3 +1,11 @@
+---
+title: "Architettura e Stato dell'Applicazione"
+aliases: ["Architettura", "Stato App", "Mappa Codice"]
+tags: [core, architettura, codice, routing]
+date: 2026-06-24
+status: published
+---
+
 # 🏗️ Architettura e Stato dell'Applicazione
 
 Questo documento descrive la struttura del codice, il funzionamento del routing (navigazione) e il flusso di dati (RAG) all'interno di **Sportello Scuola 2.0**.
@@ -25,13 +33,14 @@ L'applicazione usa `react-router-dom` per gestire la navigazione client-side:
 | :--- | :--- | :--- | :--- |
 | `/` | `HomePage.tsx` | `Hero`, `PlatformUsers`, `News`, `Deadlines` | Homepage del portale |
 | `/assistente/*` | `AssistantPage.tsx` | `AIChatContainer`, `AssistantsAI` | Pagina dei chatbot AI (RAG) |
-| `/calcolo-punteggio`| `ScorePage.tsx` | `PunteggioGPS` | Calcolatore interattivo del punteggio |
+| `/calcolo-punteggio` | `ScorePage.tsx` | `PunteggioGPS` | Calcolatore interattivo del punteggio |
 | `/normative` | `NormativePage.tsx` | `NormativeDocuments` | Raccolta e ricerca delle normative |
 | `/notizie` | `NewsPage.tsx` | `News` | Archivio notizie MIM |
 | `/scadenze` | `DeadlinesPage.tsx` | `Deadlines` | Scadenziario scolastico |
 | `/faq` | `FAQPage.tsx` | `FAQ` | Domande frequenti |
 | `/contatti` | `ContactPage.tsx` | `Contact` | Modulo di contatto e supporto |
-| `/interpelli` | *(In arrivo)* `InterpelliPage.tsx` | `InterpelliList`, `InterpelliFilters` | Centro Interpelli Nazionale |
+| `/area-riservata/*` | `AreaRiservata.tsx` (layout in `AreaRiservataLayout.tsx`) | `BandiWatch`, `UserDashboard`, `FavoritesManager` | Area riservata (protegge auth autonomamente via `supabase.auth.getSession()`) |
+| `/interpelli` | `InterpelliPage.tsx` | filtri integrati (provincia, classe, tipo posto), paginazione, paywall premium | Centro Interpelli Nazionale |
 
 ---
 
@@ -63,6 +72,6 @@ graph TD
 ---
 
 ## 🔗 Link Correlati
-*   Vedi lo **[[Schema Database]]** per le tabelle coinvolte.
-*   Consulta le **[[Linee Guida Agenti]]** per integrare le modifiche visive.
-*   Torna alla **[[00 - Benvenuto|Pagina Iniziale]]**.
+- Vedi lo **[[Competenze/Schema Database|Schema Database]]** per le tabelle coinvolte
+- Consulta le **[[Competenze/Linee Guida Agenti|Linee Guida Agenti]]** per integrare le modifiche visive
+- Torna alla **[[Benvenuto|Pagina Iniziale]]**

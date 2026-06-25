@@ -3,8 +3,49 @@ export type Impatto = 'locale' | 'regionale' | 'nazionale';
 export type Platea = 'limitata' | 'ampia' | 'intero_sistema';
 export type LivelloFonte = 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
 export type TargetUtente = 'docenti' | 'aspiranti_docenti' | 'sostegno' | 'ata' | 'amministrativi' | 'collaboratori' | 'dsga' | 'dirigenti' | 'educatori' | 'pedagogisti' | 'formatori' | 'universita' | 'sindacati' | 'famiglie' | 'studenti' | 'decisori_pubblici';
-export type CategoriaMonitoraggio = 'normativa' | 'reclutamento' | 'personale' | 'inclusione' | 'innovazione' | 'governance';
+export type CategoriaUtente =
+  | 'Bandi, Concorsi e Selezioni'
+  | 'Didattica, Formazione e Innovazione'
+  | 'Graduatorie (GPS, GAE, d\'Istituto)'
+  | 'Contratti, Salari e Personale ATA'
+  | 'Pensioni, Previdenza e Welfare'
+  | 'Normative, Note e Circolari Ministeriali'
+  | 'Mobilità, Assegnazioni e Utilizzazioni'
+  | 'Esami di Stato e Valutazioni (INVALSI)';
 export type LivelloProduzione = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+export const CATEGORIE_UTENTE: CategoriaUtente[] = [
+  'Bandi, Concorsi e Selezioni',
+  'Didattica, Formazione e Innovazione',
+  'Graduatorie (GPS, GAE, d\'Istituto)',
+  'Contratti, Salari e Personale ATA',
+  'Pensioni, Previdenza e Welfare',
+  'Normative, Note e Circolari Ministeriali',
+  'Mobilità, Assegnazioni e Utilizzazioni',
+  'Esami di Stato e Valutazioni (INVALSI)',
+];
+
+export const CATEGORIE_UTENTE_COLORS: Record<CategoriaUtente, string> = {
+  'Bandi, Concorsi e Selezioni': 'bg-blue-100 text-blue-700 border-blue-200',
+  'Didattica, Formazione e Innovazione': 'bg-green-100 text-green-700 border-green-200',
+  'Graduatorie (GPS, GAE, d\'Istituto)': 'bg-purple-100 text-purple-700 border-purple-200',
+  'Contratti, Salari e Personale ATA': 'bg-amber-100 text-amber-700 border-amber-200',
+  'Pensioni, Previdenza e Welfare': 'bg-rose-100 text-rose-700 border-rose-200',
+  'Normative, Note e Circolari Ministeriali': 'bg-sky-100 text-sky-700 border-sky-200',
+  'Mobilità, Assegnazioni e Utilizzazioni': 'bg-teal-100 text-teal-700 border-teal-200',
+  'Esami di Stato e Valutazioni (INVALSI)': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+};
+
+export const CATEGORIE_ICONE: Record<CategoriaUtente, string> = {
+  'Bandi, Concorsi e Selezioni': '📋',
+  'Didattica, Formazione e Innovazione': '📚',
+  'Graduatorie (GPS, GAE, d\'Istituto)': '📊',
+  'Contratti, Salari e Personale ATA': '💰',
+  'Pensioni, Previdenza e Welfare': '🛡️',
+  'Normative, Note e Circolari Ministeriali': '📜',
+  'Mobilità, Assegnazioni e Utilizzazioni': '🚌',
+  'Esami di Stato e Valutazioni (INVALSI)': '🎓',
+};
 
 export interface FonteInfo {
   livello: LivelloFonte;
@@ -18,7 +59,7 @@ export interface ClassificazioneIntelligence {
   impatto: Impatto;
   platea: Platea;
   target: TargetUtente[];
-  categoria: CategoriaMonitoraggio;
+  categoria: CategoriaUtente;
   livelloFonte: LivelloFonte;
   fontePrimaria: string;
   fonteUrl: string;
@@ -77,7 +118,7 @@ export interface SezioneIntelligence {
 
 export const LIVELLI_FONTE: Record<LivelloFonte, { nome: string; peso: number; descrizione: string }> = {
   A: { nome: 'Fonte Primaria Assoluta', peso: 100, descrizione: 'Gazzetta Ufficiale, Normattiva, MIM, Parlamento, ARAN, INPS' },
-  B: { nome: 'Governance e Sistema Scuola', peso: 95, descrizione: 'INVALSI, INDIRE, ISTAT' },
+  B: { nome: 'Governance e Sistema Scuola', peso: 95, descrizione: 'USR, INVALSI, INDIRE, ISTAT' },
   C: { nome: 'Giurisprudenza', peso: 98, descrizione: 'TAR, Consiglio di Stato, Corte Costituzionale, Cassazione' },
   D: { nome: 'Osservatorio Europeo', peso: 95, descrizione: 'Commissione UE, OECD, UNESCO, WHO' },
   E: { nome: 'Ricerca Scientifica', peso: 90, descrizione: 'ERIC, PubMed, Google Scholar' },

@@ -1,3 +1,11 @@
+---
+title: "Integrazione GitHub"
+aliases: ["GitHub", "Versionamento", "Git", "CI/CD"]
+tags: [competenze, github, git, versionamento, deploy]
+date: 2026-06-24
+status: published
+---
+
 # 🐙 Integrazione GitHub (Versionamento & Deploy)
 
 Questa nota definisce il protocollo formale di sincronizzazione del codice sorgente, la gestione delle credenziali di accesso e il flusso di lavoro (*Workflow*) per il versionamento su **GitHub**.
@@ -45,5 +53,5 @@ Tutti gli agenti AI e gli sviluppatori devono descrivere le modifiche apportate 
 ---
 
 ## 🔗 Riferimenti Istituzionali
-*   Torna alla **[[00 - Benvenuto|Pagina Iniziale]]**.
-*   Consulta i comandi di avvio rapido in **[[Comandi Utili]]**.
+- Torna alla **[[Benvenuto|Pagina Iniziale]]**
+- Consulta i comandi di avvio rapido in **[[Risorse/Comandi Utili|Comandi Utili]]**

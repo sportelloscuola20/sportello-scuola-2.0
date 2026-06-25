@@ -1,3 +1,11 @@
+---
+title: "Manuale Utente"
+aliases: ["Guida Utente", "Manuale", "Guida Rapida"]
+tags: [risorse, manuale, guida, utente]
+date: 2026-06-24
+status: published
+---
+
 # 📖 Manuale Utente Semplificato
 
 Benvenuto nel manuale d'uso di **Sportello Scuola 2.0**. Questa guida è scritta in modo semplice e non tecnico per aiutarti a far funzionare l'applicazione sul tuo computer, fare test e usare al meglio la Mente Alveare.
@@ -33,10 +41,10 @@ I chatbot AI sul sito non rispondono a caso, ma cercano le risposte all'interno 
 Obsidian è un ottimo strumento per prendere appunti in formato Markdown. Puoi usarlo per:
 1.  **Scrivere Idee**: Crea una nuova nota cliccando sul pulsante "+" in alto a sinistra su Obsidian.
 2.  **Segnalare Bug**: Se trovi qualcosa che non va, scrivi una nota chiamata `Bug Riscontrati` e inserisci l'elenco. L'agente AI la troverà e la risolverà per te.
-3.  **Gestire i Compiti**: Se vuoi che l'AI faccia qualcos'altro, aggiungilo in fondo alla nota **[[Attività Aperte (To-Do)]]** usando il formato `- [ ] Nome compito`. L'AI leggerà la lista alla prossima esecuzione.
+3.  **Gestire i Compiti**: Se vuoi che l'AI faccia qualcos'altro, aggiungilo in fondo alla nota **[[Diari/Attività Aperte (To-Do)|Attività Aperte]]** usando il formato `- [ ] Nome compito`. L'AI leggerà la lista alla prossima esecuzione.
 
 ---
 
 ## 🔗 Link Correlati
-*   Vedi i comandi rapidi su **[[Comandi Utili]]**.
-*   Torna alla **[[00 - Benvenuto|Pagina Iniziale]]**.
+- Vedi i comandi rapidi su **[[Risorse/Comandi Utili|Comandi Utili]]**
+- Torna alla **[[Benvenuto|Pagina Iniziale]]**

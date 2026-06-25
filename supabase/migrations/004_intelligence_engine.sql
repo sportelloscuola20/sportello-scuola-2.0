@@ -223,7 +223,7 @@ BEGIN
     -- Estrae la prima data valida dal contenuto o usa +30gg
     COALESCE(
       (regexp_matches(
-        (SELECT valore FROM jsonb_array_elements(NEW.produzione_livelli) WHERE jsonb_extract_path_text(valore, 'livello') = '3'),
+        (SELECT value::text FROM jsonb_array_elements(NEW.produzione_livelli) WHERE jsonb_extract_path_text(value, 'livello') = '3'),
         '\d{2}/\d{2}/\d{4}'
       ))[1]::TIMESTAMPTZ,
       NEW.data_pubblicazione + INTERVAL '30 days'

@@ -1,3 +1,11 @@
+---
+title: "Servizio Newsletter Istituzionale"
+aliases: ["Newsletter", "Email Newsletter", "Iscrizione Newsletter"]
+tags: [sezioni, newsletter, email, gdpr]
+date: 2026-06-24
+status: published
+---
+
 # 📧 Servizio Newsletter Istituzionale
 
 Il **Servizio Newsletter** di Sportello Scuola 2.0 consente l'invio automatizzato e periodico di circolari esplicative, scadenziari mensili e avvisi di interpello rilevanti per il personale iscritto.
@@ -55,5 +63,5 @@ CREATE TABLE newsletter_subscribers (
 ---
 
 ## 🔗 Riferimenti Istituzionali
-*   Torna alla **[[00 - Benvenuto|Pagina Iniziale]]**.
-*   Consulta la nota di configurazione in **[[Integrazione Supabase]]**.
+- Torna alla **[[Benvenuto|Pagina Iniziale]]**
+- Consulta la nota di configurazione in **[[Competenze/Integrazione Supabase|Integrazione Supabase]]**

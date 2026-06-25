@@ -1,3 +1,11 @@
+---
+title: "Mappatura delle Competenze (Skills)"
+aliases: ["Skills", "Registro Skills", "Competenze Agenti", "Skill Agentiche"]
+tags: [competenze, skills, agenti, ai]
+date: 2026-06-24
+status: published
+---
+
 # 🧠 Mappatura delle Competenze (Skills dell'Agente)
 
 Questo documento definisce il regolamento e la mappatura delle **Skills (Competenze AI)** configurate all'interno della cartella del progetto `project/.claude/skills/`. Ogni agente AI (incluso Claude Code nel terminale) deve allinearsi a queste competenze specifiche per svolgere modifiche sul codice.
@@ -31,5 +39,5 @@ Quando esegui un comando nel terminale (es. tramite Claude Code):
 ---
 
 ## 🔗 Riferimenti Istituzionali
-*   Torna alla **[[00 - Benvenuto|Pagina Iniziale]]**.
-*   Consulta la guida di stile visivo in **[[Home Page]]**.
+- Torna alla **[[Benvenuto|Pagina Iniziale]]**
+- Consulta la guida di stile visivo in **[[Core/Home Page|Home Page]]**

@@ -1,3 +1,11 @@
+---
+title: "Home Page — Portale Principale"
+aliases: ["Homepage", "Pagina Iniziale del Portale"]
+tags: [core, portale, homepage]
+date: 2026-06-24
+status: published
+---
+
 # 🏫 Portale Principale — Home Page
 
 La **Home Page** costituisce l'interfaccia d'ingresso istituzionale per la piattaforma. Ha l'obiettivo di orientare immediatamente l'utente e di fornire l'accesso rapido ai servizi digitali di supporto.
@@ -35,5 +43,5 @@ La Home Page implementa i seguenti standard in linea con le competenze degli age
 ---
 
 ## 🔗 Riferimenti Istituzionali
-*   Torna alla **[[00 - Benvenuto|Pagina Iniziale]]**.
-*   Consulta le linee guida visive in **[[Mappatura delle Competenze (Skills)]]**.
+- Torna alla **[[Benvenuto|Pagina Iniziale]]**
+- Consulta le linee guida visive in **[[Competenze/Mappatura delle Competenze (Skills)|Mappatura delle Competenze]]**

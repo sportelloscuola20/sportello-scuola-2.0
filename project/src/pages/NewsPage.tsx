@@ -1,15 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Newspaper, CalendarClock, Shield, AlertTriangle, RefreshCw, Monitor, Link2 } from 'lucide-react';
-import { LIVELLI_FONTE } from '../types/intelligence';
-import type { LivelloFonte, IntelligenceDashboardStats } from '../types/intelligence';
+import type { IntelligenceDashboardStats, CategoriaUtente } from '../types/intelligence';
+import { CATEGORIE_UTENTE, CATEGORIE_UTENTE_COLORS } from '../types/intelligence';
 import { fetchDashboardStats, getDashboardFallbackStats } from '../rag/intelligence-engine';
 import NewsHub from '../components/NewsHub';
 import SourceMonitorDashboard from '../components/SourceMonitorDashboard';
 
-const LIVELLI_ORDINE: LivelloFonte[] = ['A', 'B', 'C', 'D', 'E', 'F'];
-
 export default function NewsPage() {
-  const [showSourceMap, setShowSourceMap] = useState(false);
   const [showMonitor, setShowMonitor] = useState(false);
   const [stats, setStats] = useState<IntelligenceDashboardStats>(getDashboardFallbackStats());
   const [loading, setLoading] = useState(true);
@@ -30,8 +27,9 @@ export default function NewsPage() {
               Intelligence Editoriale — Notizie e Scadenze
             </h1>
             <p className="text-gray-600 max-w-3xl mx-auto">
-              Piattaforma di monitoraggio normativo basata su fonti primarie certificate (G.U., MIM, Normattiva, ARAN, INPS).
-              Ogni contenuto è classificato per criticità, impatto, platea e target, con validazione a 6 livelli prima della pubblicazione.
+              Piattaforma di monitoraggio normativo basata su fonti primarie certificate (G.U., MIM, Normattiva, ARAN, INPS, USR).
+              Ogni contenuto è classificato per categoria, criticità, impatto e target,
+              con validazione a 8 categorie tematiche e 7 livelli di approfondimento.
             </p>
           </div>
 
@@ -93,10 +91,6 @@ export default function NewsPage() {
               className="inline-flex items-center gap-2 text-sm text-brand-blu font-semibold hover:text-brand-blu/80 transition border border-brand-blu/20 px-4 py-2 rounded-xl hover:bg-brand-blu/5">
               <Monitor size={14} /> {showMonitor ? 'Nascondi' : 'Mostra'} Monitoraggio Fonti
             </button>
-            <button onClick={() => setShowSourceMap(!showSourceMap)}
-              className="inline-flex items-center gap-2 text-sm text-brand-blu font-semibold hover:text-brand-blu/80 transition border border-brand-blu/20 px-4 py-2 rounded-xl hover:bg-brand-blu/5">
-              <Shield size={14} /> {showSourceMap ? 'Nascondi' : 'Mostra'} Architettura Fonti
-            </button>
           </div>
 
           {/* Source monitor dashboard */}
@@ -106,37 +100,20 @@ export default function NewsPage() {
             </div>
           )}
 
-          {/* Source architecture map */}
-          {showSourceMap && (
-            <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-slate-200/60 p-6 mb-6 animate-fade-in-up">
-              <h3 className="text-lg font-bold text-[#0F172A] mb-4">Architettura delle Fonti — Piramide di Affidabilità</h3>
-              <div className="space-y-3">
-                {LIVELLI_ORDINE.map(l => {
-                  const info = LIVELLI_FONTE[l];
-                  const colors: Record<string, string> = {
-                    A: 'border-green-300 bg-green-50',
-                    B: 'border-blue-300 bg-blue-50',
-                    C: 'border-purple-300 bg-purple-50',
-                    D: 'border-teal-300 bg-teal-50',
-                    E: 'border-amber-300 bg-amber-50',
-                    F: 'border-gray-300 bg-gray-50',
-                  };
-                  return (
-                    <div key={l} className={`rounded-2xl border p-4 ${colors[l]}`}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-bold">Livello {l} — {info.nome}</span>
-                        <span className="text-xs font-mono font-bold">Peso: {info.peso}/100</span>
-                      </div>
-                      <p className="text-xs text-gray-600">{info.descrizione}</p>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="mt-4 p-4 bg-gray-100 rounded-2xl">
-                <p className="text-xs text-gray-600 font-semibold">Regola di Validazione: 1. Allerta (Livello F) → 2. Verifica (Livello A) → 3. Effetti (Livello B) → 4. Impatti giuridici (Livello C) → 5. Impatti europei (Livello D) → 6. Ricerca scientifica (Livello E). Nessuna notizia senza fonte primaria verificabile.</p>
-              </div>
+          {/* Macro-categories legend */}
+          <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-slate-200/60 p-6 mb-6">
+            <h3 className="text-lg font-bold text-[#0F172A] mb-3">8 Categorie Tematiche</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {CATEGORIE_UTENTE.map(cat => (
+                <div key={cat} className={`text-xs font-semibold px-3 py-2 rounded-xl border text-center ${CATEGORIE_UTENTE_COLORS[cat]}`}>
+                  {cat}
+                </div>
+              ))}
             </div>
-          )}
+            <div className="mt-4 p-4 bg-gray-100 rounded-2xl">
+              <p className="text-xs text-gray-600 font-semibold">Ogni notizia è classificata in una delle 8 categorie tematiche, con criticità, impatto, platea e target specifici. Validazione a 6 livelli: Allerta → Verifica Fonte Primaria → Effetti Operativi → Impatti Giuridici → Risvolti Europei → Ricerca Scientifica.</p>
+            </div>
+          </div>
         </div>
 
         <NewsHub />

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Bell, ExternalLink, Search, ChevronDown, FileText, AlertTriangle, Shield, Target, RefreshCw } from 'lucide-react';
+import { Calendar, Clock, Bell, Search, ChevronDown, FileText, AlertTriangle, Shield, Target, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './Auth/AuthContext';
 import LoginModal from './Auth/LoginModal';
 import { supabase } from '../lib/supabaseClient';
 import { MOCK_SCADENZE_INTELLIGENCE, calcolaGiorniRimasti, formatDataItaliana } from '../rag/intelligence-engine';
-import type { ScadenzaIntelligence } from '../types/intelligence';
-import { CRITICALITA_COLORS, IMPATTO_COLORS, TARGET_LABELS } from '../types/intelligence';
+import type { ScadenzaIntelligence, CategoriaUtente } from '../types/intelligence';
+import { CRITICALITA_COLORS, IMPATTO_COLORS, TARGET_LABELS, CATEGORIE_UTENTE_COLORS } from '../types/intelligence';
 
 const MAX_VISIBLE = 4;
 const REFRESH_INTERVAL_MS = 60000;
@@ -52,7 +52,7 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
-  const [activeType, setActiveType] = useState('Tutte');
+  const [activeCategory, setActiveCategory] = useState<string>('Tutte');
   const [filterPriorita, setFilterPriorita] = useState<string>('');
   const [deadlineItems, setDeadlineItems] = useState<ScadenzaIntelligence[]>(MOCK_SCADENZE_INTELLIGENCE);
   const [ultimoAggiornamento, setUltimoAggiornamento] = useState<Date>(new Date());
@@ -99,10 +99,10 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
   }, []);
 
   const filtered = deadlineItems.filter(d => {
-    const matchType = activeType === 'Tutte' || d.tipo === activeType;
+    const matchCat = activeCategory === 'Tutte' || d.tipo === activeCategory;
     const matchPrio = !filterPriorita || d.priorita === filterPriorita;
     const matchSearch = !searchQuery || d.titolo.toLowerCase().includes(searchQuery.toLowerCase()) || d.descrizione.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchType && matchPrio && matchSearch;
+    return matchCat && matchPrio && matchSearch;
   });
 
   const displayed = showAll ? filtered : filtered.slice(0, MAX_VISIBLE);
@@ -123,7 +123,7 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
               Scadenze Intelligence — Monitoraggio Attivo
             </h2>
             <p className="text-gray-600 font-normal max-w-3xl mx-auto">
-              Sistema di tracciamento scadenze con classificazione per priorità, impatto e soggetti coinvolti.
+              Sistema di tracciamento scadenze con classificazione per categoria, priorità, impatto e soggetti coinvolti.
               Ogni scadenza include base normativa, conseguenze della non-azione e guida operativa POLIS.
             </p>
           </div>
@@ -141,9 +141,9 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mt-4 mb-8">
             <div className="flex gap-2 flex-wrap">
               {types.map(t => (
-                <button key={t} onClick={() => setActiveType(t)}
+                <button key={t} onClick={() => setActiveCategory(t)}
                   className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-all ${
-                    activeType === t ? 'bg-brand-ambra text-white' : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-ambra/30'
+                    activeCategory === t ? 'bg-brand-ambra text-white' : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-ambra/30'
                   }`}>{t}</button>
               ))}
             </div>
@@ -181,6 +181,9 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-3 flex-wrap">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${CATEGORIE_UTENTE_COLORS[deadline.tipo as CategoriaUtente] || 'bg-gray-100 text-gray-600'}`}>
+                        {deadline.tipo}
+                      </span>
                       <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${CRITICALITA_COLORS[deadline.priorita]}`}>
                         {deadline.priorita}
                       </span>
@@ -252,15 +255,9 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
                       <h4 className="text-xs font-bold text-brand-ambra uppercase tracking-wider mb-2 flex items-center gap-1.5">
                         <FileText size={12} /> Guida Operativa
                       </h4>
-                      <p className="text-sm text-gray-700 leading-relaxed mb-3">
+                      <p className="text-sm text-gray-700 leading-relaxed">
                         {deadline.guidaOperativa}
                       </p>
-                      {deadline.link && deadline.link !== '#' && (
-                        <a href={deadline.link} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-ambra to-brand-verde text-white rounded-xl text-sm font-semibold hover:opacity-90 transition">
-                          <ExternalLink size={14} /> Avvia procedura su POLIS
-                        </a>
-                      )}
                     </div>
 
                     {isFoll && (
@@ -289,17 +286,15 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
       {filtered.length > MAX_VISIBLE && !showAll && (
         <div className="text-center mt-8">
           {compact ? (
-            <Link to="/notizie-scadenze"
+            <Link to="/notizie-scadenze/archivio"
               className="inline-flex items-center gap-2 text-brand-ambra font-semibold hover:text-brand-ambra/80 transition-colors text-sm border border-brand-ambra/20 px-5 py-2.5 rounded-xl hover:bg-brand-ambra/5">
               Vedi archivio completo
-              <ExternalLink size={14} />
             </Link>
           ) : (
-            <button onClick={() => setShowAll(true)}
+            <Link to="/notizie-scadenze/archivio"
               className="inline-flex items-center gap-2 bg-brand-ambra text-white px-8 py-3 rounded-2xl hover:bg-brand-ambra/90 transition-colors font-semibold shadow-soft">
               Vedi tutte le scadenze ({filtered.length})
-              <ExternalLink size={16} />
-            </button>
+            </Link>
           )}
         </div>
       )}

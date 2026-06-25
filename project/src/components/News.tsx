@@ -1,35 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Calendar, ExternalLink, Star, ChevronDown, Search, FileText, Target, Shield, Activity, BarChart3, RefreshCw, Link2 } from 'lucide-react';
+import { Calendar, Star, ChevronDown, Search, FileText, Target, Shield, Activity, BarChart3, RefreshCw, Link2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './Auth/AuthContext';
 import LoginModal from './Auth/LoginModal';
 import { supabase } from '../lib/supabaseClient';
 import { MOCK_NEWS_INTELLIGENCE, generaDatiDataJournalism, fetchKnowledgeGraph } from '../rag/intelligence-engine';
 import { formatDataItaliana } from '../rag/intelligence-engine';
-import type { NotiziaIntelligence, LivelloProduzione, SezioneIntelligence, KnowledgeLink } from '../types/intelligence';
-import { CRITICALITA_COLORS, IMPATTO_COLORS, LIVELLI_FONTE, LIVELLO_PRODUZIONE_LABELS, TARGET_LABELS, RELAZIONE_LABELS } from '../types/intelligence';
+import type { NotiziaIntelligence, LivelloProduzione, SezioneIntelligence, KnowledgeLink, CategoriaUtente } from '../types/intelligence';
+import { CRITICALITA_COLORS, IMPATTO_COLORS, LIVELLO_PRODUZIONE_LABELS, TARGET_LABELS, RELAZIONE_LABELS, CATEGORIE_UTENTE, CATEGORIE_UTENTE_COLORS } from '../types/intelligence';
 import type { NewsCache } from '../types/database';
 
 const MAX_VISIBLE = 4;
 const REFRESH_INTERVAL_MS = 60000;
-
-function FonteBadge({ livello }: { livello: string }) {
-  const info = LIVELLI_FONTE[livello as keyof typeof LIVELLI_FONTE];
-  if (!info) return null;
-  const colors: Record<string, string> = {
-    A: 'bg-green-100 text-green-700 border-green-200',
-    B: 'bg-blue-100 text-blue-700 border-blue-200',
-    C: 'bg-purple-100 text-purple-700 border-purple-200',
-    D: 'bg-teal-100 text-teal-700 border-teal-200',
-    E: 'bg-amber-100 text-amber-700 border-amber-200',
-    F: 'bg-gray-100 text-gray-600 border-gray-200',
-  };
-  return (
-    <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${colors[livello] || 'bg-gray-100 text-gray-600'}`} title={`${info.nome} — Peso: ${info.peso}/100`}>
-      Livello {livello}
-    </span>
-  );
-}
 
 export default function News({ compact = false }: { compact?: boolean }) {
   const { isAuthenticated } = useAuth();
@@ -39,7 +21,7 @@ export default function News({ compact = false }: { compact?: boolean }) {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [filterCriticalita, setFilterCriticalita] = useState<string>('');
-  const [activeCategory, setActiveCategory] = useState('Tutte');
+  const [activeCategory, setActiveCategory] = useState<CategoriaUtente | 'Tutte'>('Tutte');
   const [newsItems, setNewsItems] = useState<NotiziaIntelligence[]>([]);
   const [dataJournalism] = useState<SezioneIntelligence[]>(() => generaDatiDataJournalism());
   const [showDataJournalism, setShowDataJournalism] = useState(false);
@@ -67,7 +49,7 @@ export default function News({ compact = false }: { compact?: boolean }) {
           classifica: {
             criticita: n.criticita || 'media', impatto: n.impatto || 'nazionale',
             platea: n.platea || 'ampia', target: n.target || ['docenti'],
-            categoria: n.categoria || 'normativa', livelloFonte: n.fonte_livello || 'A',
+            categoria: n.categoria || 'Normative, Note e Circolari Ministeriali', livelloFonte: n.fonte_livello || 'A',
             fontePrimaria: n.fonte_primaria || '', fonteUrl: n.fonte_url_dettaglio || '',
             dataAcquisizione: n.data_acquisizione || n.created_at,
           },
@@ -98,7 +80,7 @@ export default function News({ compact = false }: { compact?: boolean }) {
           classifica: {
             criticita: 'media', impatto: 'nazionale',
             platea: 'ampia', target: ['docenti'],
-            categoria: 'normativa', livelloFonte: 'A',
+            categoria: 'Normative, Note e Circolari Ministeriali', livelloFonte: 'A',
             fontePrimaria: n.source_url || '', fonteUrl: n.source_url || '',
             dataAcquisizione: n.created_at,
           },
@@ -132,7 +114,7 @@ export default function News({ compact = false }: { compact?: boolean }) {
   }, []);
 
   const filtered = newsItems.filter(item => {
-    const matchCat = activeCategory === 'Tutte' || item.tag.includes(activeCategory) || item.classifica.categoria === activeCategory.toLowerCase();
+    const matchCat = activeCategory === 'Tutte' || item.classifica.categoria === activeCategory;
     const matchCrit = !filterCriticalita || item.classifica.criticita === filterCriticalita;
     const matchSearch = !searchQuery || item.titolo.toLowerCase().includes(searchQuery.toLowerCase()) || item.descrizione.toLowerCase().includes(searchQuery.toLowerCase());
     return matchCat && matchCrit && matchSearch;
@@ -170,9 +152,6 @@ export default function News({ compact = false }: { compact?: boolean }) {
     return icone[l];
   };
 
-  const allTags = [...new Set(newsItems.flatMap(n => n.tag))];
-  const categorieFiltro = ['Tutte', ...allTags];
-
   const grid = (
     <>
       {!compact && (
@@ -183,7 +162,7 @@ export default function News({ compact = false }: { compact?: boolean }) {
             </h2>
             <p className="text-gray-600 font-normal max-w-3xl mx-auto">
               Sistema di monitoraggio normativo e informativo basato su fonti primarie certificate.
-              Ogni notizia è classificata per criticità, impatto, platea e target, con approfondimento
+              Ogni notizia è classificata per categoria, criticità, impatto e target, con approfondimento
               a 7 livelli: dalla notizia immediata agli scenari futuri.
             </p>
           </div>
@@ -200,7 +179,11 @@ export default function News({ compact = false }: { compact?: boolean }) {
           </div>
           <div className="flex flex-col gap-4 mt-4 mb-8">
             <div className="flex flex-wrap gap-2 items-center">
-              {categorieFiltro.map(cat => (
+              <button key="Tutte" onClick={() => setActiveCategory('Tutte')}
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-all ${
+                  activeCategory === 'Tutte' ? 'bg-brand-blu text-white' : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-blu/30'
+                }`}>Tutte</button>
+              {CATEGORIE_UTENTE.map(cat => (
                 <button key={cat} onClick={() => setActiveCategory(cat)}
                   className={`px-4 py-2 rounded-2xl text-xs font-semibold transition-all ${
                     activeCategory === cat ? 'bg-brand-blu text-white' : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-blu/30'
@@ -261,7 +244,7 @@ export default function News({ compact = false }: { compact?: boolean }) {
         {displayed.map((news) => {
           const isExpanded = expandedId === news.id;
           const isFav = favorites.includes(news.id);
-          const { criticita, impatto, target, livelloFonte } = news.classifica;
+          const { criticita, impatto, target, categoria } = news.classifica;
           return (
             <div key={news.id} className={`bg-white/70 backdrop-blur-md rounded-3xl border transition-all duration-500 ease-in-out overflow-hidden ${
               isExpanded ? 'border-brand-blu/30 shadow-medium' : 'border-slate-200/60 shadow-soft hover:border-brand-blu/20'
@@ -270,7 +253,9 @@ export default function News({ compact = false }: { compact?: boolean }) {
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-3 flex-wrap">
-                      <FonteBadge livello={livelloFonte} />
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${CATEGORIE_UTENTE_COLORS[categoria as CategoriaUtente] || 'bg-gray-100 text-gray-600'}`}>
+                        {categoria}
+                      </span>
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CRITICALITA_COLORS[criticita]}`}>
                         {criticita}
                       </span>
@@ -329,12 +314,6 @@ export default function News({ compact = false }: { compact?: boolean }) {
                         <Shield size={12} /> Fonte Primaria
                       </h4>
                       <p className="text-sm text-gray-700">{news.classifica.fontePrimaria}</p>
-                      {news.link && news.link !== '#' && (
-                        <a href={news.link} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 mt-2 px-4 py-2 bg-gradient-to-r from-brand-blu to-brand-verde text-white rounded-xl text-sm font-semibold hover:opacity-90 transition">
-                          <ExternalLink size={14} /> Vai alla fonte ufficiale
-                        </a>
-                      )}
                     </div>
 
                     {knowledgeLinks[news.id] && knowledgeLinks[news.id].length > 0 && (
@@ -370,17 +349,15 @@ export default function News({ compact = false }: { compact?: boolean }) {
       {filtered.length > MAX_VISIBLE && !showAll && (
         <div className="text-center mt-8">
           {compact ? (
-            <Link to="/notizie-scadenze"
+            <Link to="/notizie-scadenze/archivio"
               className="inline-flex items-center gap-2 text-brand-blu font-semibold hover:text-brand-blu/80 transition-colors text-sm border border-brand-blu/20 px-5 py-2.5 rounded-xl hover:bg-brand-blu/5">
               Vedi archivio completo
-              <ExternalLink size={14} />
             </Link>
           ) : (
-            <button onClick={() => setShowAll(true)}
+            <Link to="/notizie-scadenze/archivio"
               className="inline-flex items-center gap-2 bg-brand-blu text-white px-8 py-3 rounded-2xl hover:bg-brand-blu/90 transition-colors font-semibold shadow-soft">
               Vedi tutte le notizie ({filtered.length})
-              <ExternalLink size={16} />
-            </button>
+            </Link>
           )}
         </div>
       )}

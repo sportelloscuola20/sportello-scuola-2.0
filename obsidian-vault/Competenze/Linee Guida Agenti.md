@@ -1,3 +1,11 @@
+---
+title: "Linee Guida per gli Agenti AI"
+aliases: ["Linee Guida", "Regole Agenti", "Convenzioni Sviluppo"]
+tags: [competenze, linee-guida, agenti, sviluppo, design]
+date: 2026-06-24
+status: published
+---
+
 # 📜 Linee Guida per gli Agenti AI
 
 Questo documento contiene le regole e le convenzioni che **ogni agente AI** (incluso me stesso e gli agenti futuri) deve seguire rigorosamente quando lavora su questo codebase.
@@ -47,6 +55,6 @@ La qualità visiva dell'applicazione è di fondamentale importanza. Il design de
 ## 🤝 3. Procedura di Handoff (Passaggio di Consegne)
 
 Ogni volta che finisci una sessione di lavoro:
-1.  Aggiorna il **[[Diario del Progetto]]** con una sintesi delle modifiche apportate.
-2.  Aggiorna le **[[Attività Aperte (To-Do)]]**, segnando come completate quelle svolte ed eventualmente aggiungendo nuovi task scoperti durante l'implementazione.
+1.  Aggiorna il **[[Diari/Diario del Progetto|Diario del Progetto]]** con una sintesi delle modifiche apportate.
+2.  Aggiorna le **[[Diari/Attività Aperte (To-Do)|Attività Aperte]]**, segnando come completate quelle svolte ed eventualmente aggiungendo nuovi task scoperti durante l'implementazione.
 3.  Non lasciare file a metà o con errori di compilazione TypeScript.
