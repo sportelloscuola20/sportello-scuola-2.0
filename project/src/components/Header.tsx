@@ -63,7 +63,7 @@ export default function Header() {
               alt="Sportello Scuola 2.0"
               className="h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
             />
-            <span className="h-12 flex flex-col justify-center font-display uppercase text-[13px] sm:text-[15px] leading-none tracking-[0.06em] font-bold">
+            <span className="h-12 flex flex-col justify-center font-display uppercase text-lg sm:text-2xl leading-none tracking-[0.06em] font-bold">
               <span className="text-brand-blu">Sportello</span>
               <span className="text-brand-verde">Scuola <span className="text-brand-ottanio">2.0</span></span>
             </span>
