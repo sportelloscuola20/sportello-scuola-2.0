@@ -70,6 +70,22 @@ const rateLimiter = new RateLimiter();
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
+// Categorie specifiche per le scadenze (8 macro-settori)
+const CATEGORIE_SCADENZA = [
+  'Iscrizioni, Bandi e Concorsi pubblici',
+  'Aggiornamento e Inserimento Graduatorie',
+  'Mobilità del Personale Scolastico',
+  'Immissioni in Ruolo e Supplenze',
+  'Cessazioni dal Servizio e Pensionamenti',
+  'Adempimenti Amministrativi e Sicurezza',
+  'Esami di Stato, Scrutini e Valutazioni',
+  'Formazione Obbligatoria e Periodo di Prova',
+] as const;
+
+function isValidaCategoriaScadenza(cat: string): boolean {
+  return CATEGORIE_SCADENZA.includes(cat as typeof CATEGORIE_SCADENZA[number]);
+}
+
 // --- TIPI ---
 interface SourceDocument {
   id: string;
@@ -110,15 +126,18 @@ interface GeminiResponse {
     priorita: string;
     conseguenze_non_azione: string;
     guida_operativa: string;
+    categoria_scadenza: string;
+    regione: string;
   }>;
 }
 
-// --- PROMPT DI SISTEMA per Gemini (tassonomia 8 categorie utente) ---
-function buildPrompt(titolo: string, contenuto: string): string {
+// --- PROMPT DI SISTEMA per Gemini (tassonomia 8 categorie utente + scadenze rigorose) ---
+function buildPrompt(titolo: string, contenuto: string, sourceName: string, sourceUrl: string): string {
   return `Sei un giornalista specializzato in istruzione scolastica italiana. Analizza il documento grezzo fornito e genera un contenuto editoriale originale seguendo il modello a 7 livelli di produzione.
 
 DOCUMENTO DA ANALIZZARE:
 TITOLO: ${titolo}
+FONTE: ${sourceName} (${sourceUrl})
 CONTENUTO: ${contenuto}
 
 REGOLE ASSOLUTE:
@@ -138,6 +157,22 @@ REGOLE ASSOLUTE:
   8. "Esami di Stato e Valutazioni (INVALSI)" — esami di Stato, maturità, INVALSI, valutazioni
 - fonte_livello: A | B | C | D | E | F
 - Se il contenuto non riguarda l'istruzione scolastica, imposta "categoria" come "nessuna" e produzione_livelli vuoto.
+
+REGOLE PER LE SCADENZE (campo "scadenze"):
+- GENERA UNA SCADENZA SOLO SE il documento contiene ESPLICITAMENTE una data limite perentoria, un termine ultimo di presentazione o una scadenza istituzionale/amministrativa chiara.
+- NON generare scadenze per: dibattiti, commenti sindacali, convegni, eventi informativi, editoriali, interviste, o qualsiasi contenuto senza adempimenti operativi immediati.
+- Ogni scadenza deve appartenere a UNA di queste 8 categorie specifiche:
+  1. "Iscrizioni, Bandi e Concorsi pubblici" — Termini presentazione domande concorsi, TFA, iscrizioni alunni
+  2. "Aggiornamento e Inserimento Graduatorie" — Finestre aggiornamento GPS, GAE, graduatorie istituto, scioglimento riserve
+  3. "Mobilità del Personale Scolastico" — Domande trasferimento, assegnazioni provvisorie, utilizzazioni
+  4. "Immissioni in Ruolo e Supplenze" — Scelta 150 scuole, nomine, accettazione, risposte interpelli
+  5. "Cessazioni dal Servizio e Pensionamenti" — Dimissioni volontarie, pensionamento, Opzione Donna, APE Sociale
+  6. "Adempimenti Amministrativi e Sicurezza" — Rendicontazione fondi, Carta del Docente, privacy, sicurezza
+  7. "Esami di Stato, Scrutini e Valutazioni" — Maturità, Terza Media, modelli candidati esterni, INVALSI
+  8. "Formazione Obbligatoria e Periodo di Prova" — Piattaforma INDIRE neoassunti, crediti formativi, sicurezza
+- I campi "normativa", "conseguenze_non_azione" e "guida_operativa" sono OBBLIGATORI e non devono mai essere vuoti.
+- "regione": imposta il codice regione (es. "LAZ", "LOM", "CAM") se la scadenza è relativa a un USR specifico, altrimenti stringa vuota.
+- Se non ci sono scadenze valide, imposta "scadenze" come array vuoto [].
 
 Rispondi ESCLUSIVAMENTE con un JSON valido, senza markdown, senza spiegazioni, seguendo ESATTAMENTE questa struttura:
 {
@@ -165,7 +200,7 @@ Rispondi ESCLUSIVAMENTE con un JSON valido, senza markdown, senza spiegazioni, s
     { "livello": 7, "titolo": "Scenari Futuri", "contenuto": "Proiezioni e possibili evoluzioni" }
   ],
   "scadenze": [
-    { "titolo": "Titolo scadenza", "normativa": "Rif. normativo", "soggetti_coinvolti": ["docenti"], "data_scadenza": "2026-06-30", "priorita": "alta", "conseguenze_non_azione": "Cosa succede se non si rispetta", "guida_operativa": "Istruzioni passo passo" }
+    { "titolo": "Titolo scadenza", "normativa": "Rif. normativo esatto", "soggetti_coinvolti": ["docenti"], "data_scadenza": "2026-06-30", "priorita": "alta", "conseguenze_non_azione": "Cosa succede se non si rispetta il termine", "guida_operativa": "Istruzioni passo passo per adempiere", "categoria_scadenza": "Iscrizioni, Bandi e Concorsi pubblici", "regione": "" }
   ]
 }`;
 }
@@ -287,25 +322,70 @@ async function createKnowledgeLinks(supabase: any, newsId: string, categoria: st
   }
 }
 
-// --- FUNZIONE PER CREARE SCADENZE ---
+// --- MAPPA REGIONI DA NOME FONTE USR ---
+function getRegioneFromSourceName(nome: string): string {
+  const map: Record<string, string> = {
+    'USR Abruzzo': 'ABR',
+    'USR Basilicata': 'BAS',
+    'USR Calabria': 'CAL',
+    'USR Campania': 'CAM',
+    'USR Emilia-Romagna': 'EMR',
+    'USR Friuli-Venezia Giulia': 'FVG',
+    'USR Lazio': 'LAZ',
+    'USR Liguria': 'LIG',
+    'USR Lombardia': 'LOM',
+    'USR Marche': 'MAR',
+    'USR Molise': 'MOL',
+    'USR Piemonte': 'PIE',
+    'USR Puglia': 'PUG',
+    'USR Sardegna': 'SAR',
+    'USR Sicilia': 'SIC',
+    'USR Toscana': 'TOS',
+    'USR Umbria': 'UMB',
+    'USR Veneto': 'VEN',
+  };
+  return map[nome] || '';
+}
+
+// --- FUNZIONE PER CREARE SCADENZE (con validazione rigorosa) ---
 async function createScadenze(supabase: any, newsId: string, aiResult: GeminiResponse) {
   if (!aiResult.scadenze || !Array.isArray(aiResult.scadenze)) return;
+
+  // Regione ereditata dalla fonte se USR
+  const regioneDefault = getRegioneFromSourceName(aiResult.fonte_nome || '');
 
   for (const scadenza of aiResult.scadenze) {
     // Salta scadenze senza data
     if (!scadenza.data_scadenza) continue;
 
+    // VALIDAZIONE STRETTA: salta se mancano campi obbligatori (falsi positivi)
+    const normativa = (scadenza.normativa || '').trim();
+    const conseguenze = (scadenza.conseguenze_non_azione || '').trim();
+    const guida = (scadenza.guida_operativa || '').trim();
+
+    if (!normativa || !conseguenze || !guida) {
+      console.warn(`Scadenza scartata per campi vuoti: ${scadenza.titolo} (normativa="${normativa}", conseguenze="${conseguenze}", guida="${guida}")`);
+      continue;
+    }
+
+    // Validazione categoria scadenza (usa la categoria specifica o fallback)
+    const catScadenza = scadenza.categoria_scadenza || aiResult.categoria || 'generale';
+
+    // Regione: priorità a quella indicata dall'AI, poi default dalla fonte
+    const regione = scadenza.regione || regioneDefault || '';
+
     await supabase.from('intelligence_scadenze').insert({
       news_id: newsId,
       titolo: scadenza.titolo || 'Scadenza: ' + aiResult.titolo,
-      normativa: scadenza.normativa || aiResult.fonte_primaria,
+      normativa: normativa,
       soggetti_coinvolti: scadenza.soggetti_coinvolti || aiResult.target,
       data_scadenza: scadenza.data_scadenza,
       priorita: scadenza.priorita || 'media',
       impatto: aiResult.impatto || 'nazionale',
-      conseguenze_non_azione: scadenza.conseguenze_non_azione || '',
-      guida_operativa: scadenza.guida_operativa || '',
-      tipo: 'auto_' + (aiResult.categoria || 'generale'),
+      conseguenze_non_azione: conseguenze,
+      guida_operativa: guida,
+      tipo: catScadenza,
+      regione: regione,
       auto_generata: true,
     }).catch((e) => console.warn('Errore creazione scadenza:', e.message));
   }
@@ -379,7 +459,9 @@ Deno.serve(async (req) => {
 
       try {
         console.log(`${progress} Analisi documento: ${doc.titolo?.slice(0, 80)}...`);
-        const prompt = buildPrompt(doc.titolo || '', doc.contenuto_raw || '');
+        const sourceName = doc.source_id || 'Fonte Automatica';
+        const sourceUrl = doc.url || '';
+        const prompt = buildPrompt(doc.titolo || '', doc.contenuto_raw || '', sourceName, sourceUrl);
         const aiResult: GeminiResponse = await callGemini(geminiApiKey, prompt);
 
         // Se il contenuto non è pertinente, salta

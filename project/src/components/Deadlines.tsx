@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Bell, Search, ChevronDown, FileText, AlertTriangle, Shield, Target, RefreshCw } from 'lucide-react';
+import { Calendar, Clock, Bell, Search, ChevronDown, FileText, AlertTriangle, Shield, Target, RefreshCw, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './Auth/AuthContext';
 import LoginModal from './Auth/LoginModal';
 import { supabase } from '../lib/supabaseClient';
 import { MOCK_SCADENZE_INTELLIGENCE, calcolaGiorniRimasti, formatDataItaliana } from '../rag/intelligence-engine';
-import type { ScadenzaIntelligence, CategoriaUtente } from '../types/intelligence';
-import { CRITICALITA_COLORS, IMPATTO_COLORS, TARGET_LABELS, CATEGORIE_UTENTE_COLORS } from '../types/intelligence';
+import type { ScadenzaIntelligence, CategoriaUtente, CategoriaScadenza } from '../types/intelligence';
+import { CRITICALITA_COLORS, IMPATTO_COLORS, TARGET_LABELS, CATEGORIE_UTENTE_COLORS, CATEGORIE_SCADENZA, CATEGORIE_SCADENZA_COLORS, REGIONI_ITALIA } from '../types/intelligence';
 
 const MAX_VISIBLE = 4;
 const REFRESH_INTERVAL_MS = 60000;
@@ -54,6 +54,7 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
   const [showAll, setShowAll] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('Tutte');
   const [filterPriorita, setFilterPriorita] = useState<string>('');
+  const [filterRegione, setFilterRegione] = useState<string>('');
   const [deadlineItems, setDeadlineItems] = useState<ScadenzaIntelligence[]>(MOCK_SCADENZE_INTELLIGENCE);
   const [ultimoAggiornamento, setUltimoAggiornamento] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -84,6 +85,7 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
           guidaOperativa: d.guida_operativa || '',
           autoGenerata: d.auto_generata,
           periodicita: d.periodicita,
+          regione: d.regione || '',
         }));
         setDeadlineItems(mapped);
       }
@@ -101,8 +103,9 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
   const filtered = deadlineItems.filter(d => {
     const matchCat = activeCategory === 'Tutte' || d.tipo === activeCategory;
     const matchPrio = !filterPriorita || d.priorita === filterPriorita;
+    const matchReg = !filterRegione || d.regione === filterRegione;
     const matchSearch = !searchQuery || d.titolo.toLowerCase().includes(searchQuery.toLowerCase()) || d.descrizione.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchCat && matchPrio && matchSearch;
+    return matchCat && matchPrio && matchReg && matchSearch;
   });
 
   const displayed = showAll ? filtered : filtered.slice(0, MAX_VISIBLE);
@@ -112,7 +115,7 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
     setFollowed(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
   };
 
-  const types = ['Tutte', ...new Set(deadlineItems.map(d => d.tipo))];
+  const types = ['Tutte', ...CATEGORIE_SCADENZA];
 
   const grid = (
     <>
@@ -138,7 +141,7 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
               Aggiorna
             </button>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mt-4 mb-8">
+          <div className="flex flex-col gap-4 mt-4 mb-8">
             <div className="flex gap-2 flex-wrap">
               {types.map(t => (
                 <button key={t} onClick={() => setActiveCategory(t)}
@@ -147,7 +150,7 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
                   }`}>{t}</button>
               ))}
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative w-full sm:w-56">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input type="text" placeholder="Cerca scadenze..." value={searchQuery}
@@ -161,6 +164,11 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
                 <option value="alta">Alta</option>
                 <option value="media">Media</option>
                 <option value="bassa">Bassa</option>
+              </select>
+              <select value={filterRegione} onChange={e => setFilterRegione(e.target.value)}
+                className="px-4 py-2 rounded-2xl border border-slate-200/60 bg-white text-sm focus:ring-2 focus:ring-brand-ambra/20 outline-none">
+                <option value="">Tutte le regioni</option>
+                {REGIONI_ITALIA.map(r => <option key={r.codice} value={r.codice}>{r.nome}</option>)}
               </select>
             </div>
           </div>
@@ -181,7 +189,7 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-3 flex-wrap">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${CATEGORIE_UTENTE_COLORS[deadline.tipo as CategoriaUtente] || 'bg-gray-100 text-gray-600'}`}>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${CATEGORIE_SCADENZA_COLORS[deadline.tipo as CategoriaScadenza] || CATEGORIE_UTENTE_COLORS[deadline.tipo as CategoriaUtente] || 'bg-gray-100 text-gray-600'}`}>
                         {deadline.tipo}
                       </span>
                       <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${CRITICALITA_COLORS[deadline.priorita]}`}>
@@ -193,6 +201,11 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
                       <span className="text-xs text-brand-ambra font-medium flex items-center gap-1">
                         <Calendar size={12} /> {formatDataItaliana(deadline.dataScadenza)}
                       </span>
+                      {deadline.regione && (
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 flex items-center gap-1">
+                          <Globe size={10} /> {REGIONI_ITALIA.find(r => r.codice === deadline.regione)?.nome || deadline.regione}
+                        </span>
+                      )}
                     </div>
                     <h3 className="text-lg font-bold text-[#0F172A] mb-2">{deadline.titolo}</h3>
                     <p className={`text-gray-600 text-sm leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
@@ -286,12 +299,12 @@ export default function Deadlines({ compact = false }: { compact?: boolean }) {
       {filtered.length > MAX_VISIBLE && !showAll && (
         <div className="text-center mt-8">
           {compact ? (
-            <Link to="/notizie-scadenze/archivio"
+            <Link to="/notizie-scadenze/archivio?tab=scadenze"
               className="inline-flex items-center gap-2 text-brand-ambra font-semibold hover:text-brand-ambra/80 transition-colors text-sm border border-brand-ambra/20 px-5 py-2.5 rounded-xl hover:bg-brand-ambra/5">
               Vedi archivio completo
             </Link>
           ) : (
-            <Link to="/notizie-scadenze/archivio"
+            <Link to="/notizie-scadenze/archivio?tab=scadenze"
               className="inline-flex items-center gap-2 bg-brand-ambra text-white px-8 py-3 rounded-2xl hover:bg-brand-ambra/90 transition-colors font-semibold shadow-soft">
               Vedi tutte le scadenze ({filtered.length})
             </Link>

@@ -349,12 +349,12 @@ export default function News({ compact = false }: { compact?: boolean }) {
       {filtered.length > MAX_VISIBLE && !showAll && (
         <div className="text-center mt-8">
           {compact ? (
-            <Link to="/notizie-scadenze/archivio"
+            <Link to="/notizie-scadenze/archivio?tab=notizie"
               className="inline-flex items-center gap-2 text-brand-blu font-semibold hover:text-brand-blu/80 transition-colors text-sm border border-brand-blu/20 px-5 py-2.5 rounded-xl hover:bg-brand-blu/5">
               Vedi archivio completo
             </Link>
           ) : (
-            <Link to="/notizie-scadenze/archivio"
+            <Link to="/notizie-scadenze/archivio?tab=notizie"
               className="inline-flex items-center gap-2 bg-brand-blu text-white px-8 py-3 rounded-2xl hover:bg-brand-blu/90 transition-colors font-semibold shadow-soft">
               Vedi tutte le notizie ({filtered.length})
             </Link>

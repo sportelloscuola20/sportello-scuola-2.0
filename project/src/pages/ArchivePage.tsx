@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Newspaper, CalendarClock, Search, ArrowUpDown, Calendar, Target } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { MOCK_NEWS_INTELLIGENCE, MOCK_SCADENZE_INTELLIGENCE, formatDataItaliana } from '../rag/intelligence-engine';
 import type { NotiziaIntelligence, ScadenzaIntelligence, CategoriaUtente } from '../types/intelligence';
 import { CATEGORIE_UTENTE, CATEGORIE_UTENTE_COLORS, CRITICALITA_COLORS, TARGET_LABELS, CATEGORIE_ICONE } from '../types/intelligence';
 
 export default function ArchivePage() {
-  const [activeView, setActiveView] = useState<'notizie' | 'scadenze'>('notizie');
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [activeView, setActiveView] = useState<'notizie' | 'scadenze'>(tabParam === 'scadenze' ? 'scadenze' : 'notizie');
   const [searchQuery, setSearchQuery] = useState('');
   const [newsItems, setNewsItems] = useState<NotiziaIntelligence[]>([]);
   const [deadlineItems, setDeadlineItems] = useState<ScadenzaIntelligence[]>([]);
@@ -71,6 +73,7 @@ export default function ArchivePage() {
             tipo: d.tipo || 'generale',
             guidaOperativa: d.guida_operativa || '',
             autoGenerata: d.auto_generata,
+            regione: d.regione || '',
           })));
         } else {
           setDeadlineItems(MOCK_SCADENZE_INTELLIGENCE);

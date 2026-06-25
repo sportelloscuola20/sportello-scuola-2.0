@@ -36,6 +36,59 @@ export const CATEGORIE_UTENTE_COLORS: Record<CategoriaUtente, string> = {
   'Esami di Stato e Valutazioni (INVALSI)': 'bg-indigo-100 text-indigo-700 border-indigo-200',
 };
 
+export type CategoriaScadenza =
+  | 'Iscrizioni, Bandi e Concorsi pubblici'
+  | 'Aggiornamento e Inserimento Graduatorie'
+  | 'Mobilità del Personale Scolastico'
+  | 'Immissioni in Ruolo e Supplenze'
+  | 'Cessazioni dal Servizio e Pensionamenti'
+  | 'Adempimenti Amministrativi e Sicurezza'
+  | 'Esami di Stato, Scrutini e Valutazioni'
+  | 'Formazione Obbligatoria e Periodo di Prova';
+
+export const CATEGORIE_SCADENZA: CategoriaScadenza[] = [
+  'Iscrizioni, Bandi e Concorsi pubblici',
+  'Aggiornamento e Inserimento Graduatorie',
+  'Mobilità del Personale Scolastico',
+  'Immissioni in Ruolo e Supplenze',
+  'Cessazioni dal Servizio e Pensionamenti',
+  'Adempimenti Amministrativi e Sicurezza',
+  'Esami di Stato, Scrutini e Valutazioni',
+  'Formazione Obbligatoria e Periodo di Prova',
+];
+
+export const CATEGORIE_SCADENZA_COLORS: Record<CategoriaScadenza, string> = {
+  'Iscrizioni, Bandi e Concorsi pubblici': 'bg-blue-100 text-blue-700 border-blue-200',
+  'Aggiornamento e Inserimento Graduatorie': 'bg-purple-100 text-purple-700 border-purple-200',
+  'Mobilità del Personale Scolastico': 'bg-teal-100 text-teal-700 border-teal-200',
+  'Immissioni in Ruolo e Supplenze': 'bg-green-100 text-green-700 border-green-200',
+  'Cessazioni dal Servizio e Pensionamenti': 'bg-rose-100 text-rose-700 border-rose-200',
+  'Adempimenti Amministrativi e Sicurezza': 'bg-amber-100 text-amber-700 border-amber-200',
+  'Esami di Stato, Scrutini e Valutazioni': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  'Formazione Obbligatoria e Periodo di Prova': 'bg-sky-100 text-sky-700 border-sky-200',
+};
+
+export const REGIONI_ITALIA = [
+  { codice: 'ABR', nome: 'Abruzzo' },
+  { codice: 'BAS', nome: 'Basilicata' },
+  { codice: 'CAL', nome: 'Calabria' },
+  { codice: 'CAM', nome: 'Campania' },
+  { codice: 'EMR', nome: 'Emilia-Romagna' },
+  { codice: 'FVG', nome: 'Friuli-Venezia Giulia' },
+  { codice: 'LAZ', nome: 'Lazio' },
+  { codice: 'LIG', nome: 'Liguria' },
+  { codice: 'LOM', nome: 'Lombardia' },
+  { codice: 'MAR', nome: 'Marche' },
+  { codice: 'MOL', nome: 'Molise' },
+  { codice: 'PIE', nome: 'Piemonte' },
+  { codice: 'PUG', nome: 'Puglia' },
+  { codice: 'SAR', nome: 'Sardegna' },
+  { codice: 'SIC', nome: 'Sicilia' },
+  { codice: 'TOS', nome: 'Toscana' },
+  { codice: 'UMB', nome: 'Umbria' },
+  { codice: 'VEN', nome: 'Veneto' },
+];
+
 export const CATEGORIE_ICONE: Record<CategoriaUtente, string> = {
   'Bandi, Concorsi e Selezioni': '📋',
   'Didattica, Formazione e Innovazione': '📚',
@@ -100,6 +153,7 @@ export interface ScadenzaIntelligence {
   guidaOperativa: string;
   autoGenerata?: boolean;
   periodicita?: 'giornaliera' | 'settimanale' | 'mensile' | 'annuale';
+  regione?: string;
 }
 
 export interface DataJournalismData {
