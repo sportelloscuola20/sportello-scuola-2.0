@@ -7,10 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-// --- RATE LIMITER (sliding window) ---
-// Gemini 1.5 Flash Free Tier: 15 richieste/minuto, 1500 richieste/giorno
-const MAX_REQUESTS_PER_MINUTE = 14;   // 1 di buffer sotto il limite di 15
-const MAX_REQUESTS_PER_DAY = 1450;    // 50 di buffer sotto il limite di 1500
+const MAX_REQUESTS_PER_MINUTE = 14;
+const MAX_REQUESTS_PER_DAY = 1450;
 const WINDOW_MS = 60_000;
 
 class RateLimiter {
@@ -20,39 +18,27 @@ class RateLimiter {
 
   async waitForSlot(): Promise<void> {
     const now = Date.now();
-
-    // Reset contatore giornaliero se passate 24h
     if (now > this.dayReset) {
       this.dayCount = 0;
       this.dayReset = now + 86_400_000;
     }
-
-    // Limite giornaliero
     if (this.dayCount >= MAX_REQUESTS_PER_DAY) {
       const waitUntil = this.dayReset - now + 5_000;
-      console.warn(`Limite giornaliero raggiunto (${this.dayCount}/${MAX_REQUESTS_PER_DAY}). Attendo ${Math.ceil(waitUntil / 1000)}s...`);
       await new Promise(r => setTimeout(r, waitUntil));
       return this.waitForSlot();
     }
-
-    // Pulisci timestamps scaduti (finestra mobile)
     this.minuteTimestamps = this.minuteTimestamps.filter(t => now - t < WINDOW_MS);
-
-    // Se abbiamo raggiunto il limite al minuto, attendi
     if (this.minuteTimestamps.length >= MAX_REQUESTS_PER_MINUTE) {
       const oldest = this.minuteTimestamps[0];
       const waitTime = WINDOW_MS - (now - oldest) + 500;
-      console.log(`Rate limit minute: ${this.minuteTimestamps.length}/${MAX_REQUESTS_PER_MINUTE}. Attendo ${Math.ceil(waitTime / 1000)}s...`);
       await new Promise(r => setTimeout(r, waitTime));
       return this.waitForSlot();
     }
-
-    // Concedi slot
     this.minuteTimestamps.push(now);
     this.dayCount++;
   }
 
-  getStats(): { rpm: number; rpmMax: number; rpd: number; rpdMax: number } {
+  getStats() {
     const now = Date.now();
     this.minuteTimestamps = this.minuteTimestamps.filter(t => now - t < WINDOW_MS);
     return {
@@ -66,15 +52,13 @@ class RateLimiter {
 
 const rateLimiter = new RateLimiter();
 
-// --- MODELLO GEMINI ---
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
-// Categorie specifiche per le scadenze (8 macro-settori)
 const CATEGORIE_SCADENZA = [
   'Iscrizioni, Bandi e Concorsi pubblici',
   'Aggiornamento e Inserimento Graduatorie',
-  'Mobilità del Personale Scolastico',
+  'Mobilit\u00e0 del Personale Scolastico',
   'Immissioni in Ruolo e Supplenze',
   'Cessazioni dal Servizio e Pensionamenti',
   'Adempimenti Amministrativi e Sicurezza',
@@ -82,11 +66,6 @@ const CATEGORIE_SCADENZA = [
   'Formazione Obbligatoria e Periodo di Prova',
 ] as const;
 
-function isValidaCategoriaScadenza(cat: string): boolean {
-  return CATEGORIE_SCADENZA.includes(cat as typeof CATEGORIE_SCADENZA[number]);
-}
-
-// --- TIPI ---
 interface SourceDocument {
   id: string;
   source_id: string;
@@ -131,267 +110,31 @@ interface GeminiResponse {
   }>;
 }
 
-// --- PROMPT DI SISTEMA per Gemini (tassonomia 8 categorie utente + scadenze rigorose) ---
 function buildPrompt(titolo: string, contenuto: string, sourceName: string, sourceUrl: string): string {
+  const contenutoBreve = contenuto.length > 2000
+    ? contenuto.slice(0, 2000) + '\n...[TRONCATO]'
+    : contenuto;
   return `Sei un giornalista specializzato in istruzione scolastica italiana. Analizza il documento grezzo fornito e genera un contenuto editoriale originale seguendo il modello a 7 livelli di produzione.
 
 DOCUMENTO DA ANALIZZARE:
 TITOLO: ${titolo}
 FONTE: ${sourceName} (${sourceUrl})
-CONTENUTO: ${contenuto}
+CONTENUTO: ${contenutoBreve}
 
 REGOLE ASSOLUTE:
 - NON copiare. Rielabora professionalmente.
-- criticità: bassa | media | alta | urgente | strategica
+- criticita: bassa | media | alta | urgente | strategica
 - impatto: locale | regionale | nazionale
 - platea: limitata | ampia | intero_sistema
 - target: scegli tra [docenti, aspiranti_docenti, sostegno, ata, amministrativi, collaboratori, dsga, dirigenti, educatori, pedagogisti, formatori, universita, sindacati, famiglie, studenti, decisori_pubblici]
-- categoria: SCEGLI UNA E UNA SOLA tra queste 8 categorie orientate all'utente:
-  1. "Bandi, Concorsi e Selezioni" — concorsi, bandi, selezioni pubbliche, TFA, PAS
-  2. "Didattica, Formazione e Innovazione" — formazione docenti, innovazione didattica, PNRR scuola, progetti
-  3. "Graduatorie (GPS, GAE, d'Istituto)" — GPS, GAE, graduatorie d'istituto, terza fascia ATA
-  4. "Contratti, Salari e Personale ATA" — rinnovo CCNL, stipendi, aumenti, arretrati, personale ATA
-  5. "Pensioni, Previdenza e Welfare" — pensioni, previdenza, TFR, buonuscita, welfare scuola
-  6. "Normative, Note e Circolari Ministeriali" — leggi, decreti, circolari, note MIM, ordini del giorno
-  7. "Mobilità, Assegnazioni e Utilizzazioni" — mobilità docenti/ATA, assegnazioni provvisorie, utilizzazioni
-  8. "Esami di Stato e Valutazioni (INVALSI)" — esami di Stato, maturità, INVALSI, valutazioni
+- categoria: SCEGLI UNA tra: 1. Bandi/Concorsi/Selezioni, 2. Didattica/Formazione/Innovazione, 3. Graduatorie (GPS/GAE/d'Istituto), 4. Contratti/Salari/ATA, 5. Pensioni/Previdenza/Welfare, 6. Normative/Circolari Ministeriali, 7. Mobilita/Assegnazioni, 8. Esami di Stato/Valutazioni
 - fonte_livello: A | B | C | D | E | F
-- Se il contenuto non riguarda l'istruzione scolastica, imposta "categoria" come "nessuna" e produzione_livelli vuoto.
+- Se non riguarda istruzione, categoria="nessuna"
 
-REGOLE PER LE SCADENZE (campo "scadenze"):
-- GENERA UNA SCADENZA SOLO SE il documento contiene ESPLICITAMENTE una data limite perentoria, un termine ultimo di presentazione o una scadenza istituzionale/amministrativa chiara.
-- NON generare scadenze per: dibattiti, commenti sindacali, convegni, eventi informativi, editoriali, interviste, o qualsiasi contenuto senza adempimenti operativi immediati.
-- Ogni scadenza deve appartenere a UNA di queste 8 categorie specifiche:
-  1. "Iscrizioni, Bandi e Concorsi pubblici" — Termini presentazione domande concorsi, TFA, iscrizioni alunni
-  2. "Aggiornamento e Inserimento Graduatorie" — Finestre aggiornamento GPS, GAE, graduatorie istituto, scioglimento riserve
-  3. "Mobilità del Personale Scolastico" — Domande trasferimento, assegnazioni provvisorie, utilizzazioni
-  4. "Immissioni in Ruolo e Supplenze" — Scelta 150 scuole, nomine, accettazione, risposte interpelli
-  5. "Cessazioni dal Servizio e Pensionamenti" — Dimissioni volontarie, pensionamento, Opzione Donna, APE Sociale
-  6. "Adempimenti Amministrativi e Sicurezza" — Rendicontazione fondi, Carta del Docente, privacy, sicurezza
-  7. "Esami di Stato, Scrutini e Valutazioni" — Maturità, Terza Media, modelli candidati esterni, INVALSI
-  8. "Formazione Obbligatoria e Periodo di Prova" — Piattaforma INDIRE neoassunti, crediti formativi, sicurezza
-- I campi "normativa", "conseguenze_non_azione" e "guida_operativa" sono OBBLIGATORI e non devono mai essere vuoti.
-- "regione": imposta il codice regione (es. "LAZ", "LOM", "CAM") se la scadenza è relativa a un USR specifico, altrimenti stringa vuota.
-- Se non ci sono scadenze valide, imposta "scadenze" come array vuoto [].
-
-Rispondi ESCLUSIVAMENTE con un JSON valido, senza markdown, senza spiegazioni, seguendo ESATTAMENTE questa struttura:
-{
-  "titolo": "Titolo chiaro, specifico, orientato all'impatto",
-  "descrizione": "Sintesi immediata (max 5 righe). Cosa è successo, chi è coinvolto, cosa deve fare",
-  "fonte_livello": "A",
-  "fonte_nome": "MIM",
-  "fonte_url": "https://...",
-  "criticita": "media",
-  "impatto": "nazionale",
-  "platea": "ampia",
-  "target": ["docenti", "aspiranti_docenti"],
-  "categoria": "Graduatorie (GPS, GAE, d'Istituto)",
-  "fonte_primaria": "Riferimento normativo esatto",
-  "tag": ["tag1", "tag2"],
-  "link": "https://...",
-  "is_pinned": false,
-  "produzione_livelli": [
-    { "livello": 1, "titolo": "Notizia Immediata", "contenuto": "Testo conciso della notizia" },
-    { "livello": 2, "titolo": "Analisi", "contenuto": "Spiegazione approfondita con contesto, motivazioni, conseguenze" },
-    { "livello": 3, "titolo": "Impatto Operativo", "contenuto": "Cosa cambia realmente, chi deve agire, come deve agire" },
-    { "livello": 4, "titolo": "Domande Frequenti", "contenuto": "D: domanda? R: risposta.\\nD: altra domanda? R: altra risposta." },
-    { "livello": 5, "titolo": "Checklist", "contenuto": "1. Primo passo\\n2. Secondo passo\\n3. Terzo passo" },
-    { "livello": 6, "titolo": "Cronologia Normativa", "contenuto": "• Norma 1 — descrizione\\n• Norma 2 — descrizione" },
-    { "livello": 7, "titolo": "Scenari Futuri", "contenuto": "Proiezioni e possibili evoluzioni" }
-  ],
-  "scadenze": [
-    { "titolo": "Titolo scadenza", "normativa": "Rif. normativo esatto", "soggetti_coinvolti": ["docenti"], "data_scadenza": "2026-06-30", "priorita": "alta", "conseguenze_non_azione": "Cosa succede se non si rispetta il termine", "guida_operativa": "Istruzioni passo passo per adempiere", "categoria_scadenza": "Iscrizioni, Bandi e Concorsi pubblici", "regione": "" }
-  ]
-}`;
+Rispondi ESCLUSIVAMENTE con JSON valido, senza markdown:
+{titolo, descrizione, fonte_livello, fonte_nome, fonte_url, criticita, impatto, platea, target, categoria, fonte_primaria, tag, link, is_pinned, produzione_livelli, scadenze}`;
 }
 
-// --- CHIAMATA A GEMINI CON RATE LIMITING ---
-async function callGemini(apiKey: string, prompt: string): Promise<GeminiResponse> {
-  // Attendi il rate limiter prima di ogni richiesta
-  await rateLimiter.waitForSlot();
-
-  const url = `${GEMINI_BASE_URL}/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 8192,
-        responseMimeType: 'application/json',
-      },
-      safetySettings: [
-        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
-        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
-      ],
-    }),
-  });
-
-  if (!resp.ok) {
-    const errBody = await resp.text();
-    let msg = `Gemini HTTP ${resp.status}`;
-
-    // Rate limit esplicito da Google -> backoff più lungo
-    if (resp.status === 429) {
-      msg += ': RATE LIMIT raggiunto. Backoff automatico di 60s.';
-      console.warn(msg);
-      await new Promise(r => setTimeout(r, 60_000));
-      // Riprova una volta
-      return callGemini(apiKey, prompt);
-    }
-
-    if (resp.status === 403) {
-      msg += `: QUOTA o API KEY non valida. ${errBody}`;
-    } else {
-      msg += `: ${errBody}`;
-    }
-    throw new Error(msg);
-  }
-
-  const data = await resp.json();
-
-  // Bloccato da safety filter
-  if (data.promptFeedback?.blockReason) {
-    console.warn(`Contenuto bloccato da Gemini: ${data.promptFeedback.blockReason}`);
-    return {
-      titolo: '', descrizione: '', fonte_livello: 'F',
-      fonte_nome: 'Fonte Automatica', fonte_url: '',
-      criticita: 'media', impatto: 'nazionale', platea: 'ampia',
-      target: ['docenti'], categoria: 'nessuna', fonte_primaria: '',
-      tag: [], link: '', is_pinned: false,
-      produzione_livelli: [], scadenze: [],
-    };
-  }
-
-  let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-  // Tentativi multipli di parsing JSON
-  const tryParse = (s: string): GeminiResponse | null => {
-    try {
-      // 1. Prova rimuovendo markdown code block
-      const cleaned = s.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '').trim();
-      // 2. Estrai oggetto JSON
-      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-      if (jsonMatch) return JSON.parse(jsonMatch[0]);
-      // 3. Fallback: parse diretto
-      return JSON.parse(cleaned);
-    } catch {
-      return null;
-    }
-  };
-
-  const parsed = tryParse(text);
-
-  if (!parsed) {
-    // Ultimo tentativo: rimuovi caratteri non stampabili
-    const sanitized = text.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
-    const retry = tryParse(sanitized);
-    if (retry) return retry;
-    throw new Error(`Risposta Gemini non valida (${text.length} chars): ${text.slice(0, 200)}`);
-  }
-
-  return parsed;
-}
-
-// --- FUNZIONE PER CREARE KNOWLEDGE LINKS ---
-async function createKnowledgeLinks(supabase: any, newsId: string, categoria: string, limit = 5) {
-  try {
-    const { data: relatedNews } = await supabase
-      .from('intelligence_news')
-      .select('id')
-      .eq('categoria', categoria)
-      .neq('id', newsId)
-      .limit(limit);
-
-    if (relatedNews) {
-      for (const related of relatedNews) {
-        await supabase.from('knowledge_links').insert({
-          news_id_a: newsId,
-          news_id_b: related.id,
-          tipo_relazione: 'stesso_argomento',
-          peso: 0.8,
-        }).catch(() => {}); // Ignora duplicati
-      }
-    }
-  } catch (e) {
-    console.warn('Errore creazione knowledge links:', e.message);
-  }
-}
-
-// --- MAPPA REGIONI DA NOME FONTE USR ---
-function getRegioneFromSourceName(nome: string): string {
-  const map: Record<string, string> = {
-    'USR Abruzzo': 'ABR',
-    'USR Basilicata': 'BAS',
-    'USR Calabria': 'CAL',
-    'USR Campania': 'CAM',
-    'USR Emilia-Romagna': 'EMR',
-    'USR Friuli-Venezia Giulia': 'FVG',
-    'USR Lazio': 'LAZ',
-    'USR Liguria': 'LIG',
-    'USR Lombardia': 'LOM',
-    'USR Marche': 'MAR',
-    'USR Molise': 'MOL',
-    'USR Piemonte': 'PIE',
-    'USR Puglia': 'PUG',
-    'USR Sardegna': 'SAR',
-    'USR Sicilia': 'SIC',
-    'USR Toscana': 'TOS',
-    'USR Umbria': 'UMB',
-    'USR Veneto': 'VEN',
-  };
-  return map[nome] || '';
-}
-
-// --- FUNZIONE PER CREARE SCADENZE (con validazione rigorosa) ---
-async function createScadenze(supabase: any, newsId: string, aiResult: GeminiResponse) {
-  if (!aiResult.scadenze || !Array.isArray(aiResult.scadenze)) return;
-
-  // Regione ereditata dalla fonte se USR
-  const regioneDefault = getRegioneFromSourceName(aiResult.fonte_nome || '');
-
-  for (const scadenza of aiResult.scadenze) {
-    // Salta scadenze senza data
-    if (!scadenza.data_scadenza) continue;
-
-    // VALIDAZIONE STRETTA: salta se mancano campi obbligatori (falsi positivi)
-    const normativa = (scadenza.normativa || '').trim();
-    const conseguenze = (scadenza.conseguenze_non_azione || '').trim();
-    const guida = (scadenza.guida_operativa || '').trim();
-
-    if (!normativa || !conseguenze || !guida) {
-      console.warn(`Scadenza scartata per campi vuoti: ${scadenza.titolo} (normativa="${normativa}", conseguenze="${conseguenze}", guida="${guida}")`);
-      continue;
-    }
-
-    // Validazione categoria scadenza (usa la categoria specifica o fallback)
-    const catScadenza = scadenza.categoria_scadenza || aiResult.categoria || 'generale';
-
-    // Regione: priorità a quella indicata dall'AI, poi default dalla fonte
-    const regione = scadenza.regione || regioneDefault || '';
-
-    await supabase.from('intelligence_scadenze').insert({
-      news_id: newsId,
-      titolo: scadenza.titolo || 'Scadenza: ' + aiResult.titolo,
-      normativa: normativa,
-      soggetti_coinvolti: scadenza.soggetti_coinvolti || aiResult.target,
-      data_scadenza: scadenza.data_scadenza,
-      priorita: scadenza.priorita || 'media',
-      impatto: aiResult.impatto || 'nazionale',
-      conseguenze_non_azione: conseguenze,
-      guida_operativa: guida,
-      tipo: catScadenza,
-      regione: regione,
-      auto_generata: true,
-    }).catch((e) => console.warn('Errore creazione scadenza:', e.message));
-  }
-}
-
-// --- HANDLER PRINCIPALE ---
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders });
@@ -405,7 +148,7 @@ Deno.serve(async (req) => {
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY') || '';
 
     if (!geminiApiKey) {
-      return new Response(JSON.stringify({ error: 'GEMINI_API_KEY non configurata. Imposta la variabile d\'ambiente GEMINI_API_KEY nelle Edge Functions di Supabase.' }), {
+      return new Response(JSON.stringify({ error: 'GEMINI_API_KEY non configurata.' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -413,16 +156,15 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Leggi parametri: batch opzionale via body (default 10, max 50 per smaltimento code)
-    let batchSize = 10;
+    let batchSize = 2;
     try {
-      const body = await req.json().catch(() => ({}));
-      if (body.batch && typeof body.batch === 'number' && body.batch > 0 && body.batch <= 50) {
-        batchSize = body.batch;
+      const raw = await req.text();
+      const body = raw ? JSON.parse(raw) : {};
+      if (body.batch != null && Number(body.batch) > 0) {
+        batchSize = Math.min(Number(body.batch), 50);
       }
     } catch {}
 
-    // --- 1. Ottieni documenti da elaborare (massimo batchSize) ---
     const { data: documents, error: docsError } = await supabase
       .from('source_documents')
       .select('*')
@@ -434,160 +176,159 @@ Deno.serve(async (req) => {
     if (!documents || documents.length === 0) {
       return new Response(JSON.stringify({
         message: 'Nessun documento da elaborare',
-        stats: rateLimiter.getStats(),
         elapsedMs: Date.now() - startTime,
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    console.log(`Avvio elaborazione ${documents.length} documenti...`);
-
-    // --- 2. Elabora ogni documento con rate limiting e timeout atomico per-documento ---
     const results: Array<{ titolo: string; status: string; error?: string }> = [];
-    const DOC_TIMEOUT_MS = 25_000; // 25s per singolo doc (Edge Function max 60s, batch=10 → 10*25=250s no, 60/10≈6s... usiamo 15s per doc)
+    const MAX_RUNTIME_MS = 50_000;
 
     for (let i = 0; i < documents.length; i++) {
       const doc = documents[i] as SourceDocument;
-      const progress = `[${i + 1}/${documents.length}]`;
+      const elapsed = Date.now() - startTime;
+      const remaining = MAX_RUNTIME_MS - elapsed;
 
-      // Pausa tra un documento e l'altro (anche se il rate limiter già gestisce)
-      if (i > 0) {
-        const pause = Math.min(1000, 60_000 / MAX_REQUESTS_PER_MINUTE);
-        await new Promise(r => setTimeout(r, pause));
-      }
+      if (remaining < 5_000) break;
+      if (i > 0) await new Promise(r => setTimeout(r, 400));
 
       try {
-        console.log(`${progress} Analisi documento: ${doc.titolo?.slice(0, 80)}...`);
+        const prompt = buildPrompt(doc.titolo || '', doc.contenuto_raw || '', doc.source_id || '', doc.url || '');
+        const controller = new AbortController();
+        const t = setTimeout(() => controller.abort(), 30_000);
 
-        // Timeout atomico per singolo documento — impedisce che un doc blocchi l'intero batch
-        const processingPromise = (async () => {
-          const sourceName = doc.source_id || 'Fonte Automatica';
-          const sourceUrl = doc.url || '';
-          const prompt = buildPrompt(doc.titolo || '', doc.contenuto_raw || '', sourceName, sourceUrl);
-          const aiResult: GeminiResponse = await callGemini(geminiApiKey, prompt);
+        const geminiResp = await fetch(`${GEMINI_BASE_URL}/${GEMINI_MODEL}:generateContent?key=${geminiApiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.2, maxOutputTokens: 8192, responseMimeType: 'application/json' },
+            safetySettings: [
+              { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+              { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+              { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+              { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+            ],
+          }),
+        });
 
-          // Se il contenuto non è pertinente, salta
-          if (aiResult.categoria === 'nessuna' || !aiResult.titolo) {
-            await supabase.from('source_documents').update({ elaborato: true }).eq('id', doc.id);
-            results.push({ titolo: doc.titolo, status: 'skipped' });
-            console.log(`${progress} SKIPPED (non pertinente): ${doc.titolo?.slice(0, 60)}`);
-            return;
+        clearTimeout(t);
+
+        if (!geminiResp.ok) {
+          if (geminiResp.status === 429) {
+            const body429 = await geminiResp.text().catch(() => '');
+            if (body429.includes('quota')) {
+              results.push({ titolo: doc.titolo?.slice(0, 40), status: 'quota_exhausted' });
+              break;
+            }
+            const retryAfter = parseInt(geminiResp.headers.get('retry-after') || '12', 10);
+            await new Promise(r => setTimeout(r, Math.min(retryAfter, 30) * 1000));
+            i--;
+            continue;
           }
+          throw new Error(`Gemini HTTP ${geminiResp.status}`);
+        }
 
-          // --- 3. Inserisci notizia intelligence ---
-          const { data: news, error: newsError } = await supabase
-            .from('intelligence_news')
-            .insert({
-              titolo: aiResult.titolo,
-              descrizione: aiResult.descrizione || '',
-              data_pubblicazione: new Date().toISOString(),
-              fonte_livello: aiResult.fonte_livello || 'F',
-              fonte_nome: aiResult.fonte_nome || 'Fonte Automatica',
-              fonte_url: aiResult.fonte_url || doc.url,
-              fonte_peso: 100,
-              criticita: aiResult.criticita || 'media',
-              impatto: aiResult.impatto || 'nazionale',
-              platea: aiResult.platea || 'ampia',
-              target: aiResult.target || ['docenti'],
-              categoria: aiResult.categoria || 'normativa',
-              fonte_primaria: aiResult.fonte_primaria || '',
-              fonte_url_dettaglio: doc.url,
-              produzione_livelli: aiResult.produzione_livelli || [],
-              tag: aiResult.tag || [],
-              link: aiResult.link || doc.url || '',
-              is_pinned: aiResult.is_pinned || false,
-              is_archived: false,
-              source_document_id: doc.id,
-              ultimo_aggiornamento: new Date().toISOString(),
-            })
-            .select()
-            .single();
+        const data = await geminiResp.json();
 
-          if (newsError) {
-            throw new Error(`Errore insert DB: ${newsError.message}`);
-          }
+        if (data.promptFeedback?.blockReason) {
+          await supabase.from('source_documents').update({ elaborato: true }).eq('id', doc.id);
+          results.push({ titolo: doc.titolo?.slice(0, 40), status: 'blocked' });
+          continue;
+        }
 
-          // --- 4. Marca documento come elaborato ---
-          await supabase.from('source_documents').update({
-            elaborato: true,
-            news_generata_id: news.id,
-          }).eq('id', doc.id);
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-          // --- 5. Crea knowledge links (async, non bloccante) ---
-          createKnowledgeLinks(supabase, news.id, aiResult.categoria).catch(e =>
-            console.warn(`Knowledge links fallito per ${news.id}:`, e.message)
-          );
+        const tryParse = (s: string): GeminiResponse | null => {
+          try {
+            const cleaned = s.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '').trim();
+            const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+            if (jsonMatch) return JSON.parse(jsonMatch[0]);
+            return JSON.parse(cleaned);
+          } catch { return null; }
+        };
 
-          // --- 6. Crea scadenze (async, non bloccante) ---
-          createScadenze(supabase, news.id, aiResult).catch(e =>
-            console.warn(`Scadenze fallito per ${news.id}:`, e.message)
-          );
+        let aiResult = tryParse(text);
+        if (!aiResult) {
+          aiResult = tryParse(text.replace(/[\u0000-\u001F\u007F-\u009F]/g, ''));
+        }
+        if (!aiResult) {
+          results.push({ titolo: doc.titolo?.slice(0, 40), status: 'parse_error' });
+          continue;
+        }
 
-          results.push({ titolo: aiResult.titolo, status: 'created' });
-          console.log(`${progress} CREATO: ${aiResult.titolo?.slice(0, 60)}`);
-        })();
+        if (aiResult.categoria === 'nessuna' || !aiResult.titolo) {
+          await supabase.from('source_documents').update({ elaborato: true }).eq('id', doc.id);
+          results.push({ titolo: doc.titolo?.slice(0, 40), status: 'skipped' });
+          continue;
+        }
 
-        // Timeout race — se il documento impiega troppo, viene saltato
-        const timeoutPromise = new Promise<void>((_, reject) =>
-          setTimeout(() => reject(new Error(`TIMEOUT ${DOC_TIMEOUT_MS}ms — documento saltato`)), DOC_TIMEOUT_MS)
-        );
+        const { data: news, error: newsError } = await supabase
+          .from('intelligence_news')
+          .insert({
+            titolo: aiResult.titolo,
+            descrizione: aiResult.descrizione || '',
+            data_pubblicazione: new Date().toISOString(),
+            fonte_livello: aiResult.fonte_livello || 'F',
+            fonte_nome: aiResult.fonte_nome || 'Fonte Automatica',
+            fonte_url: aiResult.fonte_url || doc.url,
+            fonte_peso: 100,
+            criticita: aiResult.criticita || 'media',
+            impatto: aiResult.impatto || 'nazionale',
+            platea: aiResult.platea || 'ampia',
+            target: aiResult.target || ['docenti'],
+            categoria: aiResult.categoria || 'normativa',
+            fonte_primaria: aiResult.fonte_primaria || '',
+            fonte_url_dettaglio: doc.url,
+            produzione_livelli: aiResult.produzione_livelli || [],
+            tag: aiResult.tag || [],
+            link: aiResult.link || doc.url || '',
+            is_pinned: aiResult.is_pinned || false,
+            is_archived: false,
+            source_document_id: doc.id,
+            ultimo_aggiornamento: new Date().toISOString(),
+          })
+          .select()
+          .single();
 
-        await Promise.race([processingPromise, timeoutPromise]);
+        if (newsError) throw new Error(`Errore insert DB: ${newsError.message}`);
+
+        await supabase.from('source_documents').update({
+          elaborato: true,
+          news_generata_id: news.id,
+        }).eq('id', doc.id);
+
+        results.push({ titolo: aiResult.titolo, status: 'created' });
 
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
-        console.error(`${progress} ERRORE elaborazione documento ${doc.id}: ${errMsg}`);
-        // Marca come processato anche in errore per evitare cicli infiniti
-        await supabase.from('source_documents').update({
-          elaborato: true,
-        }).eq('id', doc.id);
-        results.push({ titolo: doc.titolo, status: 'error', error: errMsg });
+        await supabase.from('source_documents').update({ elaborato: true }).eq('id', doc.id);
+        results.push({ titolo: doc.titolo?.slice(0, 40), status: 'error', error: errMsg });
       }
     }
 
-    const elapsed = Date.now() - startTime;
-
-    // --- 7. Risultato ---
     const created = results.filter(r => r.status === 'created').length;
     const skipped = results.filter(r => r.status === 'skipped').length;
     const errored = results.filter(r => r.status === 'error').length;
+    const quotaBlocked = results.filter(r => r.status === 'quota_exhausted').length;
+    const pending = documents.length - results.length;
 
-    // Suggerisci prossima esecuzione se ci sono ancora documenti
-    let nextAction = null;
-    try {
-      const { count } = await supabase
-        .from('source_documents')
-        .select('*', { count: 'exact', head: true })
-        .eq('elaborato', false);
-      if (count && count > 0) {
-        const estimatedMs = Math.ceil(count / MAX_REQUESTS_PER_MINUTE) * 60_000;
-        nextAction = {
-          documenti_rimanenti: count,
-          stima_secondi: Math.ceil(estimatedMs / 1000),
-          suggerimento: 'Esegui ingest-news tra circa ' + Math.ceil(estimatedMs / 1000) + 's per elaborare i rimanenti',
-        };
-      }
-    } catch {}
+    if (quotaBlocked > 0) {
+      return new Response(JSON.stringify({
+        message: `Quota Gemini esaurita. ${pending} documenti rimandati al prossimo ciclo.`,
+        created, skipped, errored, quotaBlocked, pending,
+        elapsedMs: Date.now() - startTime,
+      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     return new Response(JSON.stringify({
-      message: `Elaborati ${results.length} documenti (${created} creati, ${skipped} saltati, ${errored} errori).`,
-      results,
-      stats: rateLimiter.getStats(),
-      elapsedMs: elapsed,
-      nextAction,
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+      message: `Elaborati ${results.length} documenti (${created} creati, ${skipped} saltati, ${errored} errori).${pending > 0 ? ` ${pending} rimandati.` : ''}`,
+      created, skipped, errored, pending,
+      elapsedMs: Date.now() - startTime,
+    }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (err) {
-    console.error('Errore ingest-news:', err.message);
-    return new Response(JSON.stringify({
-      error: err.message,
-      stats: rateLimiter.getStats(),
-    }), {
+    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

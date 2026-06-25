@@ -1,160 +1,206 @@
 import { useState } from 'react';
-import { User, Briefcase, Globe, GraduationCap, FileCheck, MapPin, Building, MessageCircle, HelpCircle, ChevronRight, School, ArrowRight } from 'lucide-react';
+import { GraduationCap, Briefcase, Globe, ArrowRight, Sparkles, Shield, Zap, CheckCircle, MessageSquare } from 'lucide-react';
+import { CATEGORIE_SERVIZI, type CategoriaServizio, type Servizio } from '../data/servizi';
 import BookingModal from './BookingModal';
 
-type TabKey = 'docenti' | 'ata' | 'generali';
-
-const tabs: { key: TabKey; label: string; icon: typeof User }[] = [
-  { key: 'docenti', label: 'Area Docenti', icon: GraduationCap },
-  { key: 'ata', label: 'Area ATA', icon: Briefcase },
-  { key: 'generali', label: 'Servizi Trasversali', icon: Globe },
+const tabs: { key: CategoriaServizio; label: string; icon: typeof GraduationCap; desc: string }[] = [
+  { key: 'docenti', label: 'Area Docenti', icon: GraduationCap, desc: 'Per insegnanti e aspiranti docenti' },
+  { key: 'ata', label: 'Area ATA', icon: Briefcase, desc: 'Per personale Amministrativo, Tecnico e Ausiliario' },
+  { key: 'generali', label: 'Servizi Trasversali', icon: Globe, desc: 'Per ogni esigenza scolastica e formativa' },
 ];
 
-const servizi: Record<TabKey, { title: string; desc: string; icon: typeof User; items: string[] }[]> = {
-  docenti: [
-    {
-      title: 'Compilazione e Inoltro Domande GPS',
-      desc: 'Supporto completo nella scelta delle migliori classi di concorso di riferimento, inserimento ponderato dei titoli di accesso, dei titoli culturali ed artistici per l\'aggiornamento/inserimento nel biennio.',
-      icon: FileCheck,
-      items: ['Analisi titoli di accesso e classe di concorso', 'Inserimento certificazioni linguistiche CEDILS/C2', 'Caricamento titoli di servizio e culturali', 'Invio telematico tramite POLIS'],
-    },
-    {
-      title: 'Scelta Preferenze 150 Scuole',
-      desc: 'Consulenza strategica mirata per la compilazione dell\'istanza di scelta delle sedi e delle istituzioni scolastiche per le supplenze annuali (31 agosto / 30 giugno), ottimizzando le preferenze per massimizzare le probabilità di nomina dall\'algoritmo.',
-      icon: MapPin,
-      items: ['Analisi storica delle convocazioni per provincia', 'Mappatura scuole con maggiori cattedre disponibili', 'Ottimizzazione ordine preferenze algoritmo GPS', 'Simulazione scenario di nomina'],
-    },
-    {
-      title: 'Assegnazioni Provvisorie e Utilizzazioni',
-      desc: 'Gestione e controllo delle procedure di mobilità annuale interprovinciale e provinciale per il ricongiungimento familiare o per utilizzo su posti di sostegno e altra classe di concorso.',
-      icon: Building,
-      items: ['Verifica requisiti mobilità D.Lgs. 59/2017', 'Compilazione domanda su POLIS', 'Calcolo punteggio mobilità e precedenze', 'Assistenza post-assegnazione'],
-    },
-    {
-      title: 'Invio Interpelli Provinciali e Nazionali',
-      desc: 'Predisposizione, redazione e inoltro mirato delle candidature in risposta agli avvisi di selezione (Interpelli) pubblicati dalle scuole e dagli Uffici Scolastici Provinciali in caso di graduatorie esaurite.',
-      icon: School,
-      items: ['Ricerca interpelli per provincia e classe concorso', 'Predisposizione curriculum e documentazione', 'Invio candidatura tramite PEC o portale', 'Monitoraggio riscontro scuola'],
-    },
-  ],
-  ata: [
-    {
-      title: 'Inserimento e Aggiornamento 3ª Fascia ATA',
-      desc: 'Supporto tecnico e inserimento telematico della domanda per i profili di Assistente Amministrativo, Assistente Tecnico, Collaboratore Scolastico e Operatore Scolastico, inclusa la convalida dei titoli di accesso obbligatori.',
-      icon: FileCheck,
-      items: ['Riconoscimento titoli di accesso per profilo (AA/AT/CS/OS)', 'Attestazione CIAD obbligatoria', 'Inserimento servizi pregressi e titoli culturali', 'Invio istanza su POLIS entro scadenza'],
-    },
-    {
-      title: 'Graduatoria Permanente ATA 24 Mesi',
-      desc: 'Gestione completa, calcolo dei requisiti e inoltro dell\'istanza per l\'accesso ai ruoli provinciali dello Stato (I Fascia) per il personale ATA che ha maturato almeno 24 mesi di servizio effettivo.',
-      icon: GraduationCap,
-      items: ['Verifica requisito 24 mesi servizio effettivo', 'Calcolo punteggio titoli D.M. 89/2024', 'Compilazione domanda POLIS', 'Assistenza ricorsi e accesso atti'],
-    },
-    {
-      title: 'Assegnazioni Provvisorie e Utilizzazioni ATA',
-      desc: 'Assistenza e inoltro guidato della domanda di mobilità annuale dedicata al personale ATA già immesso in ruolo.',
-      icon: Building,
-      items: ['Analisi requisiti mobilità personale ATA', 'Compilazione domanda su POLIS', 'Calcolo punteggio e priorità sociali', 'Supporto ricongiungimento familiare'],
-    },
-  ],
-  generali: [
-    {
-      title: 'Revisione e Check Pratiche Già Compilate',
-      desc: 'Analisi minuziosa e controllo incrociato delle istanze già inoltrate autonomamente dall\'utente per rilevare errori materiali, omissioni di titoli valutabili o dichiarazioni di servizio errate.',
-      icon: FileCheck,
-      items: ['Audit completo della domanda presentata', 'Verifica corrispondenza titoli dichiarati/posseduti', 'Report errori e omissioni da correggere', 'Assistenza rettifica su POLIS'],
-    },
-    {
-      title: 'Consulenza via Chat per Chiarimenti Rapidi',
-      desc: 'Attivazione di un canale di messaggistica diretto, sincrono e prioritario per la risoluzione istantanea di quesiti contrattuali rapidi, scadenze o dubbi veloci sulla compilazione.',
-      icon: MessageCircle,
-      items: ['Chat 1:1 con consulente specializzato', 'Risposta entro 60 minuti in orario d\'ufficio', 'Archivio storico della consulenza', 'Riferimenti normativi allegati'],
-    },
-    {
-      title: 'Assistenza Tecnica su Casi Specifici o Dubbi Complessi',
-      desc: 'Sessione d\'esame e consulenza approfondita per casistiche particolari: gestione ricorsi, sanzioni da rinuncia o abbandono supplenza, calcolo congedi e maternità, superamento anno di prova.',
-      icon: HelpCircle,
-      items: ['Analisi normativa personalizzata', 'Ricorsi avverso punteggio errato', 'Calcolo congedi maternità e permessi 150 ore', 'Gestione anno di prova e riserve di legge'],
-    },
-  ],
+const iconMap: Record<string, typeof Shield> = {
+  default: Shield,
+  chat: MessageSquare,
 };
 
-export default function ServiziGrid() {
-  const [activeTab, setActiveTab] = useState<TabKey>('docenti');
-  const [showBooking, setShowBooking] = useState(false);
+function ServiceCard({ servizio, onBook }: { servizio: Servizio; onBook: (id: string) => void }) {
+  const Icon = iconMap[servizio.id] || iconMap.default;
 
   return (
-    <section id="i-nostri-servizi-professionali" className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-4">
-          <h2 className="text-4xl font-extrabold text-[#0F172A] mb-4 tracking-tight">
-            I Nostri Servizi Professionali
-          </h2>
-          <p className="text-gray-600 font-normal max-w-3xl mx-auto">
-            Consulenza specialistica per Docenti, Personale ATA e professionisti della scuola. 
-            Tutti i servizi si svolgono <strong>in modalità telematica su Google Meet</strong> oppure <strong>in presenza presso la nostra Sede</strong>.
-          </p>
-        </div>
-
-        <div className="flex justify-center gap-2 mt-10 mb-10">
-          {tabs.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
-                activeTab === tab.key
-                  ? 'bg-brand-blu text-white shadow-lg shadow-brand-blu/20'
-                  : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-blu/30 hover:text-brand-blu'
-              }`}
-            >
-              <tab.icon size={18} />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          {servizi[activeTab].map((srv, i) => (
-            <div
-              key={i}
-              className="group bg-white/70 backdrop-blur-md rounded-3xl p-6 border border-slate-200/60 shadow-soft hover:shadow-medium hover:border-brand-blu/30 transition-all duration-300"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-brand-blu/10 rounded-2xl flex items-center justify-center flex-shrink-0 mt-1">
-                  <srv.icon className="w-6 h-6 text-brand-blu" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-[#0F172A] mb-2">{srv.title}</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4">{srv.desc}</p>
-                  <ul className="space-y-2">
-                    {srv.items.map((item, j) => (
-                      <li key={j} className="flex items-start gap-2 text-sm text-gray-600">
-                        <ChevronRight size={14} className="text-brand-verde mt-0.5 flex-shrink-0" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+    <div className="group relative bg-white rounded-3xl border border-slate-200/60 shadow-soft hover:shadow-xl hover:border-brand-blu/20 transition-all duration-500 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-brand-blu/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="relative p-7 sm:p-8">
+        <div className="flex items-start gap-5">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-blu to-brand-blu/80 flex items-center justify-center flex-shrink-0 shadow-lg shadow-brand-blu/20 group-hover:shadow-brand-blu/30 transition-shadow duration-300">
+            <Icon className="w-7 h-7 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-bold text-[#0F172A] leading-tight">{servizio.titolo}</h3>
+                {servizio.evidenza && (
+                  <span className="inline-flex items-center gap-1 mt-1.5 text-xs font-semibold text-brand-verde bg-brand-verde/10 px-3 py-1 rounded-full">
+                    <Sparkles size={12} />
+                    {servizio.evidenza}
+                  </span>
+                )}
               </div>
             </div>
-          ))}
+
+            <p className="mt-3 text-base font-semibold text-brand-blu leading-snug">
+              {servizio.valore}
+            </p>
+
+            <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+              {servizio.descrizione}
+            </p>
+
+            <ul className="mt-4 space-y-1.5">
+              {servizio.dettagli.map((d, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-gray-500">
+                  <CheckCircle size={14} className="text-brand-verde mt-0.5 flex-shrink-0" />
+                  {d}
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-5 flex items-center gap-4">
+              <button
+                onClick={() => onBook(servizio.id)}
+                className="inline-flex items-center gap-2 bg-brand-verde text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-brand-verde/90 transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+              >
+                Prenota ora
+                <ArrowRight size={16} />
+              </button>
+              <span className="text-sm font-bold text-gray-400">
+                {servizio.prezzo > 0 ? `da €${servizio.prezzo}` : 'Prezzo da concordare'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AltroCard({ categoria, onBook }: { categoria: CategoriaServizio; onBook: (id: string) => void }) {
+  const labels: Record<CategoriaServizio, { title: string; desc: string }> = {
+    docenti: {
+      title: 'Hai un\'esigenza diversa?',
+      desc: 'Ogni carriera ha la sua storia. Raccontaci la tua situazione specifica: ti proporremo un percorso su misura.',
+    },
+    ata: {
+      title: 'Non trovi il servizio che cerchi?',
+      desc: 'Le procedure ATA possono essere complesse e personali. Descrivici il tuo caso, troveremo la soluzione giusta.',
+    },
+    generali: {
+      title: 'Il tuo caso non rientra in queste categorie?',
+      desc: 'Affrontiamo ogni situazione con la massima attenzione. Parlaci del tuo bisogno, ti risponderemo con una proposta chiara.',
+    },
+  };
+
+  const l = labels[categoria];
+
+  return (
+    <div className="relative bg-gradient-to-br from-amber-50 to-orange-50/50 rounded-3xl border border-amber-200/60 p-7 sm:p-8">
+      <div className="flex items-start gap-5">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/20">
+          <MessageSquare className="w-7 h-7 text-white" />
+        </div>
+        <div className="flex-1">
+          <h3 className="text-xl font-bold text-[#0F172A]">{l.title}</h3>
+          <p className="mt-2 text-sm text-gray-600">{l.desc}</p>
+          <button
+            onClick={() => onBook('altro-' + categoria)}
+            className="mt-4 inline-flex items-center gap-2 bg-amber-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-amber-600 transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+          >
+            Racconta la tua situazione
+            <ArrowRight size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ServiziGrid() {
+  const [activeTab, setActiveTab] = useState<CategoriaServizio>('docenti');
+  const [showBooking, setShowBooking] = useState(false);
+  const [bookingServiceId, setBookingServiceId] = useState<string | undefined>();
+
+  const categoriaCorrente = CATEGORIE_SERVIZI.find(c => c.key === activeTab)!;
+
+  const handleBook = (serviceId: string) => {
+    setBookingServiceId(serviceId);
+    setShowBooking(true);
+  };
+
+  return (
+    <section id="i-nostri-servizi-professionali" className="py-20 sm:py-28 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-4xl mx-auto mb-14">
+          <div className="inline-flex items-center gap-2 bg-brand-blu/10 text-brand-blu text-xs font-bold px-4 py-1.5 rounded-full mb-4">
+            <Zap size={14} />
+            CONSULENZA SPECIALISTICA
+          </div>
+          <h2 className="text-4xl sm:text-5xl font-extrabold text-[#0F172A] mb-5 tracking-tight leading-tight">
+            I Nostri Servizi Professionali
+          </h2>
+          <p className="text-lg text-gray-600 leading-relaxed">
+            Ogni pratica è curata da professionisti esperti. Ti seguiamo in ogni fase, con un metodo collaudato e la massima trasparenza.
+          </p>
         </div>
 
-        <div className="mt-10 text-center">
-          <button
-            onClick={() => setShowBooking(true)}
-            className="inline-flex items-center gap-2 bg-brand-verde text-white px-8 py-4 rounded-2xl font-bold hover:bg-brand-verde/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            <ArrowRight size={20} />
-            Prenota una Consulenza
-          </button>
-          <p className="text-xs text-gray-400 mt-3">
-            Oppure contattaci al <a href="tel:3889711647" className="text-brand-blu font-medium">388 971 1647</a> / <a href="tel:3346170986" className="text-brand-blu font-medium">334 617 0986</a>
+        <div className="flex flex-wrap justify-center gap-3 mb-14">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`group flex items-center gap-3 px-6 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 ${
+                  isActive
+                    ? 'bg-brand-blu text-white shadow-xl shadow-brand-blu/25 scale-105'
+                    : 'bg-white text-gray-600 border border-slate-200/60 hover:border-brand-blu/30 hover:text-brand-blu hover:shadow-md'
+                }`}
+              >
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                  isActive ? 'bg-white/20' : 'bg-brand-blu/10 group-hover:bg-brand-blu/20'
+                }`}>
+                  <Icon size={18} className={isActive ? 'text-white' : 'text-brand-blu'} />
+                </div>
+                <div className="text-left">
+                  <div>{tab.label}</div>
+                  <div className={`text-[10px] font-normal ${isActive ? 'text-white/70' : 'text-gray-400'}`}>{tab.desc}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="max-w-4xl mx-auto mb-12">
+          <p className="text-base text-gray-600 leading-relaxed text-center italic border-l-4 border-brand-blu/30 pl-6 py-2 bg-brand-blu/[0.02] rounded-r-2xl">
+            {categoriaCorrente.descrizione}
           </p>
+        </div>
+
+        <div className="space-y-6">
+          {categoriaCorrente.servizi.map(servizio => (
+            <ServiceCard key={servizio.id} servizio={servizio} onBook={handleBook} />
+          ))}
+          <AltroCard categoria={activeTab} onBook={handleBook} />
+        </div>
+
+        <div className="mt-14 text-center">
+          <p className="text-sm text-gray-500 mb-5">
+            Tutti i servizi si svolgono <strong>in modalità telematica su Google Meet</strong> oppure <strong>in presenza presso la nostra sede</strong>.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
+              onClick={() => handleBook('')}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-brand-blu to-brand-verde text-white px-10 py-4 rounded-2xl font-bold hover:opacity-90 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5 text-base"
+            >
+              <Zap size={20} />
+              Prenota una Consulenza
+            </button>
+            <span className="text-sm text-gray-400">o chiamaci al <a href="tel:3889711647" className="text-brand-blu font-semibold hover:underline">388 971 1647</a></span>
+          </div>
         </div>
       </div>
 
-      {showBooking && <BookingModal onClose={() => setShowBooking(false)} />}
+      {showBooking && <BookingModal onClose={() => setShowBooking(false)} initialServiceId={bookingServiceId} />}
     </section>
   );
 }
