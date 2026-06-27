@@ -136,6 +136,7 @@ export interface NotiziaIntelligence {
   tag: string[];
   link: string;
   isPinned: boolean;
+  regione?: string | null;
 }
 
 export interface ScadenzaIntelligence {

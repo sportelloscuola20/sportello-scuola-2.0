@@ -224,6 +224,41 @@ export interface StorageDocument {
   mimetype: string;
 }
 
+export interface DocumentoNormativo {
+  id: string;
+  titolo: string;
+  descrizione: string;
+  tipo: string;
+  categoria: string;
+  ente: string;
+  anno: number | null;
+  numero: string;
+  url_documento: string | null;
+  url_fonte: string | null;
+  data_pubblicazione: string;
+  data_entrata_vigore: string | null;
+  data_scadenza: string | null;
+  regione: string | null;
+  abstract: string;
+  tags: string[];
+  validated: boolean;
+  created_at: string;
+}
+
+export interface HubUniversita {
+  id: string;
+  nome: string;
+  tipo: string;
+  regione: string | null;
+  citta: string | null;
+  url_corso: string;
+  url_avvisi: string | null;
+  ultimo_bando: string | null;
+  stato_iscrizioni: string;
+  note: string;
+  ordine: number;
+}
+
 export interface Bando {
   id: string;
   titolo: string;

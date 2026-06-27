@@ -1,177 +1,109 @@
-import { useState } from 'react';
-import { FileText, BookOpen, Building, ShieldCheck, List, Download, ExternalLink, X, Search, GraduationCap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { FileText, BookOpen, Building, ShieldCheck, List, Download, ExternalLink, X, Search, GraduationCap, AlertCircle, RefreshCw } from 'lucide-react';
 import { jsPDF } from 'jspdf';
+import { supabase } from '../lib/supabaseClient';
+import type { DocumentoNormativo } from '../types/database';
 
-interface Documento {
-  id: string;
-  icon: typeof FileText;
-  category: string;
-  title: string;
-  desc: string;
-  filename: string;
-  content: string;
-}
+const CATEGORIE = ['Tutte', 'Decreti e Ordinanze Ministeriali', 'Bandi e Concorsi', 'Note e Circolari', 'Normativa Regionale', 'Contratti e CCNL', 'Modulistica'];
 
-const documenti: Documento[] = [
-  {
-    id: 'om-gps-2026',
-    icon: FileText,
-    category: 'GPS',
-    title: 'Ordinanza Ministeriale GPS Biennio 2026/2028',
-    desc: 'Regolamento per l\'aggiornamento e la gestione delle Graduatorie Provinciali per le Supplenze del personale docente ed educativo per il biennio 2026/2028.',
-    filename: 'OM_GPS_2026_2028.pdf',
-    content: 'REGOLAMENTO GRADUATORIE PROVINCIALI SUPPLENZE 2026-2028\n\nArt. 1 - Finalità e ambito di applicazione\nLa presente ordinanza regola l\'aggiornamento biennale delle Graduatorie Provinciali per le Supplenze (GPS) del personale docente ed educativo.\n\nArt. 2 - Presentazione delle domande\nLe domande di aggiornamento e inserimento nelle GPS devono essere presentate esclusivamente tramite la piattaforma Istanze On Line (POLIS) del Ministero dell\'Istruzione e del Merito.\n\nArt. 3 - Titoli di accesso\nPossono presentare domanda coloro che sono in possesso del titolo di studio valido per l\'accesso alla classe di concorso prescelta, secondo le tabelle allegate al presente regolamento.\n\nArt. 4 - Valutazione dei titoli\nI titoli sono valutati secondo le Tabelle A/1-A/10 allegate al presente decreto, distinte per grado di scuola e fascia di appartenenza.',
-  },
-  {
-    id: 'nota-mim-gps',
-    icon: FileText,
-    category: 'GPS',
-    title: 'Nota Ministeriale — Conferimento incarichi GPS',
-    desc: 'Nota esplicativa del MIM sulle procedure per il conferimento degli incarichi di supplenza da GPS e l\'assegnazione delle cattedre.',
-    filename: 'Nota_MIM_Conferimento_Incarichi_GPS.pdf',
-    content: 'NOTA MINISTERIALE — CONFERIMENTO INCARICHI DA GPS\n\nIl Ministero dell\'Istruzione e del Merito fornisce le seguenti indicazioni operative per il conferimento degli incarichi di supplenza:\n\n1. Le scuole attingono dalle GPS secondo l\'ordine di graduatoria.\n2. Per ciascuna classe di concorso, la scuola convoca i candidati tramite interpello.\n3. Il candidato ha 24 ore per accettare la supplenza.\n4. In caso di rinuncia senza giustificato motivo, si applicano le sanzioni previste dal D.Lgs. 59/2017.',
-  },
-  {
-    id: 'dm-89-2024',
-    icon: BookOpen,
-    category: 'ATA',
-    title: 'Decreto Terza Fascia ATA Triennio 2024/2027 — Allegato A/1',
-    desc: 'Decreto Ministeriale 89/2024 contenente le tabelle di valutazione dei titoli per il personale ATA di terza fascia per il triennio 2024-2027.',
-    filename: 'DM_89_2024_ATA_III_Fascia.pdf',
-    content: 'DECRETO MINISTERIALE 89/2024 — TABELLE ATA III FASCIA\n\nAllegato A/1 — Tabelle di valutazione titoli personale ATA\n\nProfilo AA (Assistente Amministrativo):\n- Titolo di studio: fino a 10 punti\n- CIAD: requisito obbligatorio\n- Laurea: 2 punti\n- Qualifica professionale: 1 punto\n- Servizio stesso profilo: 0,50 pt/mese\n- Servizio altro profilo ATA: 0,15 pt/mese\n\nProfilo CS (Collaboratore Scolastico):\n- Titolo di studio: fino a 10 punti\n- CIAD: requisito obbligatorio\n- Laurea: 2 punti\n- Idoneità concorso CS: 1 punto',
-  },
-  {
-    id: 'tabella-corrispondenza-at',
-    icon: BookOpen,
-    category: 'ATA',
-    title: 'Tabella di Corrispondenza Titoli/Laboratori Assistenti Tecnici',
-    desc: 'Tabella ministeriale di corrispondenza tra titoli di studio, corsi di formazione e laboratori per il profilo di Assistente Tecnico (AT).',
-    filename: 'Tabella_Corrispondenza_AT.pdf',
-    content: 'TABELLA DI CORRISPONDENZA TITOLI/LABORATORI — ASSISTENTE TECNICO\n\nCABINA ELETTRICA: Diploma di Perito Elettrotecnico, Elettronico\nLABORATORIO DI FISICA: Diploma Liceo Scientifico + corso specialistico\nLABORATORIO DI CHIMICA: Diploma Perito Chimico, Laurea in Chimica\nLABORATORIO DI INFORMATICA: Diploma Perito Informatico, Laurea in Informatica\nLABORATORIO LINGUISTICO/CONVERSAZIONE: Laurea in Lingue\nSERVIZI DI SEGRETERIA: Diploma di Ragioneria, Perito Commerciale',
-  },
-  {
-    id: 'linee-guida-inclusione',
-    icon: ShieldCheck,
-    category: 'Inclusione',
-    title: 'Linee Guida Nazionali sull\'Inclusione Scolastica',
-    desc: 'Linee guida aggiornate per l\'inclusione scolastica di alunni con disabilità, DSA e BES, con indicazioni operative per PEI e PDP.',
-    filename: 'Linee_Guida_Inclusione_Scolastica.pdf',
-    content: 'LINEE GUIDA NAZIONALI INCLUSIONE SCOLASTICA\n\n1. Principio di personalizzazione: ogni alunno ha diritto a un percorso formativo personalizzato.\n2. PEI (Piano Educativo Individualizzato) per alunni con disabilità certificata.\n3. PDP (Piano Didattico Personalizzato) per alunni con DSA.\n4. BES: attivazione di strategie didattiche inclusive.\n5. Il GLO (Gruppo di Lavoro Operativo) si riunisce entro ottobre di ogni anno.',
-  },
-  {
-    id: 'modello-ricorso',
-    icon: List,
-    category: 'Modulistica',
-    title: 'Modello Richiesta Accesso agli Atti / Ricorso Punteggio',
-    desc: 'Modello ufficiale per la richiesta di accesso agli atti e per il ricorso avverso al punteggio errato nelle graduatorie GPS e ATA.',
-    filename: 'Modello_Ricorso_Punteggio.pdf',
-    content: 'MODELLO DI RICORSO AVVERSO PUNTEGGIO GRADUATORIE\n\nAl Dirigente Scolastico della scuola polo\nL\'OGGETTO: Richiesta di accesso agli atti e ricorso avverso al punteggio attribuito\n\nIl/La sottoscritto/a _______________, nato/a a _______________ il _______________,\n\nPREMESSO CHE:\n- Ha presentato domanda di aggiornamento GPS per la classe di concorso _______________\n- Il punteggio attribuito è di _______________\n- Ritiene che il punteggio sia errato per i seguenti motivi:\n\n1. _______________\n2. _______________\n\nCHIEDE\n- La visione degli atti relativi alla valutazione dei titoli\n- La rettifica del punteggio nella misura di _______________\n\nData, _______________\nFirma _______________',
-  },
-  {
-    id: 'bando-tfa-sostegno',
-    icon: GraduationCap,
-    category: 'Bandi',
-    title: 'Bando TFA Sostegno — VIII ciclo',
-    desc: 'Bando per l\'ammissione al Tirocinio Formativo Attivo per le attività di sostegno didattico. Requisiti, CFU e modalità d\'esame per tutti i gradi scolastici.',
-    filename: 'Bando_TFA_Sostegno_VIII_ciclo.pdf',
-    content: 'BANDO TFA SOSTEGNO VIII CICLO — D.D. prot. n. 1025 del 10/05/2026\n\nIl Ministero dell\'Istruzione e del Merito indice il VIII ciclo del Tirocinio Formativo Attivo per il conseguimento della specializzazione per le attività di sostegno didattico.\n\nPOSTI DISPONIBILI:\n- Infanzia: 2.500 posti\n- Primaria: 3.500 posti\n- Secondaria I grado: 2.800 posti\n- Secondaria II grado: 3.200 posti\n\nREQUISITI DI ACCESSO:\n- Laurea magistrale o specialistica per il grado richiesto\n- Titolo di abilitazione all\'insegnamento (se richiesto)\n- Superamento della prova preselettiva nazionale\n\nSTRUTTURA DEL PERCORSO:\n- 60 CFU complessivi\n- 30 CFU di tirocinio diretto e indiretto\n- 20 CFU di insegnamenti teorico-pratici\n- 10 CFU di laboratori pedagogico-didattici\n- Prova finale di specializzazione\n\nMODALITÀ D\'ESAME:\n- Prova preselettiva computer-based (60 domande in 60 minuti)\n- Prova scritta (3 domande aperte su tematiche pedagogiche)\n- Prova orale con discussione di un caso clinico\n\nSCADENZA DOMANDA: 30 giugno 2026 tramite POLIS',
-  },
-  {
-    id: 'bandi-abilitazione-30-36-60-cfu',
-    icon: GraduationCap,
-    category: 'Bandi',
-    title: 'Percorsi di Abilitazione 30, 36 e 60 CFU',
-    desc: 'Dettaglio dei percorsi di formazione iniziale docenti basati sul DPCM 4 agosto 2023. Differenziazione per triennalisti, possessori 24 CFU e neolaureati.',
-    filename: 'Percorsi_Abilitazione_30_36_60_CFU.pdf',
-    content: 'PERCORSI DI ABILITAZIONE — DPCM 4 AGOSTO 2023\n\nIl DPCM 4 agosto 2023, pubblicato in G.U. n. 201 del 29/08/2023, ha ridefinito il sistema di formazione iniziale dei docenti.\n\nPERCORSO DA 60 CFU (Art. 2-bis D.Lgs. 59/2017):\n- Rivolto a: neolaureati senza esperienza di insegnamento\n- Durata: 1 anno accademico\n- CFU: 60 (20 tirocinio, 30 insegnamenti, 10 laboratori)\n- Prova finale: discussione tesi + lezione simulata\n\nPERCORSO DA 36 CFU (Art. 18-bis D.Lgs. 59/2017):\n- Rivolto a: docenti già in possesso di abilitazione su altra classe di concorso\n- Durata: 6 mesi\n- CFU: 36 (10 tirocinio, 20 insegnamenti, 6 laboratori)\n- Prova finale: esame orale su metodologie didattiche\n\nPERCORSO DA 30 CFU (Art. 13 DPCM 4/8/2023):\n- Rivolto a: docenti triennalisti con 3 anni di servizio (1 dei quali specifico)\n- Durata: 6 mesi\n- CFU: 30 (12 tirocinio, 14 insegnamenti, 4 laboratori)\n- Prova finale: lezione simulata davanti a commissione\n\nSCADENZE: Iscrizioni aperte da settembre 2026 su piattaforma ministeriale.',
-  },
-  {
-    id: 'concorsi-ordinari-straordinari',
-    icon: FileText,
-    category: 'Bandi',
-    title: 'Bandi Concorsi Ordinari e Straordinari MIM 2026',
-    desc: 'Suddivisione delle procedure concorsuali per la Scuola dell\'Infanzia/Primaria e per la Scuola Secondaria di I e II grado. Dettaglio posti, requisiti e scadenze.',
-    filename: 'Concorsi_Ordinari_Straordinari_2026.pdf',
-    content: 'CONCORSI ORDINARI E STRAORDINARI MIM 2026\n\nIl Ministero dell\'Istruzione e del Merito ha pubblicato i bandi per le procedure concorsuali 2026.\n\nCONCORSO ORDINARIO SCUOLA SECONDARIA (D.D. prot. n. 987 del 12/03/2026):\n- Posti: 20.000\n- Prove scritte: 15-25 ottobre 2026 (computer-based)\n- Requisiti: Laurea magistrale + 24 CFU (o titolo equipollente)\n- Materie: pedagogia, psicologia, metodologie didattiche, normativa scolastica\n\nCONCORSO STRAORDINARIO SCUOLA SECONDARIA (D.D. prot. n. 988 del 12/03/2026):\n- Posti: 5.000\n- Requisiti: 36 mesi di servizio negli ultimi 5 anni (di cui 1 specifico)\n- Prova: orale su metodologie didattiche e normativa\n\nCONCORSO ORDINARIO INFANZIA E PRIMARIA (D.D. prot. n. 989 del 12/03/2026):\n- Posti: 12.000\n- Requisiti: Laurea in Scienze della Formazione Primaria\n- Prove: preselettiva, scritta e orale\n\nTERMINI: Presentazione domande entro il 30 aprile 2026 su POLIS.',
-  },
-  {
-    id: 'ccnl-scuola',
-    icon: Building,
-    category: 'Contratti',
-    title: 'CCNL Istruzione e Ricerca — Aggiornato',
-    desc: 'Contratto Collettivo Nazionale di Lavoro del comparto Istruzione e Ricerca, aggiornato alle ultime intese sottoscritte all\'ARAN.',
-    filename: 'CCNL_Istruzione_Ricerca.pdf',
-    content: 'CCNL ISTRUZIONE E RICERCA\n\nTITOLO I - DISPOSIZIONI GENERALI\nArt. 1 - Campo di applicazione\nArt. 2 - Periodo di vigenza\n\nTITOLO II - RAPPORTO DI LAVORO\nArt. 3 - Costituzione del rapporto\nArt. 4 - Periodo di prova\nArt. 5 - Orario di lavoro\nArt. 6 - Assenze e permessi\nArt. 7 - Congedi\n\nTITOLO III - TRATTAMENTO ECONOMICO\nArt. 8 - Retribuzione\nArt. 9 - Indennità\nArt. 10 - Premi',
-  },
-];
+const CATEGORIA_STILI: Record<string, string> = {
+  'Decreti e Ordinanze Ministeriali': 'bg-blue-100 text-blue-700 border-blue-200',
+  'Bandi e Concorsi': 'bg-red-100 text-red-700 border-red-200',
+  'Note e Circolari': 'bg-sky-100 text-sky-700 border-sky-200',
+  'Normativa Regionale': 'bg-purple-100 text-purple-700 border-purple-200',
+  'Contratti e CCNL': 'bg-teal-100 text-teal-700 border-teal-200',
+  'Modulistica': 'bg-amber-100 text-amber-700 border-amber-200',
+};
 
-const CATEGORIE = ['Tutte', 'GPS', 'ATA', 'Inclusione', 'Modulistica', 'Bandi', 'Contratti'];
+const CATEGORIA_ICONA: Record<string, typeof FileText> = {
+  'Decreti e Ordinanze Ministeriali': FileText,
+  'Bandi e Concorsi': GraduationCap,
+  'Note e Circolari': BookOpen,
+  'Normativa Regionale': Building,
+  'Contratti e CCNL': ShieldCheck,
+  'Modulistica': List,
+};
 
-function downloadPDF(filename: string, content: string) {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+function downloadPDF(doc: DocumentoNormativo) {
+  const filename = `${doc.tipo}_${doc.numero || doc.id}.pdf`.replace(/\s+/g, '_');
+  const content = `TITOLO: ${doc.titolo}\n\n${doc.abstract || doc.descrizione}\n\nEnte: ${doc.ente || 'n/d'}\nAnno: ${doc.anno || 'n/d'}\nPubblicazione: ${new Date(doc.data_pubblicazione).toLocaleDateString('it-IT')}\nRegione: ${doc.regione || 'nazionale'}\nTag: ${(doc.tags || []).join(', ')}`;
+
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const margin = 20;
-  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageWidth = pdf.internal.pageSize.getWidth();
   const contentWidth = pageWidth - margin * 2;
 
-  doc.setFontSize(10);
-  doc.setTextColor(0x0F, 0x17, 0x2A);
-  doc.setFont('helvetica', 'bold');
-  doc.text(filename.replace('.pdf', '').replace(/_/g, ' '), margin, margin);
+  pdf.setFontSize(10);
+  pdf.setTextColor(0x0F, 0x17, 0x2A);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(doc.titolo, margin, margin);
 
-  doc.setDrawColor(0x0F, 0x17, 0x2A);
-  doc.line(margin, margin + 3, pageWidth - margin, margin + 3);
+  pdf.setDrawColor(0x0F, 0x17, 0x2A);
+  pdf.line(margin, margin + 3, pageWidth - margin, margin + 3);
 
-  doc.setFontSize(9);
-  doc.setTextColor(0x4B, 0x55, 0x63);
-  doc.setFont('helvetica', 'normal');
+  pdf.setFontSize(9);
+  pdf.setTextColor(0x4B, 0x55, 0x63);
+  pdf.setFont('helvetica', 'normal');
 
-  const lines = doc.splitTextToSize(content, contentWidth);
+  const lines = pdf.splitTextToSize(content, contentWidth);
   let y = margin + 12;
   for (const line of lines) {
-    if (y > 275) {
-      doc.addPage();
-      y = margin;
-    }
-    doc.text(line, margin, y);
+    if (y > 275) { pdf.addPage(); y = margin; }
+    pdf.text(line, margin, y);
     y += 5;
   }
 
-  doc.setFontSize(8);
-  doc.setTextColor(0x9C, 0xA3, 0xAF);
-  doc.text('Documento generato da Sportello Scuola 2.0 — I contenuti sono estratti da fonti ufficiali del MIM.', margin, 290);
-  doc.text(`Pagina ${doc.internal.pages.length - 1}`, pageWidth - margin, 290, { align: 'right' });
+  pdf.setFontSize(8);
+  pdf.setTextColor(0x9C, 0xA3, 0xAF);
+  pdf.text('Documento generato da Sportello Scuola 2.0 — Fonte: MIM / Gazzetta Ufficiale', margin, 290);
+  pdf.text(`Pagina ${pdf.internal.pages.length - 1}`, pageWidth - margin, 290, { align: 'right' });
 
-  const pageCount = doc.internal.pages.length - 1;
+  const pageCount = pdf.internal.pages.length - 1;
   for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(0x9C, 0xA3, 0xAF);
-    doc.text(`Sportello Scuola 2.0 — ${filename.replace('.pdf', '')}`, margin, 295);
-    doc.text(`Pagina ${i} di ${pageCount}`, pageWidth - margin, 295, { align: 'right' });
+    pdf.setPage(i);
+    pdf.setFontSize(8);
+    pdf.setTextColor(0x9C, 0xA3, 0xAF);
+    pdf.text(`Sportello Scuola 2.0 — ${doc.titolo}`, margin, 295);
+    pdf.text(`Pagina ${i} di ${pageCount}`, pageWidth - margin, 295, { align: 'right' });
   }
 
-  doc.save(filename);
+  pdf.save(filename);
 }
 
 export default function NormativeDocuments() {
   const [activeCategory, setActiveCategory] = useState('Tutte');
-  const [previewDoc, setPreviewDoc] = useState<Documento | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<DocumentoNormativo | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [documenti, setDocumenti] = useState<DocumentoNormativo[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchDocumenti = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('documenti_normativi')
+        .select('*')
+        .eq('validated', true)
+        .eq('is_archived', false)
+        .order('data_pubblicazione', { ascending: false })
+        .limit(50);
+      if (!error && data) {
+        setDocumenti(data as DocumentoNormativo[]);
+      }
+    } catch {}
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchDocumenti(); }, []);
 
   const filtered = documenti.filter(d => {
-    const matchCat = activeCategory === 'Tutte' || d.category === activeCategory;
-    const matchSearch = !searchQuery || d.title.toLowerCase().includes(searchQuery.toLowerCase()) || d.desc.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchCat = activeCategory === 'Tutte' || d.categoria === activeCategory;
+    const matchSearch = !searchQuery
+      || d.titolo.toLowerCase().includes(searchQuery.toLowerCase())
+      || (d.descrizione || '').toLowerCase().includes(searchQuery.toLowerCase())
+      || (d.abstract || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchCat && matchSearch;
   });
-
-  const categoryIcons: Record<string, string> = {
-    GPS: 'bg-blue-100 text-blue-700',
-    ATA: 'bg-green-100 text-green-700',
-    Inclusione: 'bg-purple-100 text-purple-700',
-    Modulistica: 'bg-amber-100 text-amber-700',
-    Bandi: 'bg-red-100 text-red-700',
-    Contratti: 'bg-teal-100 text-teal-700',
-  };
 
   return (
     <section id="normative" className="py-20 bg-surface-warm/40">
@@ -181,11 +113,23 @@ export default function NormativeDocuments() {
             Normative e Documenti
           </h2>
           <p className="text-gray-600 font-normal max-w-2xl mx-auto">
-            Archivio ufficiale e centralizzato di decreti, ordinanze ministeriali, bandi di concorso e modelli di domanda scaricabili.
+            Archivio ufficiale e centralizzato di decreti, ordinanze ministeriali, bandi di concorso e modelli di domanda scaricabili. Dati certificati da fonti primarie.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mt-8 mb-8">
+        <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
+          <span className="flex items-center gap-1.5">
+            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
+            {loading ? 'Caricamento...' : `${filtered.length} documenti trovati`}
+          </span>
+          <button onClick={fetchDocumenti} disabled={loading}
+            className="flex items-center gap-1 text-brand-blu font-semibold hover:text-brand-blu/80 transition disabled:opacity-50">
+            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
+            Aggiorna
+          </button>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mt-4 mb-8">
           <div className="flex gap-2 flex-wrap">
             {CATEGORIE.map(cat => (
               <button key={cat} onClick={() => setActiveCategory(cat)}
@@ -202,32 +146,52 @@ export default function NormativeDocuments() {
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filtered.map(doc => (
-            <div key={doc.id} className="bg-white/70 backdrop-blur-md rounded-3xl p-6 border border-slate-200/60 hover:border-brand-blu/30 hover:shadow-medium transition-all duration-300 group">
-              <div className="flex items-center mb-4">
-                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mr-3 ${categoryIcons[doc.category] || 'bg-gray-100 text-gray-600'}`}>
-                  <doc.icon className="h-5 w-5" />
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <RefreshCw size={32} className="animate-spin text-brand-blu/30" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20">
+            <AlertCircle size={48} className="mx-auto text-gray-300 mb-4" />
+            <p className="text-gray-500">Nessun documento trovato. I documenti normativi vengono pubblicati dopo la validazione.</p>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filtered.map(doc => {
+              const Icon = CATEGORIA_ICONA[doc.categoria] || FileText;
+              const stile = CATEGORIA_STILI[doc.categoria] || 'bg-gray-100 text-gray-600';
+              return (
+                <div key={doc.id} className="bg-white/70 backdrop-blur-md rounded-3xl p-6 border border-slate-200/60 hover:border-brand-blu/30 hover:shadow-medium transition-all duration-300 group">
+                  <div className="flex items-center mb-4">
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mr-3 ${stile}`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${stile}`}>{doc.categoria}</span>
+                      <h3 className="text-base font-bold text-[#0F172A] mt-1 line-clamp-2">{doc.titolo}</h3>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm leading-relaxed mb-2 line-clamp-2">{doc.descrizione || doc.abstract}</p>
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {doc.ente && <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">{doc.ente}</span>}
+                    {doc.anno && <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">{doc.anno}</span>}
+                    {doc.regione && <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-600">{doc.regione}</span>}
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => setPreviewDoc(doc)}
+                      className="flex-1 flex items-center justify-center gap-2 py-2 bg-brand-blu/10 text-brand-blu rounded-2xl text-sm font-semibold hover:bg-brand-blu/20 transition">
+                      <ExternalLink size={14} /> Visualizza
+                    </button>
+                    <button onClick={() => downloadPDF(doc)}
+                      className="flex-1 flex items-center justify-center gap-2 py-2 bg-brand-verde/10 text-brand-verde rounded-2xl text-sm font-semibold hover:bg-brand-verde/20 transition">
+                      <Download size={14} /> Scarica PDF
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${categoryIcons[doc.category] || 'bg-gray-100 text-gray-600'}`}>{doc.category}</span>
-                  <h3 className="text-base font-bold text-[#0F172A] mt-1 line-clamp-2">{doc.title}</h3>
-                </div>
-              </div>
-              <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2">{doc.desc}</p>
-              <div className="flex gap-3">
-                <button onClick={() => setPreviewDoc(doc)}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 bg-brand-blu/10 text-brand-blu rounded-2xl text-sm font-semibold hover:bg-brand-blu/20 transition">
-                  <ExternalLink size={14} /> Visualizza
-                </button>
-                <button onClick={() => downloadPDF(doc.filename, doc.content)}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 bg-brand-verde/10 text-brand-verde rounded-2xl text-sm font-semibold hover:bg-brand-verde/20 transition">
-                  <Download size={14} /> Scarica PDF
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {previewDoc && (
@@ -235,17 +199,40 @@ export default function NormativeDocuments() {
           <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl border border-slate-200/60 p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${categoryIcons[previewDoc.category] || 'bg-gray-100 text-gray-600'}`}>{previewDoc.category}</span>
-                <h3 className="text-xl font-bold text-[#0F172A] mt-2">{previewDoc.title}</h3>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORIA_STILI[previewDoc.categoria] || 'bg-gray-100 text-gray-600'}`}>{previewDoc.categoria}</span>
+                <h3 className="text-xl font-bold text-[#0F172A] mt-2">{previewDoc.titolo}</h3>
               </div>
               <button onClick={() => setPreviewDoc(null)} className="p-2 hover:bg-gray-100 rounded-xl transition">
                 <X size={20} className="text-gray-500" />
               </button>
             </div>
-            <div className="bg-gray-50 rounded-2xl p-6 whitespace-pre-wrap text-sm text-gray-700 font-mono leading-relaxed">
-              {previewDoc.content}
+            <div className="space-y-3 text-sm text-gray-700">
+              <div className="flex flex-wrap gap-2">
+                {previewDoc.ente && <span className="px-2 py-0.5 bg-gray-100 rounded-full text-xs">Ente: {previewDoc.ente}</span>}
+                {previewDoc.anno && <span className="px-2 py-0.5 bg-gray-100 rounded-full text-xs">Anno: {previewDoc.anno}</span>}
+                {previewDoc.numero && <span className="px-2 py-0.5 bg-gray-100 rounded-full text-xs">Numero: {previewDoc.numero}</span>}
+                {previewDoc.regione && <span className="px-2 py-0.5 bg-sky-50 text-sky-600 rounded-full text-xs">Regione: {previewDoc.regione}</span>}
+                <span className="px-2 py-0.5 bg-gray-100 rounded-full text-xs">Pubblicazione: {new Date(previewDoc.data_pubblicazione).toLocaleDateString('it-IT')}</span>
+                {previewDoc.data_scadenza && <span className="px-2 py-0.5 bg-red-50 text-red-600 rounded-full text-xs">Scadenza: {new Date(previewDoc.data_scadenza).toLocaleDateString('it-IT')}</span>}
+              </div>
+              <div className="bg-gray-50 rounded-2xl p-4 whitespace-pre-wrap text-sm text-gray-700 leading-relaxed">
+                {previewDoc.abstract || previewDoc.descrizione || 'Nessun contenuto disponibile.'}
+              </div>
+              {previewDoc.url_documento && (
+                <a href={previewDoc.url_documento} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-brand-blu font-semibold hover:underline">
+                  <ExternalLink size={14} /> Vedi documento originale
+                </a>
+              )}
+              {previewDoc.tags && previewDoc.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {previewDoc.tags.map(tag => (
+                    <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-brand-blu/5 text-brand-blu">{tag}</span>
+                  ))}
+                </div>
+              )}
             </div>
-            <button onClick={() => downloadPDF(previewDoc.filename, previewDoc.content)}
+            <button onClick={() => downloadPDF(previewDoc)}
               className="mt-4 w-full flex items-center justify-center gap-2 py-3 bg-brand-verde text-white rounded-2xl font-semibold hover:bg-brand-verde/90 transition">
               <Download size={18} /> Scarica Documento PDF
             </button>

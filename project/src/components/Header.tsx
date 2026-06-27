@@ -49,7 +49,7 @@ export default function Header() {
     { label: 'Servizi', href: '/servizi' },
     { label: 'Sindacalista AI', href: '/sindacalista-ai' },
     { label: 'Interpelli', href: '/interpelli' },
-    { label: 'Normative e Documenti', href: '/normative' },
+    { label: 'Normative e Documenti', href: '/normative-e-documenti' },
     { label: 'Notizie e Scadenze', href: '/notizie-scadenze' },
   ];
 

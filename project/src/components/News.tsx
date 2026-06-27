@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Star, ChevronDown, Search, FileText, Target, Shield, Activity, BarChart3, RefreshCw, Link2 } from 'lucide-react';
+import { Calendar, Clock, Star, ChevronDown, Search, FileText, Target, Shield, Activity, BarChart3, RefreshCw, Link2, Globe, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './Auth/AuthContext';
 import LoginModal from './Auth/LoginModal';
@@ -17,19 +17,63 @@ interface NewsFilters {
   activeCategory: CategoriaUtente | 'Tutte';
   searchQuery: string;
   filterCriticalita: string;
+  filterRegione: string;
   onCategoryChange: (cat: CategoriaUtente | 'Tutte') => void;
   onSearchChange: (q: string) => void;
   onCriticalitaChange: (c: string) => void;
+  onRegioneChange: (r: string) => void;
 }
+
+const CRITICALITA_BADGE: Record<string, { bg: string; icon: React.ReactNode; label: string }> = {
+  urgente: { bg: 'bg-red-50 border-red-300 text-red-700', icon: <AlertTriangle size={12} />, label: 'URGENTE' },
+  alta: { bg: 'bg-amber-50 border-amber-300 text-amber-700', icon: <Info size={12} />, label: 'ALTA' },
+  strategica: { bg: 'bg-purple-50 border-purple-300 text-purple-700', icon: <Activity size={12} />, label: 'STRATEGICA' },
+  media: { bg: 'bg-blue-50 border-blue-300 text-blue-700', icon: <Info size={12} />, label: 'MEDIA' },
+  bassa: { bg: 'bg-gray-50 border-gray-300 text-gray-600', icon: <CheckCircle size={12} />, label: 'BASSA' },
+};
+
+const LIVELLO_ICONE: Record<LivelloProduzione, { icon: React.ReactNode; color: string }> = {
+  1: { icon: <Activity size={14} />, color: 'text-blue-600' },
+  2: { icon: <FileText size={14} />, color: 'text-green-600' },
+  3: { icon: <Target size={14} />, color: 'text-amber-600' },
+  4: { icon: <Info size={14} />, color: 'text-purple-600' },
+  5: { icon: <CheckCircle size={14} />, color: 'text-emerald-600' },
+  6: { icon: <Shield size={14} />, color: 'text-slate-600' },
+  7: { icon: <Activity size={14} />, color: 'text-rose-600' },
+};
+
+const REGIONI_ITALIA_SHORT = [
+  { codice: '', nome: 'Tutte le regioni' },
+  { codice: 'ABR', nome: 'Abruzzo' },
+  { codice: 'BAS', nome: 'Basilicata' },
+  { codice: 'CAL', nome: 'Calabria' },
+  { codice: 'CAM', nome: 'Campania' },
+  { codice: 'EMR', nome: 'Emilia-Romagna' },
+  { codice: 'FVG', nome: 'Friuli-Venezia Giulia' },
+  { codice: 'LAZ', nome: 'Lazio' },
+  { codice: 'LIG', nome: 'Liguria' },
+  { codice: 'LOM', nome: 'Lombardia' },
+  { codice: 'MAR', nome: 'Marche' },
+  { codice: 'MOL', nome: 'Molise' },
+  { codice: 'PIE', nome: 'Piemonte' },
+  { codice: 'PUG', nome: 'Puglia' },
+  { codice: 'SAR', nome: 'Sardegna' },
+  { codice: 'SIC', nome: 'Sicilia' },
+  { codice: 'TOS', nome: 'Toscana' },
+  { codice: 'UMB', nome: 'Umbria' },
+  { codice: 'VEN', nome: 'Veneto' },
+];
 
 export default function News({ compact = false, filters }: { compact?: boolean; filters?: NewsFilters }) {
   const { isAuthenticated } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [searchQuery, setSearchQuery] = useState(filters?.searchQuery ?? '');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedLivelli, setExpandedLivelli] = useState<Record<string, Set<number>>>({});
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [filterCriticalita, setFilterCriticalita] = useState(filters?.filterCriticalita ?? '');
+  const [filterRegione, setFilterRegione] = useState(filters?.filterRegione ?? '');
   const [activeCategory, setActiveCategory] = useState<CategoriaUtente | 'Tutte'>(filters?.activeCategory ?? 'Tutte');
   const [newsItems, setNewsItems] = useState<NotiziaIntelligence[]>([]);
   const [dataJournalism] = useState<SezioneIntelligence[]>(() => generaDatiDataJournalism());
@@ -38,14 +82,14 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
   const [ultimoAggiornamento, setUltimoAggiornamento] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Sincronizza stato esterno quando fornito (NewsHub gestisce filtri)
   useEffect(() => {
     if (filters) {
       setActiveCategory(filters.activeCategory);
       setSearchQuery(filters.searchQuery);
       setFilterCriticalita(filters.filterCriticalita);
+      setFilterRegione(filters.filterRegione);
     }
-  }, [filters?.activeCategory, filters?.searchQuery, filters?.filterCriticalita]);
+  }, [filters?.activeCategory, filters?.searchQuery, filters?.filterCriticalita, filters?.filterRegione]);
 
   const fetchNewsFromDB = async (): Promise<NotiziaIntelligence[] | null> => {
     try {
@@ -75,6 +119,7 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
           tag: n.tag || [],
           link: n.link || '',
           isPinned: n.is_pinned || false,
+          regione: n.regione || null,
         }));
       }
     } catch {}
@@ -134,8 +179,9 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
   const filtered = newsItems.filter(item => {
     const matchCat = activeCategory === 'Tutte' || item.classifica.categoria === activeCategory;
     const matchCrit = !filterCriticalita || item.classifica.criticita === filterCriticalita;
+    const matchReg = !filterRegione || item.regione === filterRegione;
     const matchSearch = !searchQuery || item.titolo.toLowerCase().includes(searchQuery.toLowerCase()) || item.descrizione.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchCat && matchCrit && matchSearch;
+    return matchCat && matchCrit && matchReg && matchSearch;
   });
 
   const displayed = showAll ? filtered : filtered.slice(0, MAX_VISIBLE);
@@ -143,6 +189,15 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
   const toggleFavorite = (id: string) => {
     if (!isAuthenticated) { setShowLogin(true); return; }
     setFavorites(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
+  };
+
+  const toggleLivello = (newsId: string, livello: number) => {
+    setExpandedLivelli(prev => {
+      const next = new Set(prev[newsId] || []);
+      if (next.has(livello)) next.delete(livello);
+      else next.add(livello);
+      return { ...prev, [newsId]: next };
+    });
   };
 
   const expandedNode = expandedId ? newsItems.find(n => n.id === expandedId) ?? null : null;
@@ -157,19 +212,6 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
     }
   }, [expandedId]);
 
-  const livelloMappa = (l: LivelloProduzione) => {
-    const icone: Record<LivelloProduzione, React.ReactNode> = {
-      1: <Activity size={12} />,
-      2: <FileText size={12} />,
-      3: <Target size={12} />,
-      4: <FileText size={12} />,
-      5: <FileText size={12} />,
-      6: <FileText size={12} />,
-      7: <Activity size={12} />,
-    };
-    return icone[l];
-  };
-
   const grid = (
     <>
       {!compact && (
@@ -179,9 +221,7 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
               Notizie Intelligence — Settore Istruzione
             </h2>
             <p className="text-gray-600 font-normal max-w-3xl mx-auto">
-              Sistema di monitoraggio normativo e informativo basato su fonti primarie certificate.
-              Ogni notizia è classificata per categoria, criticità, impatto e target, con approfondimento
-              a 7 livelli: dalla notizia immediata agli scenari futuri.
+              Sistema di monitoraggio normativo e informativo basato su fonti primarie certificate con approfondimento a 6 livelli: dal fatto alla normativa.
             </p>
           </div>
           <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
@@ -209,7 +249,7 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
               ))}
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative w-full sm:w-64">
+              <div className="relative w-full sm:w-56">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input type="text" placeholder="Cerca notizie..." value={searchQuery}
                   onChange={e => { setSearchQuery(e.target.value); filters?.onSearchChange(e.target.value); }}
@@ -223,6 +263,10 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
                 <option value="alta">Alta</option>
                 <option value="media">Media</option>
                 <option value="bassa">Bassa</option>
+              </select>
+              <select value={filterRegione} onChange={e => { setFilterRegione(e.target.value); filters?.onRegioneChange(e.target.value); }}
+                className="px-4 py-2 rounded-2xl border border-slate-200/60 bg-white text-sm focus:ring-2 focus:ring-brand-blu/20 outline-none">
+                {REGIONI_ITALIA_SHORT.map(r => <option key={r.codice} value={r.codice}>{r.nome}</option>)}
               </select>
               <button onClick={() => setShowDataJournalism(!showDataJournalism)}
                 className="flex items-center gap-2 px-4 py-2 rounded-2xl border border-slate-200/60 bg-white text-sm font-semibold text-brand-blu hover:bg-brand-blu/5 transition">
@@ -263,6 +307,8 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
           const isExpanded = expandedId === news.id;
           const isFav = favorites.includes(news.id);
           const { criticita, impatto, target, categoria } = news.classifica;
+          const badge = CRITICALITA_BADGE[criticita] || CRITICALITA_BADGE.media;
+          const livelliEspansi = expandedLivelli[news.id] || new Set<number>();
           return (
             <div key={news.id} className={`bg-white/70 backdrop-blur-md rounded-3xl border transition-all duration-500 ease-in-out overflow-hidden ${
               isExpanded ? 'border-brand-blu/30 shadow-medium' : 'border-slate-200/60 shadow-soft hover:border-brand-blu/20'
@@ -271,15 +317,20 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-3 flex-wrap">
+                      <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border ${badge.bg}`}>
+                        {badge.icon} {badge.label}
+                      </span>
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${CATEGORIE_UTENTE_COLORS[categoria as CategoriaUtente] || 'bg-gray-100 text-gray-600'}`}>
                         {categoria}
-                      </span>
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CRITICALITA_COLORS[criticita]}`}>
-                        {criticita}
                       </span>
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${IMPATTO_COLORS[impatto]}`}>
                         {impatto}
                       </span>
+                      {news.regione && (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
+                          <Globe size={11} /> {REGIONI_ITALIA_SHORT.find(r => r.codice === news.regione)?.nome || news.regione}
+                        </span>
+                      )}
                       <span className="text-xs text-gray-400 flex items-center gap-1">
                         <Calendar size={12} /> {formatDataItaliana(news.dataPubblicazione)}
                         {(() => {
@@ -324,17 +375,55 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
                       ))}
                     </div>
 
-                    <div className="grid gap-3">
-                      {expandedNode.contenuti.sort((a, b) => a.livello - b.livello).map(c => (
-                        <div key={c.livello} className="bg-white rounded-2xl border border-slate-200/60 p-4">
-                          <h4 className="text-xs font-bold text-brand-blu uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            {livelloMappa(c.livello)} {LIVELLO_PRODUZIONE_LABELS[c.livello]}
-                          </h4>
-                          <p className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">{c.contenuto}</p>
-                        </div>
-                      ))}
+                    {/* 6 Livelli di produzione con accordion */}
+                    <div className="space-y-2">
+                      {expandedNode.contenuti.sort((a, b) => a.livello - b.livello).map(c => {
+                        const isLivelloOpen = livelliEspansi.has(c.livello);
+                        const lIcon = LIVELLO_ICONE[c.livello as LivelloProduzione] || LIVELLO_ICONE[1];
+                        return (
+                          <div key={c.livello} className="bg-white rounded-2xl border border-slate-200/60 overflow-hidden">
+                            <button
+                              onClick={() => toggleLivello(news.id, c.livello)}
+                              className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50/50 transition-colors"
+                            >
+                              <h4 className={`text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${lIcon.color}`}>
+                                {lIcon.icon}
+                                {c.titolo || LIVELLO_PRODUZIONE_LABELS[c.livello as LivelloProduzione] || `Livello ${c.livello}`}
+                              </h4>
+                              <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${isLivelloOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            {isLivelloOpen && (
+                              <div className="px-4 pb-4 animate-fade-in-up">
+                                <p className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">{c.contenuto}</p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
 
+                    {/* Callout: Rischi/Conseguenze */}
+                    {criticita === 'urgente' || criticita === 'alta' ? (
+                      <div className="bg-red-50 rounded-2xl p-4 border border-red-200">
+                        <h4 className="text-xs font-bold text-red-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <AlertTriangle size={12} /> Attenzione — Criticità {criticita.toUpperCase()}
+                        </h4>
+                        <p className="text-sm text-red-700 leading-relaxed">
+                          Questa notizia richiede azione immediata. Verifica i dettagli e le scadenze nella sezione dedicata.
+                        </p>
+                      </div>
+                    ) : criticita === 'strategica' ? (
+                      <div className="bg-purple-50 rounded-2xl p-4 border border-purple-200">
+                        <h4 className="text-xs font-bold text-purple-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <Activity size={12} /> Impatto Strategico
+                        </h4>
+                        <p className="text-sm text-purple-700 leading-relaxed">
+                          Questa notizia ha un impatto strategico sul sistema scolastico. Potrebbe richiedere adeguamenti organizzativi.
+                        </p>
+                      </div>
+                    ) : null}
+
+                    {/* Fonte Primaria */}
                     <div className="bg-brand-verde/5 rounded-2xl p-4 border border-brand-verde/10">
                       <h4 className="text-xs font-bold text-brand-verde uppercase tracking-wider mb-2 flex items-center gap-1.5">
                         <Shield size={12} /> Fonte Primaria

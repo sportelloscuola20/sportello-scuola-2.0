@@ -10,6 +10,7 @@ import HomePage from './pages/HomePage';
 import AssistantPage from './pages/AssistantPage';
 import ScorePage from './pages/ScorePage';
 import NormativePage from './pages/NormativePage';
+import NormativeEDocumentiPage from './pages/NormativeEDocumentiPage';
 import NewsPage from './pages/NewsPage';
 import ArchivePage from './pages/ArchivePage';
 import FAQPage from './pages/FAQPage';
@@ -46,6 +47,7 @@ function App() {
               <Route path="/sindacalista-ai" element={<AssistantPage />} />
               <Route path="/calcolo-punteggio" element={<ScorePage />} />
               <Route path="/normative" element={<NormativePage />} />
+              <Route path="/normative-e-documenti" element={<NormativeEDocumentiPage />} />
               <Route path="/notizie-scadenze" element={<NewsPage />} />
               <Route path="/notizie-scadenze/archivio" element={<ArchivePage />} />
               <Route path="/faq" element={<FAQPage />} />

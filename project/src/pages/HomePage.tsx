@@ -7,6 +7,7 @@ import ServiziGrid from '../components/ServiziGrid';
 import AssistantsAI from '../components/AssistantsAI';
 import CentroInterpelli from '../components/CentroInterpelli';
 import NormativeDocuments from '../components/NormativeDocuments';
+import UniversitaHub from '../components/UniversitaHub';
 import NewsHub from '../components/NewsHub';
 import FAQ from '../components/FAQ';
 import Contact from '../components/Contact';
@@ -49,6 +50,7 @@ export default function HomePage() {
       <AssistantsAI />
       <CentroInterpelli />
       <NormativeDocuments />
+      <UniversitaHub />
       <NewsHub />
       <FAQ />
       <Contact />

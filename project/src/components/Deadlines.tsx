@@ -77,15 +77,20 @@ export default function Deadlines({ compact = false, filters }: { compact?: bool
     }
   }, [filters?.activeCategory, filters?.searchQuery, filters?.filterRegione]);
 
-  const fetchDeadlinesFromDB = async () => {
+  const fetchDeadlinesFromDB = async (forceRefresh = false) => {
     setIsRefreshing(true);
     try {
+      const today = new Date().toISOString();
       const { data, error } = await supabase
         .from('intelligence_scadenze')
         .select('*')
-        .eq('is_conclusa', false)
+        .gte('data_scadenza', today)
         .order('data_scadenza', { ascending: true })
         .limit(20);
+
+      if (error) {
+        console.error('Deadlines fetch error:', error.message);
+      }
 
       if (!error && data && data.length > 0) {
         const mapped: ScadenzaIntelligence[] = (data as any[]).map(d => ({
@@ -106,17 +111,37 @@ export default function Deadlines({ compact = false, filters }: { compact?: bool
           regione: d.regione || '',
         }));
         setDeadlineItems(mapped);
+      } else if (!error) {
+        // Fallback a scadenze senza filtro data se non ci sono risultati futuri
+        const { data: allData } = await supabase
+          .from('intelligence_scadenze')
+          .select('*')
+          .order('data_scadenza', { ascending: true })
+          .limit(20);
+        if (allData && allData.length > 0) {
+          const mapped = (allData as any[]).map(d => ({
+            id: d.id, titolo: d.titolo, descrizione: d.descrizione || '',
+            normativa: d.normativa || '', soggettiCoinvolti: d.soggetti_coinvolti || ['docenti'],
+            dataScadenza: d.data_scadenza, priorita: d.priorita || 'media',
+            impatto: d.impatto || 'nazionale', conseguenzeNonAzione: d.conseguenze_non_azione || '',
+            link: d.link || '', tipo: d.tipo || 'generale', guidaOperativa: d.guida_operativa || '',
+            autoGenerata: d.auto_generata, periodicita: d.periodicita, regione: d.regione || '',
+          }));
+          setDeadlineItems(mapped);
+        }
       }
-    } catch {}
+    } catch (e) {
+      console.error('Deadlines fetch exception:', e);
+    }
     setUltimoAggiornamento(new Date());
     setIsRefreshing(false);
   };
 
   useEffect(() => {
     fetchDeadlinesFromDB();
-    const interval = setInterval(fetchDeadlinesFromDB, REFRESH_INTERVAL_MS);
+    const interval = setInterval(() => fetchDeadlinesFromDB(), REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, []);
+  }, [compact]);
 
   const filtered = deadlineItems.filter(d => {
     const matchCat = activeCategory === 'Tutte' || d.tipo === activeCategory;
