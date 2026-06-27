@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   LayoutDashboard, TrendingUp, Bookmark, FileText, Bell, CreditCard, Settings,
-  LogOut, Sparkles, ChevronRight,
+  LogOut, Sparkles, ChevronRight, Shield,
 } from 'lucide-react';
 import { useAuth } from '../Auth/AuthContext';
 import { useProfileStore } from '../../store/useProfileStore';
@@ -24,6 +24,10 @@ const navItems: NavItem[] = [
   { id: 'bandi', label: 'Scadenziario Bandi', path: '/area-riservata/bandi', icon: <Bell size={18} /> },
   { id: 'abbonamento', label: 'Abbonamento', path: '/area-riservata/abbonamento', icon: <CreditCard size={18} /> },
   { id: 'impostazioni', label: 'Impostazioni', path: '/area-riservata/impostazioni', icon: <Settings size={18} /> },
+];
+
+const adminNavItems: NavItem[] = [
+  { id: 'documenti-approval', label: 'Gestione Documenti', path: '/area-riservata/documenti-approval', icon: <Shield size={18} /> },
 ];
 
 export default function AreaRiservataLayout({ children }: { children: React.ReactNode }) {
@@ -129,6 +133,30 @@ export default function AreaRiservataLayout({ children }: { children: React.Reac
                 </Link>
               );
             })}
+            {user?.is_admin && (
+              <>
+                <div className="border-t border-white/10 my-2" />
+                {adminNavItems.map(item => {
+                  const isActive = location.pathname.startsWith(item.path);
+                  return (
+                    <Link
+                      key={item.id}
+                      to={item.path}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        isActive
+                          ? 'bg-amber-500/20 text-amber-400 shadow-lg'
+                          : 'text-amber-400/60 hover:text-amber-400 hover:bg-amber-500/10'
+                      }`}
+                    >
+                      {item.icon}
+                      <span>{item.label}</span>
+                      {isActive && <ChevronRight size={14} className="ml-auto" />}
+                    </Link>
+                  );
+                })}
+              </>
+            )}
           </nav>
         </div>
 

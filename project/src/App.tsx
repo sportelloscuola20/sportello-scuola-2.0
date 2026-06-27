@@ -22,6 +22,7 @@ import AreaRiservataPage from './pages/AreaRiservataPage';
 import ScorePageAR from './pages/ScorePageAR';
 import BookmarksPageAR from './pages/BookmarksPageAR';
 import DocumentsPageAR from './pages/DocumentsPageAR';
+import DocumentiApprovalPageAR from './pages/DocumentiApprovalPageAR';
 import BandiPageAR from './pages/BandiPageAR';
 import SubscriptionPageAR from './pages/SubscriptionPageAR';
 import SettingsPageAR from './pages/SettingsPageAR';
@@ -58,6 +59,7 @@ function App() {
               <Route path="/area-riservata/punteggi" element={<AreaRiservataLayout><ScorePageAR /></AreaRiservataLayout>} />
               <Route path="/area-riservata/preferiti" element={<AreaRiservataLayout><BookmarksPageAR /></AreaRiservataLayout>} />
               <Route path="/area-riservata/documenti" element={<AreaRiservataLayout><DocumentsPageAR /></AreaRiservataLayout>} />
+              <Route path="/area-riservata/documenti-approval" element={<AreaRiservataLayout><DocumentiApprovalPageAR /></AreaRiservataLayout>} />
               <Route path="/area-riservata/bandi" element={<AreaRiservataLayout><BandiPageAR /></AreaRiservataLayout>} />
               <Route path="/area-riservata/abbonamento" element={<AreaRiservataLayout><SubscriptionPageAR /></AreaRiservataLayout>} />
               <Route path="/area-riservata/impostazioni" element={<AreaRiservataLayout><SettingsPageAR /></AreaRiservataLayout>} />
