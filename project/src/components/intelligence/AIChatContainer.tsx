@@ -98,9 +98,9 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
     }
   }, [chatCount, isAdmin]);
 
-  const generateResponse = useCallback(async (userMessage: string): Promise<string> => {
+  const generateResponse = useCallback(async (userMessage: string): Promise<{ text: string; citations?: Array<{ title: string; confidence: number }> }> => {
     const localResponse = getKnowledgeResponse(userMessage);
-    if (localResponse) return localResponse;
+    if (localResponse) return { text: localResponse };
 
     try {
       const { data, error } = await supabase.functions.invoke('ai-sindacalista', {
@@ -109,11 +109,13 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
           history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
         },
       });
-      if (!error && data?.response) return data.response;
+      if (!error && data?.response) {
+        return { text: data.response, citations: data.citations || [] };
+      }
     } catch {
     }
 
-    return `Grazie per la tua domanda su "${userMessage}". Ecco cosa posso dirti in base alla normativa vigente:
+    return { text: `Grazie per la tua domanda su "${userMessage}". Ecco cosa posso dirti in base alla normativa vigente:
 
 Il Sindacalista AI ha consultato la banca dati documentale del portale. Per una risposta più specifica, ti consiglio di:
 
@@ -121,7 +123,7 @@ Il Sindacalista AI ha consultato la banca dati documentale del portale. Per una 
 2. **Utilizzare il Simulatore GPS/ATA** per verificare il tuo punteggio personalizzato
 3. **Contattarci via email** all'indirizzo sportelloscuola2.0@gmail.com per assistenza personalizzata
 
-Se desideri maggiori dettagli su un argomento specifico (CCNL, GPS, interpelli, maternità, ferie, permessi), chiedimi pure in modo più mirato e sarà mia cura fornirti la risposta normativa esatta.`;
+Se desideri maggiori dettagli su un argomento specifico (CCNL, GPS, interpelli, maternità, ferie, permessi), chiedimi pure in modo più mirato e sarà mia cura fornirti la risposta normativa esatta.` };
   }, [messages]);
 
   const sendMessage = useCallback(async (content: string) => {
@@ -148,13 +150,14 @@ Se desideri maggiori dettagli su un argomento specifico (CCNL, GPS, interpelli, 
     setChatCount(newCount);
 
     try {
-      const responseText = await generateResponse(content.trim());
+      const result = await generateResponse(content.trim());
 
       const assistantMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: responseText,
+        content: result.text,
         timestamp: new Date().toISOString(),
+        citations: result.citations,
       };
 
       setMessages(prev => [...prev, assistantMsg]);

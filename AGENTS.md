@@ -64,8 +64,12 @@ cron-job.org (5 min)
 ### Edge Functions
 | Function | Modello | Note |
 |---|---|---|
+| `ai-sindacalista` | gemini-3.1-flash-lite | Chat sindacale RAG, knowledge base server-side, citations |
 | `ingest-news` | gemini-3.1-flash-lite | Classificazione + estrazione scadenze |
 | `monitor-sources` | — | RSS/HTML scraping, keyword extraction |
+| `test-gemini` | — | Health check Gemini API |
+| `send-email` | — | Email via Resend |
+| `create-portal-session` | — | Stripe portal session |
 
 ### AI — Gemini
 | Modello | RPM | RPD | Noi |
@@ -73,12 +77,15 @@ cron-job.org (5 min)
 | `gemini-3.1-flash-lite` | 15 | 500 | RPM=10, RPD=400 (buffer 20%) |
 
 ### Database — Tabelle chiave
-- `monitored_sources`: fonti attive (RSS + Web scraping)
+- `monitored_sources`: fonti attive (45 totali, 11 attive, 34 in errore permanente)
 - `source_documents`: coda documenti (lock via `processing_started_at`)
-- `intelligence_news`: notizie processate (deduplicate su hash)
-- `intelligence_scadenze`: scadenze estratte
-- `knowledge_links`: grafo relazionale
-- `profiles`, `user_scores`, `interpelli_alerts`, `appointments`
+- `intelligence_news`: notizie processate (~8,800+)
+- `intelligence_scadenze`: scadenze estratte (~155)
+- `knowledge_links`: grafo relazionale (0 — DA POPOLARE)
+- `documenti_normativi`: documenti normativi (0 — DA POPOLARE)
+- `interpelli_nazionali`: bandi/concorsi (0 — DA POPOLARE)
+- `hub_universita`: hub universitari (10 seed)
+- `profiles`, `user_scores`, `gemini_calls_log`
 
 ### Categorie VALIDE (CHECK constraint)
 1. Bandi, Concorsi e Selezioni
