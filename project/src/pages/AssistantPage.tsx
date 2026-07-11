@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import AIChatContainer from '../components/AIChatContainer';
+import AIChatContainer from '../components/intelligence/AIChatContainer';
 
 export default function AssistantPage() {
   const { type } = useParams<{ type: string }>();

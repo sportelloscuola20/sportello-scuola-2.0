@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS interpelli_nazionali (
 ```
 **Tipo TypeScript associato**: `Bando` in `src/types/database.ts`.
 
-### 🔔 `interpelli_alerts` — già in `supabase_schema.sql`
+### 🔔 `interpelli_alerts` — già in `supabase/migrations/`
 Memorizza le preferenze di notifica degli utenti abbonati.
 ```sql
 CREATE TABLE IF NOT EXISTS interpelli_alerts (

@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FileText, Upload, Trash2, Download, File, Image, AlertCircle, Loader2, Shield } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
-import { useAuth } from '../Auth/AuthContext';
+import { useAuth } from '../foundation/AuthContext';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];

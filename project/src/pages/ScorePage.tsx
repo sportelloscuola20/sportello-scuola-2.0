@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import GPSSimulator from '../components/GPSSimulator';
-import ATASimulator from '../components/ATASimulator';
+import GPSSimulator from '../components/ui/simulators/GPSSimulator';
+import ATASimulator from '../components/ui/simulators/ATASimulator';
 
 export default function ScorePage() {
   const [activeTab, setActiveTab] = useState<'gps' | 'ata'>('gps');

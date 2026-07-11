@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, User, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
-import { useAuth } from '../Auth/AuthContext';
+import { useAuth } from '../foundation/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 
 const RUOLI = [

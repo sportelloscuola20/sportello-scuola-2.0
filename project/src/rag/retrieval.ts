@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { generateEmbedding } from './openrouter';
+import { generateEmbedding, generateChatCompletion } from './gemini';
 import { Document, DocumentChunk, Citation, RagQueryRequest, RagQueryResponse } from './types';
 
 /**

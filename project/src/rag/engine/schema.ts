@@ -104,7 +104,7 @@ export interface EngineConfig {
 export const DEFAULT_ENGINE_CONFIG: EngineConfig = {
   pollingConcurrency: 5,
   defaultPollingIntervalMs: 60_000,
-  llmModel: 'anthropic/claude-3-opus',
+  llmModel: 'gemini-3.1-flash-lite',
   llmTemperature: 0.3,
   llmMaxTokens: 2048,
   supabaseTableNews: 'news_cache',

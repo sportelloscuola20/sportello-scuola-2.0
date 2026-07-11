@@ -5,7 +5,7 @@
  * ============================================================================
  *
  *  Istruzioni: caricare questo System Prompt come system message nelle
- *  chiamate a OpenRouter (o Anthropic/OpenAI) per trasformare bozze grezze
+ *  chiamate a Gemini (Google AI) per trasformare bozze grezze
  *  provenienti dalle fonti in articoli pronti per la pubblicazione.
  *
  *  Il prompt è scritto in ITALIANO per garantire che l'LLM agisca nel

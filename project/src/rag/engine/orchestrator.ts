@@ -102,22 +102,23 @@ async function rewriteWithLLM(item: RawFeedItem): Promise<CuratedArticle | null>
   ].join('\n');
 
   try {
+    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const geminiUrl = import.meta.env.VITE_GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta';
+    const geminiModel = import.meta.env.VITE_GEMINI_MODEL || 'gemini-3.1-flash-lite';
+
     const response = await fetch(
-      `${import.meta.env.VITE_OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1'}/chat/completions`,
+      `${geminiUrl}/models/${geminiModel}:generateContent?key=${geminiKey}`,
       {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: DEFAULT_ENGINE_CONFIG.llmModel,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userMessage },
-          ],
-          temperature: DEFAULT_ENGINE_CONFIG.llmTemperature,
-          max_tokens: DEFAULT_ENGINE_CONFIG.llmMaxTokens,
+          contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: {
+            temperature: DEFAULT_ENGINE_CONFIG.llmTemperature,
+            maxOutputTokens: DEFAULT_ENGINE_CONFIG.llmMaxTokens,
+            responseMimeType: 'text/plain',
+          },
         }),
       }
     );
@@ -125,7 +126,7 @@ async function rewriteWithLLM(item: RawFeedItem): Promise<CuratedArticle | null>
     if (!response.ok) return null;
 
     const data = await response.json();
-    const rewritten = data.choices[0].message.content;
+    const rewritten = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     return {
       validated: null as any,

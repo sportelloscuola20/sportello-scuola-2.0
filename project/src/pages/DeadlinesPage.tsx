@@ -1,4 +1,4 @@
-import Deadlines from '../components/Deadlines';
+import Deadlines from '../components/ui/news/Deadlines';
 
 export default function DeadlinesPage() {
   return (

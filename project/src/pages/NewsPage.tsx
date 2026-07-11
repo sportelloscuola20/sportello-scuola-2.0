@@ -3,8 +3,8 @@ import { Newspaper, CalendarClock, Shield, AlertTriangle, RefreshCw, Monitor, Li
 import type { IntelligenceDashboardStats, CategoriaUtente } from '../types/intelligence';
 import { CATEGORIE_UTENTE, CATEGORIE_UTENTE_COLORS } from '../types/intelligence';
 import { fetchDashboardStats, getDashboardFallbackStats } from '../rag/intelligence-engine';
-import NewsHub from '../components/NewsHub';
-import SourceMonitorDashboard from '../components/SourceMonitorDashboard';
+import NewsHub from '../components/ui/news/NewsHub';
+import SourceMonitorDashboard from '../components/intelligence/SourceMonitorDashboard';
 
 export default function NewsPage() {
   const [showMonitor, setShowMonitor] = useState(false);

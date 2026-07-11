@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bell, Calendar, AlertTriangle, AlarmClock, ExternalLink, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
-import { useAuth } from '../Auth/AuthContext';
+import { useAuth } from '../foundation/AuthContext';
 
 interface BandoItem {
   id: string;

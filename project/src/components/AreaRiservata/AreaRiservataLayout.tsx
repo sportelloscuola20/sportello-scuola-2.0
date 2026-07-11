@@ -4,7 +4,7 @@ import {
   LayoutDashboard, TrendingUp, Bookmark, FileText, Bell, CreditCard, Settings,
   LogOut, Sparkles, ChevronRight, Shield,
 } from 'lucide-react';
-import { useAuth } from '../Auth/AuthContext';
+import { useAuth } from '../foundation/AuthContext';
 import { useProfileStore } from '../../store/useProfileStore';
 import OnboardingModal from './OnboardingModal';
 import { supabase } from '../../lib/supabaseClient';

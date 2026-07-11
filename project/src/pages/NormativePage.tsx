@@ -1,4 +1,4 @@
-import NormativeDocuments from '../components/NormativeDocuments';
+import NormativeDocuments from '../components/knowledge/NormativeDocuments';
 
 export default function NormativePage() {
   return (

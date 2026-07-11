@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bookmark, Star, Calendar, FileText, Trash2, ExternalLink, Filter, Search } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
-import { useAuth } from '../Auth/AuthContext';
+import { useAuth } from '../foundation/AuthContext';
 import { useProfileStore } from '../../store/useProfileStore';
 import type { UserFavorite, NewsCache } from '../../types/database';
 

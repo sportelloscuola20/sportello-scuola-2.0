@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, Mail, BellRing, Lock, Unlock, ExternalLink, CreditCard, Loader2, CheckCircle, X } from 'lucide-react';
-import { useAuth } from '../components/Auth/AuthContext';
-import LoginModal from '../components/Auth/LoginModal';
+import { useAuth } from '../components/foundation/AuthContext';
+import LoginModal from '../components/foundation/LoginModal';
 import { supabase } from '../lib/supabaseClient';
 import type { Bando } from '../types/database';
 

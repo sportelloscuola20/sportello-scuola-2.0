@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CreditCard, Crown, Lock, CheckCircle, ExternalLink, Loader2, Sparkles } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
-import { useAuth } from '../Auth/AuthContext';
+import { useAuth } from '../foundation/AuthContext';
 
 const FEATURES_PREMIUM = [
   'Consulenza prioritaria via chat 1:1',

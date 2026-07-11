@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import NewsletterForm from '../components/NewsletterForm';
-import Hero from '../components/Hero';
-import PunteggioGPS from '../components/PunteggioGPS';
-import ServiziGrid from '../components/ServiziGrid';
-import AssistantsAI from '../components/AssistantsAI';
-import CentroInterpelli from '../components/CentroInterpelli';
-import NormativeDocuments from '../components/NormativeDocuments';
-import UniversitaHub from '../components/UniversitaHub';
-import NewsHub from '../components/NewsHub';
-import FAQ from '../components/FAQ';
-import Contact from '../components/Contact';
-import LoginModal from '../components/Auth/LoginModal';
+import NewsletterForm from '../components/ui/news/NewsletterForm';
+import Hero from '../components/ui/layout/Hero';
+import PunteggioGPS from '../components/ui/simulators/PunteggioGPS';
+import ServiziGrid from '../components/ui/services/ServiziGrid';
+import AssistantsAI from '../components/intelligence/AssistantsAI';
+import CentroInterpelli from '../components/ui/interpelli/CentroInterpelli';
+import NormativeDocuments from '../components/knowledge/NormativeDocuments';
+import UniversitaHub from '../components/ui/services/UniversitaHub';
+import NewsHub from '../components/ui/news/NewsHub';
+import FAQ from '../components/knowledge/FAQ';
+import Contact from '../components/ui/services/Contact';
+import LoginModal from '../components/foundation/LoginModal';
 
 export default function HomePage() {
   const location = useLocation();

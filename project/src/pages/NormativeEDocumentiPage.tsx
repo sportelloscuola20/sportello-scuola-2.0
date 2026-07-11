@@ -1,5 +1,5 @@
-import NormativeDocuments from '../components/NormativeDocuments';
-import UniversitaHub from '../components/UniversitaHub';
+import NormativeDocuments from '../components/knowledge/NormativeDocuments';
+import UniversitaHub from '../components/ui/services/UniversitaHub';
 
 export default function NormativeEDocumentiPage() {
   return (

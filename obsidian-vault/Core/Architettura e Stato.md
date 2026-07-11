@@ -41,7 +41,7 @@ supabase/
 | `/area-riservata/*` | AreaRiservataLayout | Punteggi, preferiti, documenti, bandi, abbonamento, impostazioni |
 | `/faq`, `/contatti`, `/servizi` | Static pages | FAQ, contatti, servizi |
 
-## 🧠 Pipeline Intelligence (AI — Gemini 2.5 Flash)
+## 🧠 Pipeline Intelligence (AI — Gemini 3.1 Flash Lite)
 
 ```
 46 Fonti (RSS/Web/USR)
@@ -56,7 +56,7 @@ monitor-sources (Edge Function v2)
     ▼
 ingest-news (Edge Function v3)
     ├── Prende documenti non elaborati da source_documents
-    ├── Chiama Gemini 2.5 Flash con prompt (8 categorie utente + 8 categorie scadenze)
+    ├── Chiama Gemini 3.1 Flash Lite con prompt (8 categorie utente + 8 categorie scadenze)
     ├── Rate limiter: 14 rpm / 1450 rpd
     ├── Crea record in intelligence_news (7 livelli produzione)
     ├── Crea knowledge_links (grafo relazionale)

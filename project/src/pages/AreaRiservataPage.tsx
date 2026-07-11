@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { Bookmark, TrendingUp, Calendar, Sparkles, GraduationCap, Briefcase, User, Bell, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { useAuth } from '../components/Auth/AuthContext';
+import { useAuth } from '../components/foundation/AuthContext';
 import { useProfileStore } from '../store/useProfileStore';
-import SavedItems from '../components/SavedItems';
-import CalendarWidget from '../components/CalendarWidget';
+import SavedItems from '../components/ui/profile/SavedItems';
+import CalendarWidget from '../components/ui/profile/CalendarWidget';
 
 const ROLE_CONFIG = {
   docente: {

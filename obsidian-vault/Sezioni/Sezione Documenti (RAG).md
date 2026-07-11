@@ -29,7 +29,7 @@ Il sistema RAG (Retrieval-Augmented Generation) opera chirurgicamente sui file a
 ```mermaid
 flowchart LR
     A[Upload Documento] --> B[Text Chunking]
-    B --> C[OpenRouter Embeddings]
+    B --> C[Gemini Embeddings]
     C --> D[(Supabase Vector DB)]
     D --> E[Semantic Search]
     E --> F[Prompt Context]
@@ -43,8 +43,8 @@ flowchart LR
 *   Il testo viene diviso in frammenti (*chunks*) logici per non perdere il contesto normativo.
 *   **Regola di Chunking**: Frammenti di circa **1000 caratteri** con un'area di sovrapposizione (*overlap*) di **200 caratteri** per garantire che nessuna frase o articolo di legge venga interrotto a metà.
 
-### 3. Generazione dei Vettori (`openrouter.ts`)
-*   Ogni frammento viene inviato alle API di OpenRouter (modello `text-embedding-ada-002` o equivalente standard a 1536 dimensioni) per generare il rispettivo vettore numerico.
+### 3. Generazione dei Vettori (`gemini.ts`)
+*   Ogni frammento viene inviato alle API di Gemini (Google AI) per generare il rispettivo vettore numerico.
 
 ### 4. Salvataggio su Database (`supabaseClient.ts`)
 *   I frammenti vengono salvati nella tabella `document_chunks`.

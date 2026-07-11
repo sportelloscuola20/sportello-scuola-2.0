@@ -25,7 +25,7 @@ La piattaforma utilizza una palette di colori armoniosa e professionale basata s
 
 La piattaforma si suddivide in diverse sezioni chiave:
 1.  **Per chi è la piattaforma**: Sezione informativa per Docenti, Personale ATA e Dirigenti Scolastici.
-2.  **Assistenti AI**: Chatbot intelligenti integrati con RAG (Retrieval-Augmented Generation) tramite Supabase e OpenRouter per rispondere a domande su normative e graduatorie.
+2.  **Assistenti AI**: Chatbot intelligenti integrati con RAG (Retrieval-Augmented Generation) tramite Supabase e Gemini per rispondere a domande su normative e graduatorie.
 3.  **Calcolo Punteggio**: Strumenti interattivi per stimare il proprio punteggio nelle graduatorie scolastiche.
 4.  **Normative**: Raccolta organizzata e navigabile di decreti, circolari e leggi scolastiche.
 5.  **News & Scadenze**: Aggiornamenti in tempo reale sulle ultime novità del Ministero dell'Istruzione e del Merito (MIM).
@@ -39,7 +39,7 @@ La piattaforma si suddivide in diverse sezioni chiave:
 *   **Frontend**: React (TypeScript) + Vite
 *   **Stile**: CSS Vanilla (senza Tailwind, a meno che non espressamente richiesto) + Lucide React per le icone.
 *   **Routing**: React Router DOM per la navigazione fluida tra le pagine.
-*   **Database e RAG**: Supabase per la memorizzazione dei dati e vettorizzazione delle normative + OpenRouter per le risposte dell'AI.
+*   **Database e RAG**: Supabase per la memorizzazione dei dati e vettorizzazione delle normative + Gemini per le risposte dell'AI.
 
 ---
 

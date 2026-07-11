@@ -38,7 +38,7 @@ L'agente AI (incluso Claude Code quando modifica la logica o i prompt della chat
 ## 🏗️ Flusso Tecnico ed Architettura
 
 *   **Interfaccia Chat (`src/components/AIChatContainer.tsx`)**: Layout pulito e accessibile con messaggi contrassegnati dal ruolo (Utente / Assistente).
-*   **Integrazione RAG**: Le domande dell'utente interrogano il database dei documenti indicizzati. Se un utente chiede *"Quali sono i permessi retribuiti per motivi personali per i docenti?"*, il RAG estrae l'articolo 31 del CCNL dal database e lo inserisce come contesto per la risposta dell'LLM (tramite OpenRouter).
+*   **Integrazione RAG**: Le domande dell'utente interrogano il database dei documenti indicizzati. Se un utente chiede *"Quali sono i permessi retribuiti per motivi personali per i docenti?"*, il RAG estrae l'articolo 31 del CCNL dal database e lo inserisce come contesto per la risposta dell'LLM (tramite Gemini).
 
 ---
 

@@ -1,4 +1,4 @@
-import { Document } from './types';
+import { Document, DocumentChunk } from './types';
 
 /**
  * Split text into chunks with overlap

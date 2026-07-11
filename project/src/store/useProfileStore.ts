@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabaseClient';
-import type { UserProfile } from '../components/Auth/AuthContext';
+import type { UserProfile } from '../components/foundation/AuthContext';
 
 interface ProfileState {
   profile: UserProfile | null;

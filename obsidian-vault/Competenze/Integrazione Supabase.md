@@ -23,7 +23,7 @@ La connessione tra l'applicazione frontend React e il database Postgres di Supab
 
 ## 🛡️ Gestione della Connessione e Client Mock (`lib/supabaseClient.ts`)
 
-**Unificazione**: `src/rag/supabaseClient.ts` ora è un re-export di `src/lib/supabaseClient.ts`. Il client reale è in `lib/`.
+**Unificazione**: Il client Supabase è centralizzato in `src/lib/supabaseClient.ts`.
 
 Per garantire che l'applicazione funzioni sempre senza errori bloccanti, anche se non hai configurato le credenziali di Supabase, il client implementa un sistema di **Fallback Mock** (Simulazione) in `src/lib/supabaseClient.ts`:
 

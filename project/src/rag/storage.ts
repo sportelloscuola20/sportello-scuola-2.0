@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient';
 import { DocumentChunk } from './types';
-import { generateEmbedding } from './openrouter';
+import { generateEmbedding } from './gemini';
 
 /**
  * Store a document chunk and its embedding

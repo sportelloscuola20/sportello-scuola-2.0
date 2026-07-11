@@ -527,6 +527,7 @@ Deno.serve(async (req) => {
       continue;
     }
 
+    const targetBatch = filteredBatch.length > 0 ? filteredBatch : batch;
     const prompt = buildPrompt(filteredInput);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), CONFIG.geminiTimeoutMs);
@@ -633,7 +634,6 @@ Deno.serve(async (req) => {
       }
 
       // ─── ATOMIC WRITE ────────────────────────────────────────────────────
-      const targetBatch = filteredBatch.length > 0 ? filteredBatch : batch;
       for (const item of aiResult.documenti) {
         if (item.idx === undefined || item.idx < 0 || item.idx >= targetBatch.length) continue;
         const doc = targetBatch[item.idx];

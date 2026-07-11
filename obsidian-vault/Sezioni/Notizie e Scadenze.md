@@ -8,18 +8,18 @@ status: published
 
 # 📰 Sistema Intelligence Editoriale — Notizie e Scadenze (v2)
 
-> **Stato: Attivo (26/06/2026)** — 46 fonti monitorate, pipeline AI su Gemini 2.5 Flash, cron-job.org ogni 60min + 3min.
+> **Stato: Attivo (26/06/2026)** — 46 fonti monitorate, pipeline AI su Gemini 3.1 Flash Lite, cron-job.org ogni 60min + 3min.
 
 ## Architettura del Sistema
 
-### 1. Pipeline Intelligence (AI — Gemini 2.5 Flash)
+### 1. Pipeline Intelligence (AI — Gemini 3.1 Flash Lite)
 
 ```
 46 Fonti (RSS/Web/USR) ──[monitor-sources v2 ogni 60min]──► source_documents
                                                                     │
                                         [ingest-news v3 ogni 3min, batch=3]
                                                                     ▼
-                                                              Gemini 2.5 Flash
+                                                              Gemini 3.1 Flash Lite
                                                                     │
                                         ┌───────────────────────────┼───────────────────────────┐
                                         ▼                           ▼                           ▼
