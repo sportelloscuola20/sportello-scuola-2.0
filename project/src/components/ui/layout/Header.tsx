@@ -3,7 +3,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../foundation/AuthContext';
 import LoginModal from '../../foundation/LoginModal';
-import GlobalSearch from './GlobalSearch';
 
 const sidebarShortcuts = [
   { label: 'Punteggi & Simulazioni', path: '/area-riservata/punteggi' },
@@ -13,11 +12,14 @@ const sidebarShortcuts = [
   { label: 'Abbonamento', path: '/area-riservata/abbonamento' },
 ];
 
-export default function Header() {
+interface HeaderProps {
+  onSearchOpen?: () => void;
+}
+
+export default function Header({ onSearchOpen }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const userMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -30,17 +32,6 @@ export default function Header() {
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setShowSearch(prev => !prev);
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const isActive = (path: string) => location.pathname === path;
@@ -70,7 +61,7 @@ export default function Header() {
     <header id="main-navbar" className="bg-white/80 backdrop-blur-md shadow-soft border-b border-slate-200/60 fixed w-full top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link to="/" className="flex items-center gap-3 group" onClick={handleNavClick}>
             <img
               src="/logo.png"
               alt="Sportello Scuola 2.0"
@@ -100,12 +91,12 @@ export default function Header() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <button onClick={() => setShowSearch(true)}
-              className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-brand-blu bg-gray-100/80 hover:bg-brand-blu/5 rounded-xl text-sm transition"
+            <button onClick={onSearchOpen}
+              className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-brand-blu bg-gray-100/80 hover:bg-brand-blu/5 rounded-xl text-sm transition group"
               title="Cerca (Ctrl+K)">
               <Search size={16} />
-              <span className="text-xs text-gray-400 hidden lg:inline">Cerca...</span>
-              <kbd className="hidden lg:inline text-[10px] px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-400 font-mono">⌘K</kbd>
+              <span className="text-xs text-gray-400 hidden lg:inline group-hover:text-brand-blu transition">Cerca...</span>
+              <kbd className="hidden lg:inline text-[10px] px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-400 font-mono group-hover:border-brand-blu/30 transition">⌘K</kbd>
             </button>
             {isAuthenticated && user ? (
               <div className="relative" ref={userMenuRef}>
@@ -201,12 +192,19 @@ export default function Header() {
             )}
           </div>
 
-          <button
-            className="md:hidden text-gray-700"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="flex md:hidden items-center gap-2">
+            <button onClick={onSearchOpen}
+              className="p-2 text-gray-500 hover:text-brand-blu rounded-xl transition"
+              title="Cerca">
+              <Search size={20} />
+            </button>
+            <button
+              className="text-gray-700"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
 
         {isMenuOpen && (
@@ -256,7 +254,6 @@ export default function Header() {
       </div>
 
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
-      <GlobalSearch isOpen={showSearch} onClose={() => setShowSearch(false)} />
     </header>
   );
 }

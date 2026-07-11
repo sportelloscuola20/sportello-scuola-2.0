@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './components/foundation/AuthContext';
@@ -6,6 +6,7 @@ import { queryClient } from './lib/queryClient';
 import Header from './components/ui/layout/Header';
 import Footer from './components/ui/layout/Footer';
 import Breadcrumb from './components/ui/layout/Breadcrumb';
+import GlobalSearch from './components/ui/layout/GlobalSearch';
 import HomePage from './pages/HomePage';
 import AssistantPage from './pages/AssistantPage';
 import ScorePage from './pages/ScorePage';
@@ -34,12 +35,32 @@ function ScrollToTop() {
 }
 
 function App() {
+  const [showSearch, setShowSearch] = useState(false);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(prev => !prev);
+      }
+    }
+    function handleOpenSearch() {
+      setShowSearch(true);
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('open-global-search', handleOpenSearch);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('open-global-search', handleOpenSearch);
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <div className="min-h-screen bg-surface">
           <ScrollToTop />
-          <Header />
+          <Header onSearchOpen={() => setShowSearch(true)} />
           <div className="pt-20">
             <Breadcrumb />
             <Routes>
@@ -67,6 +88,7 @@ function App() {
           </div>
           <Footer />
         </div>
+        <GlobalSearch isOpen={showSearch} onClose={() => setShowSearch(false)} />
       </AuthProvider>
     </QueryClientProvider>
   );
