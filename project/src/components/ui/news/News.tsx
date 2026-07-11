@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Star, ChevronDown, Search, FileText, Target, Shield, Activity, BarChart3, RefreshCw, Link2, Globe, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { Calendar, Clock, Star, ChevronDown, Search, FileText, Target, Shield, Activity, BarChart3, RefreshCw, Link2, Globe, AlertTriangle, CheckCircle, Info, Newspaper } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../foundation/AuthContext';
 import LoginModal from '../../foundation/LoginModal';
 import { supabase } from '../../../lib/supabaseClient';
-import { MOCK_NEWS_INTELLIGENCE, generaDatiDataJournalism, fetchKnowledgeGraph } from '../../../rag/intelligence-engine';
+import { generaDatiDataJournalism, fetchKnowledgeGraph } from '../../../rag/intelligence-engine';
 import { formatDataItaliana } from '../../../rag/intelligence-engine';
 import type { NotiziaIntelligence, LivelloProduzione, SezioneIntelligence, KnowledgeLink, CategoriaUtente } from '../../../types/intelligence';
 import { CRITICALITA_COLORS, IMPATTO_COLORS, LIVELLO_PRODUZIONE_LABELS, TARGET_LABELS, RELAZIONE_LABELS, CATEGORIE_UTENTE, CATEGORIE_UTENTE_COLORS } from '../../../types/intelligence';
@@ -164,7 +164,7 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
     if (data) {
       setNewsItems(data);
     } else {
-      setNewsItems(MOCK_NEWS_INTELLIGENCE);
+      setNewsItems([]);
     }
     setUltimoAggiornamento(new Date());
     setIsRefreshing(false);
@@ -303,6 +303,13 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
       )}
 
       <div className="space-y-4">
+        {displayed.length === 0 && !isRefreshing && (
+          <div className="text-center py-12">
+            <Newspaper size={48} className="mx-auto text-gray-300 mb-4" />
+            <p className="text-gray-500 text-sm">Nessuna notizia disponibile al momento.</p>
+            <p className="text-gray-400 text-xs mt-1">Le notizie vengono aggiornate automaticamente dalle fonti monitorate.</p>
+          </div>
+        )}
         {displayed.map((news) => {
           const isExpanded = expandedId === news.id;
           const isFav = favorites.includes(news.id);

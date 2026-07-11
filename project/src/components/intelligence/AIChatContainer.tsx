@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../foundation/AuthContext';
 import { getKnowledgeResponse } from '../../rag/knowledge-base';
+import { MessageSquare, Plus, Trash2, Clock } from 'lucide-react';
 import type { ChatMessage } from '../../types/database';
 
 const FREE_MESSAGE_LIMIT = 3;
@@ -14,6 +15,14 @@ const SUGGESTED_PROMPTS = [
   'Requisiti e procedure per le MAD 2026-2028',
   'Calcolo punteggio per passaggio di ruolo ATA → Docente',
 ];
+
+interface Conversation {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  message_count?: number;
+}
 
 interface AIChatContainerProps {
   assistantType?: string;
@@ -88,6 +97,10 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
   const [chatCount, setChatCount] = useState<number>(getChatCount());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [showSidebar, setShowSidebar] = useState(false);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
@@ -97,6 +110,85 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
       setShowPaywall(true);
     }
   }, [chatCount, isAdmin]);
+
+  useEffect(() => {
+    if (user?.id) loadConversations();
+  }, [user?.id]);
+
+  const loadConversations = async () => {
+    if (!user?.id) return;
+    const { data } = await supabase
+      .from('chat_conversations')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(20);
+    if (data) setConversations(data);
+  };
+
+  const loadConversationMessages = async (convId: string) => {
+    const { data } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('conversation_id', convId)
+      .order('created_at', { ascending: true });
+    if (data) {
+      setMessages(data.map(m => ({
+        id: m.id,
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+        timestamp: m.created_at,
+        citations: m.citations || [],
+      })));
+      setActiveConversationId(convId);
+    }
+  };
+
+  const createNewConversation = async (): Promise<string | null> => {
+    if (!user?.id) return null;
+    const { data } = await supabase
+      .from('chat_conversations')
+      .insert({ user_id: user.id, title: 'Nuova conversazione' })
+      .select()
+      .single();
+    if (data) {
+      setConversations(prev => [data, ...prev]);
+      return data.id;
+    }
+    return null;
+  };
+
+  const deleteConversation = async (convId: string) => {
+    await supabase.from('chat_conversations').delete().eq('id', convId);
+    setConversations(prev => prev.filter(c => c.id !== convId));
+    if (activeConversationId === convId) {
+      setActiveConversationId(null);
+      setMessages([]);
+    }
+  };
+
+  const saveMessage = async (convId: string, role: 'user' | 'assistant', content: string, citations?: Array<{ title: string; confidence: number }>, latencyMs?: number) => {
+    await supabase.from('chat_messages').insert({
+      conversation_id: convId,
+      role,
+      content,
+      citations: citations || [],
+      latency_ms: latencyMs || 0,
+    });
+  };
+
+  const logGeminiCall = async (query: string, response: string, latencyMs: number, tokensUsed: number) => {
+    if (!user?.id) return;
+    await supabase.from('gemini_calls_log').insert({
+      user_id: user.id,
+      prompt_preview: query.slice(0, 200),
+      model: 'gemini-3.1-flash-lite',
+      tokens_in: tokensUsed,
+      tokens_out: Math.ceil(response.length / 4),
+      latency_ms: latencyMs,
+      status: 'ok',
+    }).then(() => {}).catch(() => {});
+  };
 
   const generateResponse = useCallback(async (userMessage: string): Promise<{ text: string; citations?: Array<{ title: string; confidence: number }> }> => {
     const localResponse = getKnowledgeResponse(userMessage);
@@ -135,6 +227,12 @@ Se desideri maggiori dettagli su un argomento specifico (CCNL, GPS, interpelli, 
       return;
     }
 
+    let convId = activeConversationId;
+    if (!convId && user?.id) {
+      convId = await createNewConversation();
+      if (convId) setActiveConversationId(convId);
+    }
+
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -149,8 +247,11 @@ Se desideri maggiori dettagli su un argomento specifico (CCNL, GPS, interpelli, 
     const newCount = incrementChatCount();
     setChatCount(newCount);
 
+    const startTime = Date.now();
+
     try {
       const result = await generateResponse(content.trim());
+      const latencyMs = Date.now() - startTime;
 
       const assistantMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -161,6 +262,12 @@ Se desideri maggiori dettagli su un argomento specifico (CCNL, GPS, interpelli, 
       };
 
       setMessages(prev => [...prev, assistantMsg]);
+
+      if (convId) {
+        await saveMessage(convId, 'user', content.trim());
+        await saveMessage(convId, 'assistant', result.text, result.citations, latencyMs);
+        await logGeminiCall(content.trim(), result.text, latencyMs, Math.ceil(content.length / 4));
+      }
     } catch {
       const assistantMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -172,7 +279,7 @@ Se desideri maggiori dettagli su un argomento specifico (CCNL, GPS, interpelli, 
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, generateResponse, isAdmin]);
+  }, [isLoading, messages, generateResponse, isAdmin, user?.id, activeConversationId]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -182,144 +289,195 @@ Se desideri maggiori dettagli su un argomento specifico (CCNL, GPS, interpelli, 
   }, [input, sendMessage]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] max-w-4xl mx-auto">
+    <div className="flex h-[calc(100vh-80px)] max-w-6xl mx-auto">
       {showPaywall && <BannerPaywall />}
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-20 h-20 bg-gradient-to-r from-brand-blu to-brand-verde rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-brand-blu mb-2">
-              Sindacalista AI {assistantType ? `- ${assistantType}` : ''}
-            </h2>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto text-sm">
-              Assistente virtuale specializzato su CCNL Istruzione e Ricerca, congedi, interpelli, GPS e diritti del personale scolastico.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
-              {SUGGESTED_PROMPTS.map(prompt => (
-                <button
-                  key={prompt}
-                  onClick={() => sendMessage(prompt)}
-                  className="text-left p-3 bg-white/70 border border-gray-200 rounded-2xl text-sm text-gray-700 hover:border-brand-blu hover:bg-brand-blu/5 transition"
-                >
-                  <span className="line-clamp-2">{prompt}</span>
-                </button>
-              ))}
-            </div>
-            {!isAdmin && (
-              <p className="text-xs text-gray-400 mt-4">
-                Consultazioni gratuite rimanenti: {Math.max(0, FREE_MESSAGE_LIMIT - chatCount)} / {FREE_MESSAGE_LIMIT}
-              </p>
-            )}
-          </div>
-        )}
+      {user?.id && (
+        <div className={`${showSidebar ? 'w-72' : 'w-12'} bg-gray-50 border-r border-gray-200 flex-shrink-0 transition-all duration-300 flex flex-col overflow-hidden`}>
+          <button onClick={() => setShowSidebar(!showSidebar)}
+            className="p-3 hover:bg-gray-200 transition flex items-center gap-2 text-gray-600"
+            title="Conversazioni">
+            <MessageSquare size={18} />
+            {showSidebar && <span className="text-sm font-medium">Conversazioni</span>}
+          </button>
 
-        {messages.map(msg => (
-          <div
-            key={msg.id}
-            className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
-          >
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                msg.role === 'user' ? 'bg-brand-blu' : 'bg-gradient-to-r from-brand-verde to-brand-ottanio'
-              }`}
-            >
-              <span className="text-white text-xs font-bold">
-                {msg.role === 'user' ? 'U' : 'AI'}
-              </span>
-            </div>
-            <div
-              className={`max-w-[80%] p-4 rounded-2xl ${
-                msg.role === 'user'
-                  ? 'bg-brand-blu text-white'
-                  : 'bg-white border border-gray-200 text-gray-800'
-              }`}
-            >
-              <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : ''}`}>
-                {msg.content.split('\n').map((line, i) => (
-                  <p key={i} className={
-                    line.startsWith('**') ? 'font-bold text-brand-blu' :
-                    line.startsWith('#') ? 'font-bold text-brand-blu mt-3' :
-                    line.startsWith('-') ? 'text-gray-700 ml-2' :
-                    line.startsWith('1.') || line.startsWith('2.') || line.startsWith('3.') || line.startsWith('4.') ? 'text-gray-700' :
-                    ''
-                  }>
-                    {line.replace(/\*\*/g, '').replace(/^#+\s*/, '')}
-                  </p>
+          {showSidebar && (
+            <>
+              <button onClick={async () => {
+                const convId = await createNewConversation();
+                if (convId) {
+                  setActiveConversationId(convId);
+                  setMessages([]);
+                }
+              }}
+                className="mx-3 mb-2 flex items-center gap-2 px-3 py-2 bg-brand-blu text-white rounded-xl text-sm font-medium hover:bg-brand-blu/90 transition">
+                <Plus size={14} /> Nuova conversazione
+              </button>
+
+              <div className="flex-1 overflow-y-auto px-2 space-y-1">
+                {conversations.map(conv => (
+                  <div key={conv.id}
+                    onClick={() => loadConversationMessages(conv.id)}
+                    className={`group flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition ${
+                      activeConversationId === conv.id ? 'bg-brand-blu/10 text-brand-blu' : 'text-gray-600 hover:bg-gray-200'
+                    }`}>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">{conv.title}</p>
+                      <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                        <Clock size={9} />
+                        {new Date(conv.updated_at).toLocaleDateString('it-IT')}
+                      </p>
+                    </div>
+                    <button onClick={e => { e.stopPropagation(); deleteConversation(conv.id); }}
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded-lg transition">
+                      <Trash2 size={12} className="text-red-400" />
+                    </button>
+                  </div>
                 ))}
               </div>
-              {msg.citations && msg.citations.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-gray-100">
-                  <p className="text-xs text-gray-500 font-medium mb-1">Fonti:</p>
-                  {msg.citations.map((c, i) => (
-                    <p key={i} className="text-xs text-brand-ottanio">
-                      {c.title} (affinità: {(c.confidence * 100).toFixed(0)}%)
+            </>
+          )}
+        </div>
+      )}
+
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.length === 0 && (
+            <div className="text-center py-12">
+              <div className="w-20 h-20 bg-gradient-to-r from-brand-blu to-brand-verde rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-brand-blu mb-2">
+                Sindacalista AI {assistantType ? `- ${assistantType}` : ''}
+              </h2>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto text-sm">
+                Assistente virtuale specializzato su CCNL Istruzione e Ricerca, congedi, interpelli, GPS e diritti del personale scolastico.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
+                {SUGGESTED_PROMPTS.map(prompt => (
+                  <button
+                    key={prompt}
+                    onClick={() => sendMessage(prompt)}
+                    className="text-left p-3 bg-white/70 border border-gray-200 rounded-2xl text-sm text-gray-700 hover:border-brand-blu hover:bg-brand-blu/5 transition"
+                  >
+                    <span className="line-clamp-2">{prompt}</span>
+                  </button>
+                ))}
+              </div>
+              {!isAdmin && (
+                <p className="text-xs text-gray-400 mt-4">
+                  Consultazioni gratuite rimanenti: {Math.max(0, FREE_MESSAGE_LIMIT - chatCount)} / {FREE_MESSAGE_LIMIT}
+                </p>
+              )}
+            </div>
+          )}
+
+          {messages.map(msg => (
+            <div
+              key={msg.id}
+              className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+            >
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  msg.role === 'user' ? 'bg-brand-blu' : 'bg-gradient-to-r from-brand-verde to-brand-ottanio'
+                }`}
+              >
+                <span className="text-white text-xs font-bold">
+                  {msg.role === 'user' ? 'U' : 'AI'}
+                </span>
+              </div>
+              <div
+                className={`max-w-[80%] p-4 rounded-2xl ${
+                  msg.role === 'user'
+                    ? 'bg-brand-blu text-white'
+                    : 'bg-white border border-gray-200 text-gray-800'
+                }`}
+              >
+                <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : ''}`}>
+                  {msg.content.split('\n').map((line, i) => (
+                    <p key={i} className={
+                      line.startsWith('**') ? 'font-bold text-brand-blu' :
+                      line.startsWith('#') ? 'font-bold text-brand-blu mt-3' :
+                      line.startsWith('-') ? 'text-gray-700 ml-2' :
+                      line.startsWith('1.') || line.startsWith('2.') || line.startsWith('3.') || line.startsWith('4.') ? 'text-gray-700' :
+                      ''
+                    }>
+                      {line.replace(/\*\*/g, '').replace(/^#+\s*/, '')}
                     </p>
                   ))}
                 </div>
-              )}
-              <p className="text-xs text-gray-400 mt-2">
-                {new Date(msg.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
-              </p>
+                {msg.citations && msg.citations.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-xs text-gray-500 font-medium mb-1">Fonti:</p>
+                    {msg.citations.map((c, i) => (
+                      <p key={i} className="text-xs text-brand-ottanio">
+                        {c.title} (affinità: {(c.confidence * 100).toFixed(0)}%)
+                      </p>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-gray-400 mt-2">
+                  {new Date(msg.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {isLoading && <SkeletonLoader />}
+          {isLoading && <SkeletonLoader />}
 
-        <div ref={messagesEndRef} />
-      </div>
-
-      <div className="border-t border-gray-200 bg-white/80 backdrop-blur-xs p-4">
-        <div className="flex gap-3 max-w-4xl mx-auto">
-          <textarea
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isLoading || (!isAdmin && chatCount >= FREE_MESSAGE_LIMIT)}
-            placeholder={
-              isAdmin
-                ? 'Scrivi la tua domanda al Sindacalista AI (accesso amministratore illimitato)...'
-                : chatCount >= FREE_MESSAGE_LIMIT
-                  ? 'Limite gratuito raggiunto. Abbonati a Pro per continuare.'
-                  : 'Scrivi la tua domanda al Sindacalista AI...'
-            }
-            rows={1}
-            className="flex-1 border border-gray-300 rounded-2xl px-4 py-3 resize-none focus:ring-2 focus:ring-brand-blu focus:border-brand-blu disabled:opacity-50 disabled:cursor-not-allowed transition"
-          />
-          <button
-            onClick={() => sendMessage(input)}
-            disabled={isLoading || !input.trim() || (!isAdmin && chatCount >= FREE_MESSAGE_LIMIT)}
-            className="px-6 py-3 bg-gradient-to-r from-brand-blu to-brand-verde text-white rounded-2xl font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
-          >
-            Invia
-          </button>
+          <div ref={messagesEndRef} />
         </div>
-        <div className="flex justify-between mt-2 max-w-4xl mx-auto">
-          {isAdmin ? (
-            <p className="text-xs text-brand-verde font-medium">Accesso amministratore: consultazioni illimitate</p>
-          ) : (
-            <p className="text-xs text-gray-400">
-              Consultazioni gratuite: {Math.max(0, FREE_MESSAGE_LIMIT - chatCount)}/{FREE_MESSAGE_LIMIT}
-            </p>
-          )}
-          {chatCount > 0 && (
+
+        <div className="border-t border-gray-200 bg-white/80 backdrop-blur-xs p-4">
+          <div className="flex gap-3 max-w-4xl mx-auto">
+            <textarea
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isLoading || (!isAdmin && chatCount >= FREE_MESSAGE_LIMIT)}
+              placeholder={
+                isAdmin
+                  ? 'Scrivi la tua domanda al Sindacalista AI (accesso amministratore illimitato)...'
+                  : chatCount >= FREE_MESSAGE_LIMIT
+                    ? 'Limite gratuito raggiunto. Abbonati a Pro per continuare.'
+                    : 'Scrivi la tua domanda al Sindacalista AI...'
+              }
+              rows={1}
+              className="flex-1 border border-gray-300 rounded-2xl px-4 py-3 resize-none focus:ring-2 focus:ring-brand-blu focus:border-brand-blu disabled:opacity-50 disabled:cursor-not-allowed transition"
+            />
             <button
-              onClick={() => {
-                setMessages([]);
-                resetChatCount();
-                setChatCount(0);
-                setShowPaywall(false);
-              }}
-              className="text-xs text-gray-400 hover:text-red-400 transition"
+              onClick={() => sendMessage(input)}
+              disabled={isLoading || !input.trim() || (!isAdmin && chatCount >= FREE_MESSAGE_LIMIT)}
+              className="px-6 py-3 bg-gradient-to-r from-brand-blu to-brand-verde text-white rounded-2xl font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
-              Reset conversazione
+              Invia
             </button>
-          )}
+          </div>
+          <div className="flex justify-between mt-2 max-w-4xl mx-auto">
+            {isAdmin ? (
+              <p className="text-xs text-brand-verde font-medium">Accesso amministratore: consultazioni illimitate</p>
+            ) : (
+              <p className="text-xs text-gray-400">
+                Consultazioni gratuite: {Math.max(0, FREE_MESSAGE_LIMIT - chatCount)}/{FREE_MESSAGE_LIMIT}
+              </p>
+            )}
+            {chatCount > 0 && (
+              <button
+                onClick={() => {
+                  setMessages([]);
+                  setActiveConversationId(null);
+                  resetChatCount();
+                  setChatCount(0);
+                  setShowPaywall(false);
+                }}
+                className="text-xs text-gray-400 hover:text-red-400 transition"
+              >
+                Reset conversazione
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

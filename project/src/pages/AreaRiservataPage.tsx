@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Bookmark, TrendingUp, Calendar, Sparkles, GraduationCap, Briefcase, User, Bell, ArrowRight } from 'lucide-react';
+import { Bookmark, TrendingUp, Calendar, Sparkles, GraduationCap, Briefcase, User, Bell, ArrowRight, Newspaper, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/foundation/AuthContext';
 import { useProfileStore } from '../store/useProfileStore';
 import SavedItems from '../components/ui/profile/SavedItems';
 import CalendarWidget from '../components/ui/profile/CalendarWidget';
+import { formatDataItaliana } from '../rag/intelligence-engine';
 
 const ROLE_CONFIG = {
   docente: {
@@ -46,6 +47,10 @@ export default function AreaRiservataPage() {
   const [preferitiCount, setPreferitiCount] = useState<number | null>(null);
   const [simulazioniCount, setSimulazioniCount] = useState<number | null>(null);
   const [bandiCount, setBandiCount] = useState<number | null>(null);
+  const [personalNews, setPersonalNews] = useState<any[]>([]);
+  const [personalDeadlines, setPersonalDeadlines] = useState<any[]>([]);
+
+  const ruolo = profile?.ruolo || user?.ruolo || 'aspirante';
 
   useEffect(() => {
     if (!user) return;
@@ -60,7 +65,37 @@ export default function AreaRiservataPage() {
     });
   }, [user]);
 
-  const ruolo = profile?.ruolo || user?.ruolo || 'aspirante';
+  useEffect(() => {
+    const fetchPersonalContent = async () => {
+      const targetMap: Record<string, string[]> = {
+        docente: ['docenti', 'aspiranti_docenti', 'sostegno'],
+        ata: ['ata', 'amministrativi', 'collaboratori', 'dsga'],
+        aspirante: ['aspiranti_docenti', 'docenti'],
+      };
+      const targets = targetMap[ruolo] || ['docenti'];
+
+      const { data: news } = await supabase
+        .from('intelligence_news')
+        .select('id, titolo, descrizione, categoria, data_pubblicazione, link, is_pinned')
+        .eq('is_archived', false)
+        .order('is_pinned', { ascending: false })
+        .order('data_pubblicazione', { ascending: false })
+        .limit(5);
+
+      if (news) setPersonalNews(news);
+
+      const { data: deadlines } = await supabase
+        .from('intelligence_scadenze')
+        .select('id, titolo, descrizione, data_scadenza, priorita, tipo')
+        .gte('data_scadenza', new Date().toISOString())
+        .order('data_scadenza', { ascending: true })
+        .limit(5);
+
+      if (deadlines) setPersonalDeadlines(deadlines);
+    };
+    fetchPersonalContent();
+  }, [ruolo]);
+
   const config = ROLE_CONFIG[ruolo as keyof typeof ROLE_CONFIG] || ROLE_CONFIG.aspirante;
 
   const quickStats = [
@@ -130,6 +165,73 @@ export default function AreaRiservataPage() {
         </div>
         <CalendarWidget />
       </div>
+
+      {personalNews.length > 0 && (
+        <div className="col-span-12 rounded-2xl bg-white/5 border border-white/10 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Newspaper size={16} className="text-brand-blu" />
+              <h3 className="text-sm font-semibold text-white">Ultime Notizie per Te</h3>
+            </div>
+            <Link to="/notizie-scadenze" className="text-xs text-brand-verde hover:underline flex items-center gap-1">
+              Vedi tutte <ArrowRight size={12} />
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {personalNews.slice(0, 4).map((n: any) => (
+              <Link key={n.id} to={n.link || '/notizie-scadenze'}
+                className="block p-3 bg-white/5 rounded-xl hover:bg-white/10 transition group">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate group-hover:text-brand-verde transition">{n.titolo}</p>
+                    <p className="text-xs text-white/40 mt-1 line-clamp-1">{n.descrizione}</p>
+                  </div>
+                  <span className="text-[10px] text-white/30 whitespace-nowrap flex items-center gap-1">
+                    <Clock size={10} /> {formatDataItaliana(n.data_pubblicazione)}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {personalDeadlines.length > 0 && (
+        <div className="col-span-12 rounded-2xl bg-white/5 border border-white/10 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Calendar size={16} className="text-brand-ambra" />
+              <h3 className="text-sm font-semibold text-white">Prossime Scadenze</h3>
+            </div>
+            <Link to="/notizie-scadenze?tab=scadenze" className="text-xs text-brand-verde hover:underline flex items-center gap-1">
+              Vedi tutte <ArrowRight size={12} />
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {personalDeadlines.slice(0, 4).map((d: any) => (
+              <Link key={d.id} to="/notizie-scadenze?tab=scadenze"
+                className="block p-3 bg-white/5 rounded-xl hover:bg-white/10 transition group">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate group-hover:text-brand-verde transition">{d.titolo}</p>
+                    <p className="text-xs text-white/40 mt-1">{d.tipo}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                      d.priorita === 'urgente' ? 'bg-red-500/20 text-red-300' :
+                      d.priorita === 'alta' ? 'bg-amber-500/20 text-amber-300' :
+                      'bg-blue-500/20 text-blue-300'
+                    }`}>{d.priorita}</span>
+                    <span className="text-[10px] text-white/30 whitespace-nowrap flex items-center gap-1">
+                      <Calendar size={10} /> {formatDataItaliana(d.data_scadenza)}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

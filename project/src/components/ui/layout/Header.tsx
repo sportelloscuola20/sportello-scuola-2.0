@@ -1,8 +1,9 @@
-import { Menu, X, User, LogOut, ChevronDown, Settings, Sparkles } from 'lucide-react';
+import { Menu, X, User, LogOut, ChevronDown, Settings, Sparkles, Search } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../foundation/AuthContext';
 import LoginModal from '../../foundation/LoginModal';
+import GlobalSearch from './GlobalSearch';
 
 const sidebarShortcuts = [
   { label: 'Punteggi & Simulazioni', path: '/area-riservata/punteggi' },
@@ -16,6 +17,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const userMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -28,6 +30,17 @@ export default function Header() {
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(prev => !prev);
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const isActive = (path: string) => location.pathname === path;
@@ -87,6 +100,13 @@ export default function Header() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
+            <button onClick={() => setShowSearch(true)}
+              className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-brand-blu bg-gray-100/80 hover:bg-brand-blu/5 rounded-xl text-sm transition"
+              title="Cerca (Ctrl+K)">
+              <Search size={16} />
+              <span className="text-xs text-gray-400 hidden lg:inline">Cerca...</span>
+              <kbd className="hidden lg:inline text-[10px] px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-400 font-mono">⌘K</kbd>
+            </button>
             {isAuthenticated && user ? (
               <div className="relative" ref={userMenuRef}>
                 <button
@@ -236,6 +256,7 @@ export default function Header() {
       </div>
 
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
+      <GlobalSearch isOpen={showSearch} onClose={() => setShowSearch(false)} />
     </header>
   );
 }

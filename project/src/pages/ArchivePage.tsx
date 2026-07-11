@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Newspaper, CalendarClock, Search, ArrowUpDown, Calendar, Target } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { MOCK_NEWS_INTELLIGENCE, MOCK_SCADENZE_INTELLIGENCE, formatDataItaliana } from '../rag/intelligence-engine';
+import { formatDataItaliana } from '../rag/intelligence-engine';
 import type { NotiziaIntelligence, ScadenzaIntelligence, CategoriaUtente } from '../types/intelligence';
 import { CATEGORIE_UTENTE, CATEGORIE_UTENTE_COLORS, CRITICALITA_COLORS, TARGET_LABELS, CATEGORIE_ICONE } from '../types/intelligence';
 
@@ -46,10 +46,10 @@ export default function ArchivePage() {
             isPinned: n.is_pinned || false,
           })));
         } else {
-          setNewsItems(MOCK_NEWS_INTELLIGENCE);
+          setNewsItems([]);
         }
       } catch {
-        setNewsItems(MOCK_NEWS_INTELLIGENCE);
+        setNewsItems([]);
       }
 
       try {
@@ -76,10 +76,10 @@ export default function ArchivePage() {
             regione: d.regione || '',
           })));
         } else {
-          setDeadlineItems(MOCK_SCADENZE_INTELLIGENCE);
+          setDeadlineItems([]);
         }
       } catch {
-        setDeadlineItems(MOCK_SCADENZE_INTELLIGENCE);
+        setDeadlineItems([]);
       }
     };
     fetchData();

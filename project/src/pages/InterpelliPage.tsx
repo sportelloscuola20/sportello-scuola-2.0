@@ -19,23 +19,6 @@ const CLASSI_CONCORSO = [
   'AA', 'AT', 'CS', 'OS', 'CU', 'IF', 'GU',
 ];
 
-function mockBandiFallback(): Bando[] {
-  return Array.from({ length: 25 }, (_, i) => ({
-    id: `mock-${i + 1}`,
-    titolo: `IC "${['Marconi', 'Einstein', 'Dante', 'Manzoni', 'Verdi', 'Rossini', 'Galilei', 'Leonardo', 'Fermi', 'Volta'][i % 10]}" - ${PROVINCE[i % PROVINCE.length]}`,
-    ente: `USP ${PROVINCE[i % PROVINCE.length]}`,
-    tipo: (['comune', 'sostegno', 'ata'] as const)[i % 3],
-    data_pubblicazione: new Date(2026, 5, 1 + i).toISOString().split('T')[0],
-    data_scadenza: new Date(2026, 5, 15 + (i % 10)).toISOString().split('T')[0],
-    link: '#',
-    regione: '',
-    provincia: PROVINCE[i % PROVINCE.length],
-    categoria: CLASSI_CONCORSO[i % CLASSI_CONCORSO.length],
-    descrizione: '',
-    created_at: new Date().toISOString(),
-  }));
-}
-
 function deriveStato(dataScadenza: string): 'aperto' | 'scaduto' {
   return new Date(dataScadenza) > new Date() ? 'aperto' : 'scaduto';
 }
@@ -84,7 +67,7 @@ export default function InterpelliPage() {
         if (error) throw error;
         setTuttiInterpelli(data || []);
       } catch {
-        setTuttiInterpelli(mockBandiFallback());
+        setTuttiInterpelli([]);
       } finally {
         setFetching(false);
       }

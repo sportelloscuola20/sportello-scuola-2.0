@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Bell, Search, ChevronDown, FileText, AlertTriangle, Shield, Target, RefreshCw, Globe } from 'lucide-react';
+import { Calendar, Clock, Bell, Search, ChevronDown, FileText, AlertTriangle, Shield, Target, RefreshCw, Globe, CalendarClock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../foundation/AuthContext';
 import LoginModal from '../../foundation/LoginModal';
 import { supabase } from '../../../lib/supabaseClient';
-import { MOCK_SCADENZE_INTELLIGENCE, calcolaGiorniRimasti, formatDataItaliana } from '../../../rag/intelligence-engine';
+import { calcolaGiorniRimasti, formatDataItaliana } from '../../../rag/intelligence-engine';
 import type { ScadenzaIntelligence, CategoriaUtente, CategoriaScadenza } from '../../../types/intelligence';
 import { CRITICALITA_COLORS, IMPATTO_COLORS, TARGET_LABELS, CATEGORIE_UTENTE_COLORS, CATEGORIE_SCADENZA, CATEGORIE_SCADENZA_COLORS, REGIONI_ITALIA } from '../../../types/intelligence';
 
@@ -64,7 +64,7 @@ export default function Deadlines({ compact = false, filters }: { compact?: bool
   const [activeCategory, setActiveCategory] = useState<string>(filters?.activeCategory ?? 'Tutte');
   const [filterPriorita, setFilterPriorita] = useState<string>('');
   const [filterRegione, setFilterRegione] = useState<string>(filters?.filterRegione ?? '');
-  const [deadlineItems, setDeadlineItems] = useState<ScadenzaIntelligence[]>(MOCK_SCADENZE_INTELLIGENCE);
+  const [deadlineItems, setDeadlineItems] = useState<ScadenzaIntelligence[]>([]);
   const [ultimoAggiornamento, setUltimoAggiornamento] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -219,6 +219,13 @@ export default function Deadlines({ compact = false, filters }: { compact?: bool
       )}
 
       <div className="space-y-4">
+        {displayed.length === 0 && !isRefreshing && (
+          <div className="text-center py-12">
+            <CalendarClock size={48} className="mx-auto text-gray-300 mb-4" />
+            <p className="text-gray-500 text-sm">Nessuna scadenza disponibile al momento.</p>
+            <p className="text-gray-400 text-xs mt-1">Le scadenze vengono aggiornate automaticamente.</p>
+          </div>
+        )}
         {displayed.map((deadline) => {
           const isExpanded = expandedId === deadline.id;
           const isFoll = followed.includes(deadline.id);
