@@ -370,7 +370,7 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
   const showFollowUps = !isLoading && !isTyping && lastAssistantMsg && messages[messages.length - 1]?.role === 'assistant';
 
   return (
-    <div className="flex h-[calc(100vh-80px)] max-w-6xl mx-auto">
+    <div className="flex h-full max-w-6xl mx-auto">
       {showPaywall && <BannerPaywall />}
 
       {user?.id && (

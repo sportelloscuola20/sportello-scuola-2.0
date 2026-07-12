@@ -55,6 +55,7 @@ export default function Header({ onSearchOpen }: HeaderProps) {
     { label: 'Normative', href: '/normative-e-documenti' },
     { label: 'Notizie', href: '/notizie-scadenze' },
     { label: 'Assistente', href: '/assistente' },
+    { label: 'Servizi', href: '/servizi' },
   ];
 
   return (
