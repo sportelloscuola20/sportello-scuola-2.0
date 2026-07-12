@@ -5,7 +5,7 @@ import { trackChatMessage } from '../../lib/analytics';
 import { MessageSquare, Plus, Trash2, Clock, Send, Sparkles, BookOpen, ArrowRight, Copy, Check, User, GraduationCap, Briefcase, Building2, ChevronRight } from 'lucide-react';
 import type { ChatMessage } from '../../types/database';
 
-const FREE_MESSAGE_LIMIT = 3;
+const FREE_MESSAGE_LIMIT = 10;
 
 // ═══ PROFILES — adaptive prompts per user type ═══
 
@@ -285,7 +285,15 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
     return followUps.slice(0, 3);
   }, [messages]);
 
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isLoading, isTyping, streamingText]);
+  useEffect(() => {
+    const container = messagesEndRef.current?.closest('.overflow-y-auto');
+    if (container) {
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 200;
+      if (isNearBottom || messages.length <= 2) {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }, [messages, streamingText]);
   useEffect(() => { if (!isAdmin && chatCount >= FREE_MESSAGE_LIMIT) setShowPaywall(true); }, [chatCount, isAdmin]);
   useEffect(() => { if (user?.id) loadConversations(); }, [user?.id]);
   useEffect(() => {

@@ -29,56 +29,56 @@ const MAX_ITEMS_PER_BOX = 3;
 
 const FALL_NEWS: NotiziaIntelligence[] = [
   {
-    id: 'fn-1', titolo: 'Concorso Straordinario 2026: 5.000 posti per docenti con 36 mesi di servizio',
+    id: 'fn-1', titolo: '**Concorso Straordinario 2026**: 5.000 posti per docenti con 36 mesi di servizio',
     descrizione: 'Il MIM ha pubblicato le disposizioni per il concorso straordinario 2026 riservato al personale con almeno 36 mesi di servizio negli ultimi 5 anni. Le prove scritte sono previste a ottobre 2026.',
     dataPubblicazione: '2026-07-10', fonte: { livello: 'A', nome: 'MIM', url: 'https://www.mim.gov.it', peso: 100 },
     classifica: { criticita: 'alta', impatto: 'nazionale', platea: 'ampia', target: ['docenti', 'aspiranti_docenti'], categoria: 'Bandi, Concorsi e Selezioni', livelloFonte: 'A', fontePrimaria: 'MIM - Disposizioni concorso straordinario 2026', fonteUrl: '', dataAcquisizione: '2026-07-10' },
     contenuti: [], tag: ['concorso', 'straordinario', '2026'], link: '', isPinned: true,
   },
   {
-    id: 'fn-2', titolo: 'OM 88/2024: aggiornamento GPS biennio 2026/2028 in preparazione',
-    descrizione: 'Il Ministero sta preparando il nuovo ordinanza per il rinnovo delle Graduatorie Provinciali per le Supplenze. Attese novità sui criteri di valutazione dei titoli e sull\'algoritmo di assegnazione.',
+    id: 'fn-2', titolo: '**OM 88/2024**: aggiornamento GPS biennio 2026/2028 in preparazione',
+    descrizione: 'Il Ministero sta preparando la nuova ordinanza per il rinnovo delle Graduatorie Provinciali per le Supplenze. Attese novità sui criteri di valutazione dei titoli.',
     dataPubblicazione: '2026-07-08', fonte: { livello: 'A', nome: 'MIM', url: 'https://www.mim.gov.it', peso: 100 },
     classifica: { criticita: 'urgente', impatto: 'nazionale', platea: 'intero_sistema', target: ['docenti', 'aspiranti_docenti'], categoria: 'Graduatorie (GPS, GAE, d\'Istituto)', livelloFonte: 'A', fontePrimaria: 'OM 88/2024 - GPS Biennio', fonteUrl: '', dataAcquisizione: '2026-07-08' },
     contenuti: [], tag: ['GPS', 'graduatorie', 'supplenze'], link: '', isPinned: true,
   },
   {
-    id: 'fn-3', titolo: 'CCNL 2024-2026: avvio trattative per il rinnovo del comparto Istruzione',
+    id: 'fn-3', titolo: '**CCNL 2024-2026**: avvio trattative per il rinnovo del comparto Istruzione',
     descrizione: 'L\'ARAN ha convocato le organizzazioni sindacali per l\'avvio delle trattative per il rinnovo del CCNL Comparto Istruzione e Ricerca. In scadenza il 31 dicembre 2026.',
     dataPubblicazione: '2026-07-05', fonte: { livello: 'A', nome: 'ARAN', url: 'https://www.aran.it', peso: 100 },
     classifica: { criticita: 'strategica', impatto: 'nazionale', platea: 'intero_sistema', target: ['docenti', 'ata', 'dirigenti'], categoria: 'Contratti, Salari e Personale ATA', livelloFonte: 'A', fontePrimaria: 'ARAN - Avvio trattative CCNL', fonteUrl: '', dataAcquisizione: '2026-07-05' },
     contenuti: [], tag: ['CCNL', 'rinnovo', 'trattative'], link: '', isPinned: false,
   },
   {
-    id: 'fn-4', titolo: 'TFA Sostegno VIII ciclo: 12.000 posti, bando previsto a settembre',
-    descrizione: 'Il Decreto Direttoriale 1025/2026 ha definito le linee guida per l\'VIII ciclo del TFA Sostegno con 12.000 posti. Il bando è atteso a settembre con prove preselettie a novembre.',
+    id: 'fn-4', titolo: '**TFA Sostegno VIII ciclo**: 12.000 posti, bando previsto a settembre',
+    descrizione: 'Il Decreto Direttoriale 1025/2026 ha definito le linee guida per l\'VIII ciclo del TFA Sostegno con 12.000 posti. Il bando è atteso a settembre con prove preselettive a novembre.',
     dataPubblicazione: '2026-07-03', fonte: { livello: 'A', nome: 'MIM', url: 'https://www.mim.gov.it', peso: 100 },
     classifica: { criticita: 'alta', impatto: 'nazionale', platea: 'ampia', target: ['docenti', 'aspiranti_docenti', 'sostegno'], categoria: 'Didattica, Formazione e Innovazione', livelloFonte: 'A', fontePrimaria: 'DD 1025/2026 - TFA Sostegno', fonteUrl: '', dataAcquisizione: '2026-07-03' },
     contenuti: [], tag: ['TFA', 'sostegno', 'formazione'], link: '', isPinned: false,
   },
   {
-    id: 'fn-5', titolo: 'DM 89/2024: aggiornamento graduatorie ATA terza fascia triennio 2027/2030',
+    id: 'fn-5', titolo: '**DM 89/2024**: aggiornamento graduatorie ATA terza fascia triennio 2027/2030',
     descrizione: 'Prossimo aggiornamento delle graduatorie di terza fascia del personale ATA. Nuova scadenza per inserimento e aggiornamento con il D.M. previsto per il primo trimestre 2027.',
     dataPubblicazione: '2026-07-01', fonte: { livello: 'A', nome: 'MIM', url: 'https://www.mim.gov.it', peso: 100 },
     classifica: { criticita: 'media', impatto: 'nazionale', platea: 'ampia', target: ['ata'], categoria: 'Graduatorie (GPS, GAE, d\'Istituto)', livelloFonte: 'A', fontePrimaria: 'DM 89/2024 - Graduatorie ATA', fonteUrl: '', dataAcquisizione: '2026-07-01' },
     contenuti: [], tag: ['ATA', 'graduatorie', 'terza fascia'], link: '', isPinned: false,
   },
   {
-    id: 'fn-6', titolo: 'Mobilità 2027/2029: apertura domande prevista a febbraio',
+    id: 'fn-6', titolo: '**Mobilità 2027/2029**: apertura domande prevista a febbraio',
     descrizione: 'Il CCNI Mobilità per il triennio 2027/2029 sarà firmato entro dicembre 2026. Le domande di trasferimento dovranno essere presentate entro febbraio 2027 via POLIS.',
-    dataPubblicazione: '2026-06-28', fonte: { livello: 'A', nome: 'ARAN', url: 'https://www.aran.it', peso: 100 },
-    classifica: { criticita: 'media', impatto: 'nazionale', platea: 'ampia', target: ['docenti', 'ata'], categoria: 'Mobilità, Assegnazioni e Utilizzazioni', livelloFonte: 'A', fontePrimaria: 'CCNI Mobilità 2027/2029', fonteUrl: '', dataAcquisizione: '2026-06-28' },
+    dataPubblicazione: '2026-06-28', fonte: { livello: 'A', nome: 'Orizzonte Scuola', url: 'https://www.orizizontesuola.it', peso: 95 },
+    classifica: { criticita: 'media', impatto: 'nazionale', platea: 'ampia', target: ['docenti', 'ata'], categoria: 'Mobilità, Assegnazioni e Utilizzazioni', livelloFonte: 'A', fontePrimaria: 'Orizzonte Scuola - CCNI Mobilità', fonteUrl: '', dataAcquisizione: '2026-06-28' },
     contenuti: [], tag: ['mobilità', 'trasferimento', 'CCNI'], link: '', isPinned: false,
   },
   {
-    id: 'fn-7', titolo: 'Esami di Stato 2026: scrutinio finale e valutazioni INVALSI',
+    id: 'fn-7', titolo: '**Esami di Stato 2026**: scrutinio finale e valutazioni INVALSI',
     descrizione: 'Risultati dello scrutinio finale degli Esami di Stato 2026. Commissioni miste docenti-esterni. Punteggi e procedure di appello per i candidati.',
     dataPubblicazione: '2026-06-25', fonte: { livello: 'B', nome: 'INVALSI', url: 'https://www.invalsi.it', peso: 95 },
     classifica: { criticita: 'bassa', impatto: 'nazionale', platea: 'ampia', target: ['docenti', 'dirigenti', 'studenti', 'famiglie'], categoria: 'Esami di Stato e Valutazioni (INVALSI)', livelloFonte: 'B', fontePrimaria: 'INVALSI - Esami di Stato 2026', fonteUrl: '', dataAcquisizione: '2026-06-25' },
     contenuti: [], tag: ['esami', 'valutazione', 'INVALSI'], link: '', isPinned: false,
   },
   {
-    id: 'fn-8', titolo: 'Interpelli luglio 2026: 340 avvisi attivi in tutta Italia',
+    id: 'fn-8', titolo: '**Interpelli luglio 2026**: 340 avvisi attivi in tutta Italia',
     descrizione: 'Il Centro Nazionale Interpelli conta 340 avvisi attivi per supplenze annuali e temporanee. Maggior disponibilità in Lombardia, Lazio e Campania.',
     dataPubblicazione: '2026-06-20', fonte: { livello: 'A', nome: 'MIM', url: 'https://www.mim.gov.it', peso: 100 },
     classifica: { criticita: 'alta', impatto: 'nazionale', platea: 'ampia', target: ['docenti', 'aspiranti_docenti'], categoria: 'Bandi, Concorsi e Selezioni', livelloFonte: 'A', fontePrimaria: 'Centro Nazionale Interpelli', fonteUrl: '', dataAcquisizione: '2026-06-20' },
@@ -120,8 +120,9 @@ export default function NewsHub({ isHomePage = true }: NewsHubProps) {
   const fetchData = async () => {
     setLoading(true);
     try {
+      const AUTHORITATIVE_SOURCES = ['MIM', 'MIMUR', 'Gazzetta Ufficiale', 'ARAN', 'Orizzonte Scuola', 'INVALSI', 'INPS', 'Normattiva'];
       const [newsResult, scadenzeResult] = await Promise.all([
-        supabase.from('intelligence_news').select('*').eq('is_archived', false).order('data_pubblicazione', { ascending: false }).limit(60),
+        supabase.from('intelligence_news').select('*').eq('is_archived', false).in('fonte_nome', AUTHORITATIVE_SOURCES).order('data_pubblicazione', { ascending: false }).limit(60),
         supabase.from('intelligence_scadenze').select('*').order('data_scadenza', { ascending: true }).limit(40),
       ]);
 
