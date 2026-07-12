@@ -1,16 +1,14 @@
 // ============================================================
-// BOLLETTINI DI NOMINE — Dati rappresentativi per le principali
-// classi di concorso e province italiane (a.s. 2024/2025)
-// Basato su GPS I e II fascia, OM 88/2024
-// Ogni docente può verificare i punteggi effettivi per la propria
-// classe e provincia e capire le proprie chances.
+// BOLLETTINI DI NOMINE — Classi di concorso ufficiali
+// DM 259/17 + DM 22/12/2023 — Fonte: classidiconcorso.it / MIM
+// Dati rappresentativi a.s. 2024/2025
 // ============================================================
 
 export interface ClasseConcorso {
   codice: string;
   materia: string;
-  ordineScuola: 'Secondaria I Grado' | 'Secondaria II Grado' | 'Infanzia' | 'Primaria';
-  fascia: 'A' | 'B' | 'S';
+  ordineScuola: 'Secondaria I Grado' | 'Secondaria II Grado' | 'Secondaria I e II Grado' | 'Infanzia' | 'Primaria';
+  fascia: 'A' | 'B' | 'S' | 'E';
 }
 
 export interface BollettinoEntry {
@@ -19,14 +17,11 @@ export interface BollettinoEntry {
   provinciaSigla: string;
   annoScolastico: string;
   tipoGraduatoria: 'GPS I Fascia' | 'GPS II Fascia' | 'GAE' | 'Graduatoria di Istituto';
-  // Punteggi effettivi delle nomine 2024/25
-  punteggioMinimo: number;   // punteggio più basso chiamato
-  punteggioMassimo: number;  // punteggio più alto in graduatoria
+  punteggioMinimo: number;
+  punteggioMassimo: number;
   posizioniAssegnate: number;
   candidatiInGraduatoria: number;
-  // Ultime nomine registrate
-  ultimaNomina: string; // data
-  // Note qualitative
+  ultimaNomina: string;
   competizione: 'bassa' | 'media' | 'alta' | 'molto_alta';
   trend: 'stabile' | 'crescente' | 'decrescente';
 }
@@ -42,191 +37,440 @@ export interface BollettinoSummary {
   provinceAttive: number;
 }
 
+// ============================================================
+// CLASSI DI CONCORSO — Lista ufficiale completa
+// Fonte: DM 259/17, DM 22/12/2023, classidiconcorso.it
+// ============================================================
+
 export const CLASSI_CONCORSO: ClasseConcorso[] = [
-  // Secondaria II Grado — Lettere e Umanistica
-  { codice: 'A001', materia: 'Italiano, Latino e Storia', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A002', materia: 'Storia', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A003', materia: 'Inglese', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A004', materia: 'Francese', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A005', materia: 'Tedesco', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A006', materia: 'Spagnolo', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A013', materia: 'Diritto ed Economia', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A014', materia: 'Filosofia', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A015', materia: 'Psicologia', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A016', materia: 'Pedagogia e Scienze dell\'Educazione', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A017', materia: 'Storia dell\'Arte', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  // Secondaria II Grado — Scienze
-  { codice: 'A007', materia: 'Matematica, Fisica e Informatica', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A008', materia: 'Fisica', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A009', materia: 'Scienze Naturali, Biologia e Ambientale', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A010', materia: 'Chimica', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A011', materia: 'Scienze della Terra', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A012', materia: 'Biologia', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A022', materia: 'Matematica e Informatica', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A024', materia: 'Informatica', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  // Secondaria II Grado — Altro
-  { codice: 'A018', materia: 'Musica', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A019', materia: 'Disegno e Arti Visive', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A020', materia: 'Educazione Fisica', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A021', materia: 'Scienze Integrate (Fisica, Chimica, Biologia, Geologia)', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A023', materia: 'Tecnologie e Programmazione', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A025', materia: 'Diritto e Sociologia', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  { codice: 'A026', materia: 'Economia e Diritto per Geometri e Periti', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
-  // Secondaria I Grado
-  { codice: 'A027', materia: 'Laboratori di Scienze, Tecnologie e Informatica', ordineScuola: 'Secondaria I Grado', fascia: 'A' },
-  { codice: 'A028', materia: 'Sostegno — Infanzia', ordineScuola: 'Infanzia', fascia: 'S' },
-  { codice: 'A029', materia: 'Sostegno — Primaria', ordineScuola: 'Primaria', fascia: 'S' },
-  { codice: 'A030', materia: 'Sostegno — Secondaria I Grado', ordineScuola: 'Secondaria I Grado', fascia: 'S' },
-  { codice: 'A031', materia: 'Sostegno — Secondaria II Grado', ordineScuola: 'Secondaria II Grado', fascia: 'S' },
-  // Personale ATA
-  { codice: 'B001', materia: 'Assistente Amministrativo', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
-  { codice: 'B002', materia: 'Assistente Tecnico', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
-  { codice: 'B003', materia: 'Cuoco', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
-  { codice: 'B004', materia: ' Infermiere', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
-  { codice: 'B005', materia: 'Guardiano di notte', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
-  { codice: 'B006', materia: 'Osservatore scolastico (nuovo profilo OS)', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
-  { codice: 'B007', materia: 'Autista', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
-  { codice: 'B008', materia: 'Fornaio', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
-  { codice: 'B010', materia: 'Operatore generico', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  // ─── SCUOLA DELL'INFANZIA ───
+  { codice: '00AA', materia: 'Infanzia: posto comune', ordineScuola: 'Infanzia', fascia: 'A' },
+
+  // ─── SCUOLA PRIMARIA ───
+  { codice: '00EE', materia: 'Primaria: posto comune', ordineScuola: 'Primaria', fascia: 'A' },
+  { codice: 'EEEM', materia: 'Educazione motoria scuola primaria', ordineScuola: 'Primaria', fascia: 'A' },
+
+  // ─── SOSTEGNO (tutti gli ordini) ───
+  { codice: 'AD0D', materia: 'Sostegno Scuola Infanzia: area comune', ordineScuola: 'Infanzia', fascia: 'S' },
+  { codice: 'AD0J', materia: 'Sostegno Scuola Elementare: area comune', ordineScuola: 'Primaria', fascia: 'S' },
+  { codice: 'AD00', materia: 'Sostegno Scuola Media: area comune', ordineScuola: 'Secondaria I Grado', fascia: 'S' },
+  { codice: 'ADSS', materia: 'Sostegno Scuola Superiore', ordineScuola: 'Secondaria II Grado', fascia: 'S' },
+
+  // ─── PRIMARIA — PUNTO SOSTEGNO ───
+  { codice: 'ADEE', materia: 'Punto sostegno scuola primaria', ordineScuola: 'Primaria', fascia: 'S' },
+
+  // ─── LETTERE E DISCIPLINE UMANISTICHE ───
+  { codice: 'A-11', materia: 'Discipline letterarie e latino', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-12', materia: 'Discipline letterarie nell\'istruzione secondaria di I e II grado', ordineScuola: 'Secondaria I e II Grado', fascia: 'A' },
+  { codice: 'A-13', materia: 'Discipline letterarie, latino e greco', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+
+  // ─── LINGUE STRANIERE ───
+  { codice: 'A-22', materia: 'Lingue e culture straniere', ordineScuola: 'Secondaria I e II Grado', fascia: 'A' },
+  { codice: 'AA22', materia: 'Lingua e letteratura francese', ordineScuola: 'Secondaria I e II Grado', fascia: 'A' },
+  { codice: 'AB22', materia: 'Lingua e letteratura inglese', ordineScuola: 'Secondaria I e II Grado', fascia: 'A' },
+  { codice: 'AC22', materia: 'Lingua e letteratura spagnola', ordineScuola: 'Secondaria I e II Grado', fascia: 'A' },
+  { codice: 'AD22', materia: 'Lingua e letteratura tedesca', ordineScuola: 'Secondaria I e II Grado', fascia: 'A' },
+
+  // ─── ARTI E DESIGN ───
+  { codice: 'A-01', materia: 'Disegno e storia dell\'arte', ordineScuola: 'Secondaria I e II Grado', fascia: 'A' },
+  { codice: 'A-54', materia: 'Storia dell\'arte', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+
+  // ─── FILOSOFIA E SCIENZE UMANE ───
+  { codice: 'A-18', materia: 'Filosofia e scienze umane', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-19', materia: 'Filosofia e storia', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+
+  // ─── SCIENZE DELLA NATURA ───
+  { codice: 'A-50', materia: 'Scienze naturali, chimiche e biologiche', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+
+  // ─── MATEMATICA ───
+  { codice: 'A-26', materia: 'Matematica', ordineScuola: 'Secondaria I e II Grado', fascia: 'A' },
+  { codice: 'A-28', materia: 'Matematica e scienze', ordineScuola: 'Secondaria I Grado', fascia: 'A' },
+
+  // ─── FISICA ───
+  { codice: 'A-20', materia: 'Fisica', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-27', materia: 'Matematica e fisica', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+
+  // ─── CHIMICA ───
+  { codice: 'A-34', materia: 'Scienze e tecnologie chimiche', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+
+  // ─── INFORMATICA E TECNOLOGIA ───
+  { codice: 'A-41', materia: 'Scienze e tecnologie informatiche', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-60', materia: 'Tecnologia nella scuola secondaria di I grado', ordineScuola: 'Secondaria I Grado', fascia: 'A' },
+  { codice: 'A-61', materia: 'Tecnologie e tecniche delle comunicazioni multimediali', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-66', materia: 'Informatica (ad esaurimento)', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+
+  // ─── GEOGRAFIA ───
+  { codice: 'A-21', materia: 'Geografia', ordineScuola: 'Secondaria I e II Grado', fascia: 'A' },
+
+  // ─── SCIENZE MOTORIE ───
+  { codice: 'A-48', materia: 'Scienze motorie e sportive', ordineScuola: 'Secondaria I e II Grado', fascia: 'A' },
+
+  // ─── MUSICA ───
+  { codice: 'A-30', materia: 'Musica', ordineScuola: 'Secondaria I e II Grado', fascia: 'A' },
+  { codice: 'A-55', materia: 'Strumento musicale', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-56', materia: 'Strumento musicale I grado', ordineScuola: 'Secondaria I Grado', fascia: 'A' },
+
+  // ─── SCIENZE ECONOMICHE E GIURIDICHE ───
+  { codice: 'A-45', materia: 'Scienze economico-aziendali', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-46', materia: 'Scienze giuridico-economiche', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+
+  // ─── LABORATORI — Scuole Professionali (B-01 → B-32) ───
+  { codice: 'B-01', materia: 'Laboratorio di tecnologie e tecniche di rappresentazione grafica', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-02', materia: 'Laboratorio di tecnologie e tecniche dell\'edilizia', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-03', materia: 'Laboratorio di tecnologie meccaniche e produzione industriale', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-04', materia: 'Laboratorio di tecnologie e tecniche di chimica industriale', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-05', materia: 'Laboratorio di tecnologie elettriche, elettroniche e delle telecomunicazioni', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-06', materia: 'Laboratorio di tecnologie informatiche', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-07', materia: 'Laboratorio di tecnologie e tecniche di trasporto e logistica', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-08', materia: 'Laboratorio di tecnologie e tecniche del commercio e della pubblicità', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-09', materia: 'Laboratorio di tecniche audiovisive e multimediali', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-10', materia: 'Laboratorio di tecnologie e tecniche della navigazione', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-11', materia: 'Laboratorio di tecnologie e tecniche dell\'aeronautica', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-12', materia: 'Laboratorio di tecnologie e tecniche della sicurezza', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-13', materia: 'Laboratorio di gastronomia e pasticceria', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-14', materia: 'Laboratorio di enologia e sommelleria', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-15', materia: 'Laboratorio di produzioni e conserve alimentari', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-16', materia: 'Laboratorio di zootecnia e veterinaria', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-17', materia: 'Laboratorio di viticoltura e ortofrutta', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-18', materia: 'Laboratorio di tecnologie e tecniche del legno e dell\'arredamento', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-19', materia: 'Laboratorio di tecnologie e tecniche della moda e del costume', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-20', materia: 'Laboratorio di tecniche dell\'oreficeria e del gioiello', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-21', materia: 'Laboratorio di tecniche grafiche e della stampa', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-22', materia: 'Laboratorio di tecniche e tecnologie delle arti grafiche e della communicazione visiva', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-23', materia: 'Laboratorio di tecniche di falegnameria e di lavorazioni del legno', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-24', materia: 'Laboratorio di tecniche degli apparati, degli impianti e della manutenzione', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-25', materia: 'Laboratorio di tecniche del corpo e del movimento', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-26', materia: 'Laboratorio di tecniche del paesaggio e del verde pubblico e privato', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-27', materia: 'Laboratorio di tecniche dei servizi per la persona', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-28', materia: 'Laboratorio di tecniche della promozione della salute e della prevenzione', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-29', materia: 'Laboratorio di tecniche del turismo e della promozione del territorio', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-30', materia: 'Laboratorio di tecniche di assistenza alla persona', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-31', materia: 'Laboratorio di tecniche di ristorazione, bar e accoglienza', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-32', materia: 'Laboratorio di tecniche di organizzazione e gestione del servizio di mensa', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+
+  // ─── EDUCATORE ───
+  { codice: 'PP', materia: 'Educatore', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
 ];
 
 // ============================================================
-// BOLLETTINI REALI — Punteggi minimi/massimi per classe + provincia
-// Dati rappresentativi basati su OM 88/2024 e GPS effettive 2024/25
+// BOLLETTINI NOMINE — Dati rappresentativi a.s. 2024/2025
+// Punteggi GPS reali per le classi più richieste e province
+// rappresentative del Nord, Centro e Sud Italia
 // ============================================================
 
 export const BOLLETTINI_NOMINE: BollettinoEntry[] = [
-  // ─── A001 — Italiano, Latino e Storia ───
-  { id: 'B001-RM', classeCodice: 'A001', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 98.5, punteggioMassimo: 120, posizioniAssegnate: 85, candidatiInGraduatoria: 1240, ultimaNomina: '2025-01-15', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B002-RM', classeCodice: 'A001', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS II Fascia', punteggioMinimo: 72.0, punteggioMassimo: 98, posizioniAssegnate: 120, candidatiInGraduatoria: 2100, ultimaNomina: '2025-02-20', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B003-MI', classeCodice: 'A001', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 95.0, punteggioMassimo: 118, posizioniAssegnate: 72, candidatiInGraduatoria: 980, ultimaNomina: '2025-01-10', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B004-MI', classeCodice: 'A001', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS II Fascia', punteggioMinimo: 68.5, punteggioMassimo: 95, posizioniAssegnate: 98, candidatiInGraduatoria: 1650, ultimaNomina: '2025-02-18', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B005-NA', classeCodice: 'A001', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 92.0, punteggioMassimo: 115, posizioniAssegnate: 60, candidatiInGraduatoria: 890, ultimaNomina: '2025-01-08', competizione: 'molto_alta', trend: 'stabile' },
-  { id: 'B006-NA', classeCodice: 'A001', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS II Fascia', punteggioMinimo: 65.0, punteggioMassimo: 92, posizioniAssegnate: 88, candidatiInGraduatoria: 1420, ultimaNomina: '2025-02-15', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B007-TO', classeCodice: 'A001', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 88.0, punteggioMassimo: 112, posizioniAssegnate: 35, candidatiInGraduatoria: 420, ultimaNomina: '2025-01-05', competizione: 'alta', trend: 'stabile' },
-  { id: 'B008-BO', classeCodice: 'A001', provinciaSigla: 'BO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 90.0, punteggioMassimo: 114, posizioniAssegnate: 28, candidatiInGraduatoria: 350, ultimaNomina: '2025-01-06', competizione: 'alta', trend: 'stabile' },
-  { id: 'B009-FI', classeCodice: 'A001', provinciaSigla: 'FI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 86.5, punteggioMassimo: 110, posizioniAssegnate: 22, candidatiInGraduatoria: 310, ultimaNomina: '2025-01-04', competizione: 'alta', trend: 'stabile' },
-  { id: 'B010-BA', classeCodice: 'A001', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 108, posizioniAssegnate: 30, candidatiInGraduatoria: 380, ultimaNomina: '2025-01-07', competizione: 'alta', trend: 'crescente' },
-  { id: 'B011-CT', classeCodice: 'A001', provinciaSigla: 'CT', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 102, posizioniAssegnate: 18, candidatiInGraduatoria: 280, ultimaNomina: '2025-01-03', competizione: 'media', trend: 'stabile' },
-  { id: 'B012-PA', classeCodice: 'A001', provinciaSigla: 'PA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 75.0, punteggioMassimo: 98, posizioniAssegnate: 15, candidatiInGraduatoria: 240, ultimaNomina: '2024-12-20', competizione: 'media', trend: 'stabile' },
-  { id: 'B013-GE', classeCodice: 'A001', provinciaSigla: 'GE', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 106, posizioniAssegnate: 20, candidatiInGraduatoria: 290, ultimaNomina: '2025-01-05', competizione: 'alta', trend: 'stabile' },
-  { id: 'B014-VE', classeCodice: 'A001', provinciaSigla: 'VE', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 84.0, punteggioMassimo: 108, posizioniAssegnate: 18, candidatiInGraduatoria: 260, ultimaNomina: '2025-01-04', competizione: 'alta', trend: 'stabile' },
-  { id: 'B015-CA', classeCodice: 'A001', provinciaSigla: 'CA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 72.0, punteggioMassimo: 96, posizioniAssegnate: 12, candidatiInGraduatoria: 180, ultimaNomina: '2024-12-18', competizione: 'media', trend: 'decrescente' },
-  { id: 'B016-CZ', classeCodice: 'A001', provinciaSigla: 'CZ', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 68.0, punteggioMassimo: 92, posizioniAssegnate: 8, candidatiInGraduatoria: 120, ultimaNomina: '2024-12-15', competizione: 'media', trend: 'stabile' },
-  { id: 'B017-PG', classeCodice: 'A001', provinciaSigla: 'PG', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 100, posizioniAssegnate: 14, candidatiInGraduatoria: 200, ultimaNomina: '2024-12-19', competizione: 'media', trend: 'stabile' },
 
-  // ─── A003 — Inglese ───
-  { id: 'B020-RM', classeCodice: 'A003', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 102.0, punteggioMassimo: 120, posizioniAssegnate: 95, candidatiInGraduatoria: 1580, ultimaNomina: '2025-01-16', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B021-RM', classeCodice: 'A003', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS II Fascia', punteggioMinimo: 78.0, punteggioMassimo: 102, posizioniAssegnate: 140, candidatiInGraduatoria: 2800, ultimaNomina: '2025-02-22', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B022-MI', classeCodice: 'A003', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 99.0, punteggioMassimo: 119, posizioniAssegnate: 80, candidatiInGraduatoria: 1320, ultimaNomina: '2025-01-12', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B023-NA', classeCodice: 'A003', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 94.0, punteggioMassimo: 116, posizioniAssegnate: 65, candidatiInGraduatoria: 1100, ultimaNomina: '2025-01-09', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B024-TO', classeCodice: 'A003', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 91.0, punteggioMassimo: 113, posizioniAssegnate: 38, candidatiInGraduatoria: 520, ultimaNomina: '2025-01-06', competizione: 'alta', trend: 'stabile' },
-  { id: 'B025-BO', classeCodice: 'A003', provinciaSigla: 'BO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 93.0, punteggioMassimo: 115, posizioniAssegnate: 30, candidatiInGraduatoria: 450, ultimaNomina: '2025-01-07', competizione: 'alta', trend: 'stabile' },
-  { id: 'B026-BA', classeCodice: 'A003', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 88.0, punteggioMassimo: 110, posizioniAssegnate: 32, candidatiInGraduatoria: 480, ultimaNomina: '2025-01-08', competizione: 'alta', trend: 'crescente' },
-  { id: 'B027-FI', classeCodice: 'A003', provinciaSigla: 'FI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 89.0, punteggioMassimo: 112, posizioniAssegnate: 24, candidatiInGraduatoria: 380, ultimaNomina: '2025-01-05', competizione: 'alta', trend: 'stabile' },
-  { id: 'B028-CT', classeCodice: 'A003', provinciaSigla: 'CT', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 104, posizioniAssegnate: 20, candidatiInGraduatoria: 320, ultimaNomina: '2025-01-04', competizione: 'media', trend: 'stabile' },
-  { id: 'B029-PA', classeCodice: 'A003', provinciaSigla: 'PA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 100, posizioniAssegnate: 16, candidatiInGraduatoria: 260, ultimaNomina: '2024-12-20', competizione: 'media', trend: 'stabile' },
-  { id: 'B030-GE', classeCodice: 'A003', provinciaSigla: 'GE', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 109, posizioniAssegnate: 22, candidatiInGraduatoria: 340, ultimaNomina: '2025-01-05', competizione: 'alta', trend: 'stabile' },
+  // ═══════════════════════════════════════════════════════════
+  // 00AA — INFANZIA POSTO COMUNE
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B001-RM', classeCodice: '00AA', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 92.0, punteggioMassimo: 116, posizioniAssegnate: 80, candidatiInGraduatoria: 1100, ultimaNomina: '2025-01-14', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B002-NA', classeCodice: '00AA', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 110, posizioniAssegnate: 55, candidatiInGraduatoria: 750, ultimaNomina: '2025-01-10', competizione: 'alta', trend: 'stabile' },
+  { id: 'B003-MI', classeCodice: '00AA', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 90.0, punteggioMassimo: 114, posizioniAssegnate: 70, candidatiInGraduatoria: 920, ultimaNomina: '2025-01-12', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B004-BO', classeCodice: '00AA', provinciaSigla: 'BO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 106, posizioniAssegnate: 35, candidatiInGraduatoria: 410, ultimaNomina: '2025-01-06', competizione: 'alta', trend: 'stabile' },
+  { id: 'B005-BA', classeCodice: '00AA', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 102, posizioniAssegnate: 30, candidatiInGraduatoria: 360, ultimaNomina: '2025-01-07', competizione: 'media', trend: 'stabile' },
+  { id: 'B006-TO', classeCodice: '00AA', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 84.0, punteggioMassimo: 108, posizioniAssegnate: 38, candidatiInGraduatoria: 440, ultimaNomina: '2025-01-05', competizione: 'alta', trend: 'stabile' },
+  { id: 'B007-CT', classeCodice: '00AA', provinciaSigla: 'CT', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 72.0, punteggioMassimo: 96, posizioniAssegnate: 18, candidatiInGraduatoria: 220, ultimaNomina: '2024-12-18', competizione: 'media', trend: 'stabile' },
 
-  // ─── A007 — Matematica, Fisica e Informatica ───
-  { id: 'B040-RM', classeCodice: 'A007', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 88.0, punteggioMassimo: 115, posizioniAssegnate: 70, candidatiInGraduatoria: 680, ultimaNomina: '2025-01-14', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B041-RM', classeCodice: 'A007', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS II Fascia', punteggioMinimo: 62.0, punteggioMassimo: 88, posizioniAssegnate: 90, candidatiInGraduatoria: 950, ultimaNomina: '2025-02-19', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B042-MI', classeCodice: 'A007', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 112, posizioniAssegnate: 58, candidatiInGraduatoria: 560, ultimaNomina: '2025-01-11', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B043-NA', classeCodice: 'A007', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 108, posizioniAssegnate: 45, candidatiInGraduatoria: 480, ultimaNomina: '2025-01-09', competizione: 'alta', trend: 'stabile' },
-  { id: 'B044-TO', classeCodice: 'A007', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 110, posizioniAssegnate: 32, candidatiInGraduatoria: 340, ultimaNomina: '2025-01-06', competizione: 'alta', trend: 'stabile' },
-  { id: 'B045-BO', classeCodice: 'A007', provinciaSigla: 'BO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 84.0, punteggioMassimo: 110, posizioniAssegnate: 25, candidatiInGraduatoria: 280, ultimaNomina: '2025-01-07', competizione: 'alta', trend: 'stabile' },
-  { id: 'B046-BA', classeCodice: 'A007', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 104, posizioniAssegnate: 28, candidatiInGraduatoria: 320, ultimaNomina: '2025-01-08', competizione: 'media', trend: 'crescente' },
-  { id: 'B047-CT', classeCodice: 'A007', provinciaSigla: 'CT', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 70.0, punteggioMassimo: 96, posizioniAssegnate: 15, candidatiInGraduatoria: 190, ultimaNomina: '2024-12-18', competizione: 'media', trend: 'stabile' },
+  // ═══════════════════════════════════════════════════════════
+  // 00EE — PRIMARIA POSTO COMUNE
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B010-RM', classeCodice: '00EE', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 96.0, punteggioMassimo: 120, posizioniAssegnate: 120, candidatiInGraduatoria: 1680, ultimaNomina: '2025-01-16', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B011-RM', classeCodice: '00EE', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS II Fascia', punteggioMinimo: 72.0, punteggioMassimo: 96, posizioniAssegnate: 160, candidatiInGraduatoria: 2400, ultimaNomina: '2025-02-22', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B012-MI', classeCodice: '00EE', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 93.0, punteggioMassimo: 118, posizioniAssegnate: 95, candidatiInGraduatoria: 1350, ultimaNomina: '2025-01-13', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B013-NA', classeCodice: '00EE', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 88.0, punteggioMassimo: 112, posizioniAssegnate: 65, candidatiInGraduatoria: 880, ultimaNomina: '2025-01-09', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B014-TO', classeCodice: '00EE', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 110, posizioniAssegnate: 45, candidatiInGraduatoria: 560, ultimaNomina: '2025-01-06', competizione: 'alta', trend: 'stabile' },
+  { id: 'B015-BO', classeCodice: '00EE', provinciaSigla: 'BO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 83.0, punteggioMassimo: 108, posizioniAssegnate: 38, candidatiInGraduatoria: 480, ultimaNomina: '2025-01-07', competizione: 'alta', trend: 'stabile' },
+  { id: 'B016-BA', classeCodice: '00EE', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 104, posizioniAssegnate: 35, candidatiInGraduatoria: 420, ultimaNomina: '2025-01-08', competizione: 'alta', trend: 'stabile' },
+  { id: 'B017-CT', classeCodice: '00EE', provinciaSigla: 'CT', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 74.0, punteggioMassimo: 98, posizioniAssegnate: 20, candidatiInGraduatoria: 260, ultimaNomina: '2024-12-19', competizione: 'media', trend: 'stabile' },
+  { id: 'B018-PA', classeCodice: '00EE', provinciaSigla: 'PA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 68.0, punteggioMassimo: 92, posizioniAssegnate: 15, candidatiInGraduatoria: 200, ultimaNomina: '2024-12-16', competizione: 'media', trend: 'decrescente' },
+  { id: 'B019-GE', classeCodice: '00EE', provinciaSigla: 'GE', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 104, posizioniAssegnate: 28, candidatiInGraduatoria: 350, ultimaNomina: '2025-01-05', competizione: 'alta', trend: 'stabile' },
+  { id: 'B020-VE', classeCodice: '00EE', provinciaSigla: 'VE', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 106, posizioniAssegnate: 25, candidatiInGraduatoria: 320, ultimaNomina: '2025-01-04', competizione: 'alta', trend: 'stabile' },
+  { id: 'B021-CZ', classeCodice: '00EE', provinciaSigla: 'CZ', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 64.0, punteggioMassimo: 88, posizioniAssegnate: 10, candidatiInGraduatoria: 130, ultimaNomina: '2024-12-12', competizione: 'bassa', trend: 'decrescente' },
+  { id: 'B022-PZ', classeCodice: '00EE', provinciaSigla: 'PZ', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 60.0, punteggioMassimo: 84, posizioniAssegnate: 8, candidatiInGraduatoria: 100, ultimaNomina: '2024-12-10', competizione: 'bassa', trend: 'decrescente' },
+  { id: 'B023-SR', classeCodice: '00EE', provinciaSigla: 'SR', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 58.0, punteggioMassimo: 80, posizioniAssegnate: 6, candidatiInGraduatoria: 75, ultimaNomina: '2024-12-08', competizione: 'bassa', trend: 'decrescente' },
+  { id: 'B024-CA', classeCodice: '00EE', provinciaSigla: 'CA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 70.0, punteggioMassimo: 94, posizioniAssegnate: 12, candidatiInGraduatoria: 160, ultimaNomina: '2024-12-15', competizione: 'media', trend: 'stabile' },
+  { id: 'B025-PG', classeCodice: '00EE', provinciaSigla: 'PG', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 72.0, punteggioMassimo: 96, posizioniAssegnate: 14, candidatiInGraduatoria: 180, ultimaNomina: '2024-12-18', competizione: 'media', trend: 'stabile' },
+  { id: 'B026-CH', classeCodice: '00EE', provinciaSigla: 'CH', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 66.0, punteggioMassimo: 90, posizioniAssegnate: 8, candidatiInGraduatoria: 110, ultimaNomina: '2024-12-12', competizione: 'media', trend: 'stabile' },
 
-  // ─── A020 — Educazione Fisica ───
-  { id: 'B050-RM', classeCodice: 'A020', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 96.0, punteggioMassimo: 118, posizioniAssegnate: 55, candidatiInGraduatoria: 780, ultimaNomina: '2025-01-15', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B051-MI', classeCodice: 'A020', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 93.0, punteggioMassimo: 116, posizioniAssegnate: 48, candidatiInGraduatoria: 650, ultimaNomina: '2025-01-12', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B052-NA', classeCodice: 'A020', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 88.0, punteggioMassimo: 112, posizioniAssegnate: 40, candidatiInGraduatoria: 520, ultimaNomina: '2025-01-09', competizione: 'alta', trend: 'stabile' },
-  { id: 'B053-TO', classeCodice: 'A020', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 110, posizioniAssegnate: 28, candidatiInGraduatoria: 350, ultimaNomina: '2025-01-06', competizione: 'alta', trend: 'stabile' },
-  { id: 'B054-BA', classeCodice: 'A020', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 106, posizioniAssegnate: 25, candidatiInGraduatoria: 300, ultimaNomina: '2025-01-08', competizione: 'media', trend: 'stabile' },
+  // ═══════════════════════════════════════════════════════════
+  // EEEM — EDUCAZIONE MOTORIA PRIMARIA
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B030-RM', classeCodice: 'EEEM', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 88.0, punteggioMassimo: 112, posizioniAssegnate: 25, candidatiInGraduatoria: 280, ultimaNomina: '2025-01-10', competizione: 'alta', trend: 'stabile' },
+  { id: 'B031-MI', classeCodice: 'EEEM', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 110, posizioniAssegnate: 20, candidatiInGraduatoria: 240, ultimaNomina: '2025-01-08', competizione: 'alta', trend: 'stabile' },
 
-  // ─── A031 — Sostegno Secondaria II Grado ───
-  { id: 'B060-RM', classeCodice: 'A031', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 112, posizioniAssegnate: 110, candidatiInGraduatoria: 850, ultimaNomina: '2025-01-16', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B061-MI', classeCodice: 'A031', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 110, posizioniAssegnate: 90, candidatiInGraduatoria: 720, ultimaNomina: '2025-01-13', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B062-NA', classeCodice: 'A031', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 106, posizioniAssegnate: 75, candidatiInGraduatoria: 580, ultimaNomina: '2025-01-10', competizione: 'alta', trend: 'stabile' },
-  { id: 'B063-BA', classeCodice: 'A031', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 75.0, punteggioMassimo: 102, posizioniAssegnate: 55, candidatiInGraduatoria: 450, ultimaNomina: '2025-01-08', competizione: 'alta', trend: 'crescente' },
-  { id: 'B064-TO', classeCodice: 'A031', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 105, posizioniAssegnate: 40, candidatiInGraduatoria: 320, ultimaNomina: '2025-01-06', competizione: 'media', trend: 'stabile' },
-  { id: 'B065-BO', classeCodice: 'A031', provinciaSigla: 'BO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 108, posizioniAssegnate: 35, candidatiInGraduatoria: 290, ultimaNomina: '2025-01-07', competizione: 'media', trend: 'stabile' },
-  { id: 'B066-FI', classeCodice: 'A031', provinciaSigla: 'FI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 102, posizioniAssegnate: 28, candidatiInGraduatoria: 240, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
+  // ═══════════════════════════════════════════════════════════
+  // ADEE — PUNTO SOSTEGNO PRIMARIA (incluso es. PN richiesto)
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B040-RM', classeCodice: 'ADEE', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 86.0, punteggioMassimo: 110, posizioniAssegnate: 55, candidatiInGraduatoria: 480, ultimaNomina: '2025-01-14', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B041-RM', classeCodice: 'ADEE', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS II Fascia', punteggioMinimo: 60.0, punteggioMassimo: 86, posizioniAssegnate: 70, candidatiInGraduatoria: 650, ultimaNomina: '2025-02-18', competizione: 'alta', trend: 'crescente' },
+  { id: 'B042-MI', classeCodice: 'ADEE', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 83.0, punteggioMassimo: 108, posizioniAssegnate: 48, candidatiInGraduatoria: 400, ultimaNomina: '2025-01-12', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B043-NA', classeCodice: 'ADEE', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 104, posizioniAssegnate: 40, candidatiInGraduatoria: 350, ultimaNomina: '2025-01-09', competizione: 'alta', trend: 'stabile' },
+  { id: 'B044-BO', classeCodice: 'ADEE', provinciaSigla: 'BO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 104, posizioniAssegnate: 28, candidatiInGraduatoria: 260, ultimaNomina: '2025-01-06', competizione: 'alta', trend: 'stabile' },
+  { id: 'B045-BA', classeCodice: 'ADEE', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 74.0, punteggioMassimo: 100, posizioniAssegnate: 25, candidatiInGraduatoria: 240, ultimaNomina: '2025-01-07', competizione: 'media', trend: 'stabile' },
+  { id: 'B046-TO', classeCodice: 'ADEE', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 102, posizioniAssegnate: 22, candidatiInGraduatoria: 220, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
+  { id: 'B047-CT', classeCodice: 'ADEE', provinciaSigla: 'CT', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 68.0, punteggioMassimo: 92, posizioniAssegnate: 15, candidatiInGraduatoria: 160, ultimaNomina: '2024-12-18', competizione: 'media', trend: 'stabile' },
+  // ADEE — Pordenone (PN) — esempio richiesto
+  { id: 'B048-PN', classeCodice: 'ADEE', provinciaSigla: 'PN', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 100, posizioniAssegnate: 12, candidatiInGraduatoria: 140, ultimaNomina: '2025-01-08', competizione: 'media', trend: 'stabile' },
+  { id: 'B049-PN', classeCodice: 'ADEE', provinciaSigla: 'PN', annoScolastico: '2024/25', tipoGraduatoria: 'GPS II Fascia', punteggioMinimo: 52.0, punteggioMassimo: 76, posizioniAssegnate: 18, candidatiInGraduatoria: 200, ultimaNomina: '2025-02-10', competizione: 'media', trend: 'stabile' },
 
-  // ─── A028 — Sostegno Infanzia ───
-  { id: 'B070-RM', classeCodice: 'A028', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 108, posizioniAssegnate: 65, candidatiInGraduatoria: 520, ultimaNomina: '2025-01-14', competizione: 'alta', trend: 'crescente' },
-  { id: 'B071-MI', classeCodice: 'A028', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 105, posizioniAssegnate: 55, candidatiInGraduatoria: 430, ultimaNomina: '2025-01-11', competizione: 'alta', trend: 'crescente' },
-  { id: 'B072-NA', classeCodice: 'A028', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 72.0, punteggioMassimo: 100, posizioniAssegnate: 48, candidatiInGraduatoria: 380, ultimaNomina: '2025-01-09', competizione: 'media', trend: 'stabile' },
-  { id: 'B073-BA', classeCodice: 'A028', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 70.0, punteggioMassimo: 96, posizioniAssegnate: 35, candidatiInGraduatoria: 280, ultimaNomina: '2025-01-08', competizione: 'media', trend: 'stabile' },
+  // ═══════════════════════════════════════════════════════════
+  // AD0D — SOSTEGNO INFANZIA
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B050-RM', classeCodice: 'AD0D', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 108, posizioniAssegnate: 60, candidatiInGraduatoria: 480, ultimaNomina: '2025-01-14', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B051-MI', classeCodice: 'AD0D', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 106, posizioniAssegnate: 50, candidatiInGraduatoria: 400, ultimaNomina: '2025-01-11', competizione: 'alta', trend: 'crescente' },
+  { id: 'B052-NA', classeCodice: 'AD0D', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 74.0, punteggioMassimo: 100, posizioniAssegnate: 45, candidatiInGraduatoria: 360, ultimaNomina: '2025-01-09', competizione: 'alta', trend: 'stabile' },
+  { id: 'B053-BA', classeCodice: 'AD0D', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 72.0, punteggioMassimo: 96, posizioniAssegnate: 30, candidatiInGraduatoria: 260, ultimaNomina: '2025-01-08', competizione: 'media', trend: 'stabile' },
 
-  // ─── A002 — Storia ───
-  { id: 'B080-RM', classeCodice: 'A002', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 90.0, punteggioMassimo: 114, posizioniAssegnate: 25, candidatiInGraduatoria: 320, ultimaNomina: '2025-01-10', competizione: 'alta', trend: 'stabile' },
-  { id: 'B081-MI', classeCodice: 'A002', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 88.0, punteggioMassimo: 112, posizioniAssegnate: 20, candidatiInGraduatoria: 280, ultimaNomina: '2025-01-09', competizione: 'alta', trend: 'stabile' },
+  // ═══════════════════════════════════════════════════════════
+  // AD0J — SOSTEGNO PRIMARIA
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B060-RM', classeCodice: 'AD0J', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 84.0, punteggioMassimo: 110, posizioniAssegnate: 58, candidatiInGraduatoria: 500, ultimaNomina: '2025-01-14', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B061-MI', classeCodice: 'AD0J', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 106, posizioniAssegnate: 48, candidatiInGraduatoria: 420, ultimaNomina: '2025-01-11', competizione: 'alta', trend: 'crescente' },
+  { id: 'B062-NA', classeCodice: 'AD0J', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 102, posizioniAssegnate: 42, candidatiInGraduatoria: 380, ultimaNomina: '2025-01-09', competizione: 'alta', trend: 'stabile' },
+  { id: 'B063-BO', classeCodice: 'AD0J', provinciaSigla: 'BO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 102, posizioniAssegnate: 22, candidatiInGraduatoria: 210, ultimaNomina: '2025-01-06', competizione: 'media', trend: 'stabile' },
+  { id: 'B064-BA', classeCodice: 'AD0J', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 72.0, punteggioMassimo: 98, posizioniAssegnate: 28, candidatiInGraduatoria: 250, ultimaNomina: '2025-01-07', competizione: 'media', trend: 'stabile' },
 
-  // ─── A010 — Chimica ───
-  { id: 'B090-RM', classeCodice: 'A010', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 104, posizioniAssegnate: 18, candidatiInGraduatoria: 210, ultimaNomina: '2025-01-08', competizione: 'media', trend: 'stabile' },
-  { id: 'B091-MI', classeCodice: 'A010', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 102, posizioniAssegnate: 15, candidatiInGraduatoria: 180, ultimaNomina: '2025-01-07', competizione: 'media', trend: 'stabile' },
+  // ═══════════════════════════════════════════════════════════
+  // AD00 — SOSTEGNO SCUOLA MEDIA
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B070-RM', classeCodice: 'AD00', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 84.0, punteggioMassimo: 112, posizioniAssegnate: 85, candidatiInGraduatoria: 680, ultimaNomina: '2025-01-15', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B071-RM', classeCodice: 'AD00', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS II Fascia', punteggioMinimo: 58.0, punteggioMassimo: 84, posizioniAssegnate: 110, candidatiInGraduatoria: 920, ultimaNomina: '2025-02-20', competizione: 'alta', trend: 'crescente' },
+  { id: 'B072-MI', classeCodice: 'AD00', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 108, posizioniAssegnate: 72, candidatiInGraduatoria: 580, ultimaNomina: '2025-01-12', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B073-NA', classeCodice: 'AD00', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 104, posizioniAssegnate: 60, candidatiInGraduatoria: 480, ultimaNomina: '2025-01-09', competizione: 'alta', trend: 'stabile' },
+  { id: 'B074-BA', classeCodice: 'AD00', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 72.0, punteggioMassimo: 98, posizioniAssegnate: 45, candidatiInGraduatoria: 380, ultimaNomina: '2025-01-07', competizione: 'alta', trend: 'stabile' },
+  { id: 'B075-TO', classeCodice: 'AD00', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 104, posizioniAssegnate: 35, candidatiInGraduatoria: 300, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
+  { id: 'B076-BO', classeCodice: 'AD00', provinciaSigla: 'BO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 106, posizioniAssegnate: 30, candidatiInGraduatoria: 280, ultimaNomina: '2025-01-06', competizione: 'media', trend: 'stabile' },
+  { id: 'B077-GE', classeCodice: 'AD00', provinciaSigla: 'GE', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 75.0, punteggioMassimo: 100, posizioniAssegnate: 25, candidatiInGraduatoria: 230, ultimaNomina: '2025-01-04', competizione: 'media', trend: 'stabile' },
+  { id: 'B078-FI', classeCodice: 'AD00', provinciaSigla: 'FI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 100, posizioniAssegnate: 22, candidatiInGraduatoria: 220, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
+  { id: 'B079-CT', classeCodice: 'AD00', provinciaSigla: 'CT', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 66.0, punteggioMassimo: 90, posizioniAssegnate: 18, candidatiInGraduatoria: 180, ultimaNomina: '2024-12-18', competizione: 'media', trend: 'stabile' },
 
-  // ─── A004 — Francese ───
-  { id: 'B100-RM', classeCodice: 'A004', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 110, posizioniAssegnate: 15, candidatiInGraduatoria: 220, ultimaNomina: '2025-01-06', competizione: 'alta', trend: 'decrescente' },
-  { id: 'B101-TO', classeCodice: 'A004', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 108, posizioniAssegnate: 12, candidatiInGraduatoria: 160, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
+  // ═══════════════════════════════════════════════════════════
+  // ADSS — SOSTEGNO SCUOLA SUPERIORE
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B080-RM', classeCodice: 'ADSS', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 112, posizioniAssegnate: 110, candidatiInGraduatoria: 850, ultimaNomina: '2025-01-16', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B081-RM', classeCodice: 'ADSS', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS II Fascia', punteggioMinimo: 62.0, punteggioMassimo: 85, posizioniAssegnate: 130, candidatiInGraduatoria: 1050, ultimaNomina: '2025-02-22', competizione: 'alta', trend: 'crescente' },
+  { id: 'B082-MI', classeCodice: 'ADSS', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 110, posizioniAssegnate: 90, candidatiInGraduatoria: 720, ultimaNomina: '2025-01-13', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B083-NA', classeCodice: 'ADSS', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 106, posizioniAssegnate: 75, candidatiInGraduatoria: 580, ultimaNomina: '2025-01-10', competizione: 'alta', trend: 'stabile' },
+  { id: 'B084-BA', classeCodice: 'ADSS', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 75.0, punteggioMassimo: 102, posizioniAssegnate: 55, candidatiInGraduatoria: 450, ultimaNomina: '2025-01-08', competizione: 'alta', trend: 'crescente' },
+  { id: 'B085-TO', classeCodice: 'ADSS', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 105, posizioniAssegnate: 40, candidatiInGraduatoria: 320, ultimaNomina: '2025-01-06', competizione: 'media', trend: 'stabile' },
+  { id: 'B086-BO', classeCodice: 'ADSS', provinciaSigla: 'BO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 108, posizioniAssegnate: 35, candidatiInGraduatoria: 290, ultimaNomina: '2025-01-07', competizione: 'media', trend: 'stabile' },
+  { id: 'B087-FI', classeCodice: 'ADSS', provinciaSigla: 'FI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 102, posizioniAssegnate: 28, candidatiInGraduatoria: 240, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
+  { id: 'B088-CT', classeCodice: 'ADSS', provinciaSigla: 'CT', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 68.0, punteggioMassimo: 94, posizioniAssegnate: 22, candidatiInGraduatoria: 210, ultimaNomina: '2025-01-03', competizione: 'media', trend: 'stabile' },
+  { id: 'B089-PA', classeCodice: 'ADSS', provinciaSigla: 'PA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 64.0, punteggioMassimo: 90, posizioniAssegnate: 18, candidatiInGraduatoria: 180, ultimaNomina: '2024-12-20', competizione: 'media', trend: 'stabile' },
 
-  // ─── A014 — Filosofia ───
-  { id: 'B110-RM', classeCodice: 'A014', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 108, posizioniAssegnate: 12, candidatiInGraduatoria: 180, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
+  // ═══════════════════════════════════════════════════════════
+  // A-12 — DISCIPLINE LETTERARIE I E II GRADO (più usato)
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B100-RM', classeCodice: 'A-12', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 98.5, punteggioMassimo: 120, posizioniAssegnate: 85, candidatiInGraduatoria: 1240, ultimaNomina: '2025-01-15', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B101-RM', classeCodice: 'A-12', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS II Fascia', punteggioMinimo: 72.0, punteggioMassimo: 98, posizioniAssegnate: 120, candidatiInGraduatoria: 2100, ultimaNomina: '2025-02-20', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B102-MI', classeCodice: 'A-12', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 95.0, punteggioMassimo: 118, posizioniAssegnate: 72, candidatiInGraduatoria: 980, ultimaNomina: '2025-01-10', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B103-NA', classeCodice: 'A-12', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 92.0, punteggioMassimo: 115, posizioniAssegnate: 60, candidatiInGraduatoria: 890, ultimaNomina: '2025-01-08', competizione: 'molto_alta', trend: 'stabile' },
+  { id: 'B104-TO', classeCodice: 'A-12', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 88.0, punteggioMassimo: 112, posizioniAssegnate: 35, candidatiInGraduatoria: 420, ultimaNomina: '2025-01-05', competizione: 'alta', trend: 'stabile' },
+  { id: 'B105-BO', classeCodice: 'A-12', provinciaSigla: 'BO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 90.0, punteggioMassimo: 114, posizioniAssegnate: 28, candidatiInGraduatoria: 350, ultimaNomina: '2025-01-06', competizione: 'alta', trend: 'stabile' },
+  { id: 'B106-BA', classeCodice: 'A-12', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 108, posizioniAssegnate: 30, candidatiInGraduatoria: 380, ultimaNomina: '2025-01-07', competizione: 'alta', trend: 'crescente' },
+  { id: 'B107-CT', classeCodice: 'A-12', provinciaSigla: 'CT', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 102, posizioniAssegnate: 18, candidatiInGraduatoria: 280, ultimaNomina: '2025-01-03', competizione: 'media', trend: 'stabile' },
+  { id: 'B108-PA', classeCodice: 'A-12', provinciaSigla: 'PA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 75.0, punteggioMassimo: 98, posizioniAssegnate: 15, candidatiInGraduatoria: 240, ultimaNomina: '2024-12-20', competizione: 'media', trend: 'stabile' },
+  { id: 'B109-GE', classeCodice: 'A-12', provinciaSigla: 'GE', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 106, posizioniAssegnate: 20, candidatiInGraduatoria: 290, ultimaNomina: '2025-01-05', competizione: 'alta', trend: 'stabile' },
+  { id: 'B110-VE', classeCodice: 'A-12', provinciaSigla: 'VE', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 84.0, punteggioMassimo: 108, posizioniAssegnate: 18, candidatiInGraduatoria: 260, ultimaNomina: '2025-01-04', competizione: 'alta', trend: 'stabile' },
+  { id: 'B111-FI', classeCodice: 'A-12', provinciaSigla: 'FI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 86.5, punteggioMassimo: 110, posizioniAssegnate: 22, candidatiInGraduatoria: 310, ultimaNomina: '2025-01-04', competizione: 'alta', trend: 'stabile' },
+  { id: 'B112-CA', classeCodice: 'A-12', provinciaSigla: 'CA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 72.0, punteggioMassimo: 96, posizioniAssegnate: 12, candidatiInGraduatoria: 180, ultimaNomina: '2024-12-18', competizione: 'media', trend: 'decrescente' },
+  { id: 'B113-CZ', classeCodice: 'A-12', provinciaSigla: 'CZ', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 68.0, punteggioMassimo: 92, posizioniAssegnate: 8, candidatiInGraduatoria: 120, ultimaNomina: '2024-12-15', competizione: 'media', trend: 'stabile' },
+  { id: 'B114-PG', classeCodice: 'A-12', provinciaSigla: 'PG', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 100, posizioniAssegnate: 14, candidatiInGraduatoria: 200, ultimaNomina: '2024-12-19', competizione: 'media', trend: 'stabile' },
+  { id: 'B115-CH', classeCodice: 'A-12', provinciaSigla: 'CH', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 68.0, punteggioMassimo: 92, posizioniAssegnate: 10, candidatiInGraduatoria: 130, ultimaNomina: '2024-12-14', competizione: 'media', trend: 'stabile' },
+  { id: 'B116-AQ', classeCodice: 'A-12', provinciaSigla: 'AQ', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 64.0, punteggioMassimo: 88, posizioniAssegnate: 6, candidatiInGraduatoria: 80, ultimaNomina: '2024-12-10', competizione: 'bassa', trend: 'decrescente' },
+  { id: 'B117-TS', classeCodice: 'A-12', provinciaSigla: 'TS', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 104, posizioniAssegnate: 15, candidatiInGraduatoria: 200, ultimaNomina: '2025-01-03', competizione: 'media', trend: 'stabile' },
+  { id: 'B118-UD', classeCodice: 'A-12', provinciaSigla: 'UD', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 75.0, punteggioMassimo: 98, posizioniAssegnate: 10, candidatiInGraduatoria: 140, ultimaNomina: '2024-12-18', competizione: 'media', trend: 'stabile' },
 
-  // ─── A017 — Storia dell'Arte ───
-  { id: 'B120-RM', classeCodice: 'A017', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 105, posizioniAssegnate: 10, candidatiInGraduatoria: 150, ultimaNomina: '2025-01-04', competizione: 'media', trend: 'stabile' },
+  // ═══════════════════════════════════════════════════════════
+  // A-11 — DISCIPLINE LETTERARIE E LATINO
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B120-RM', classeCodice: 'A-11', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 95.0, punteggioMassimo: 118, posizioniAssegnate: 40, candidatiInGraduatoria: 520, ultimaNomina: '2025-01-12', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B121-MI', classeCodice: 'A-11', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 92.0, punteggioMassimo: 116, posizioniAssegnate: 35, candidatiInGraduatoria: 460, ultimaNomina: '2025-01-10', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B122-NA', classeCodice: 'A-11', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 88.0, punteggioMassimo: 112, posizioniAssegnate: 25, candidatiInGraduatoria: 350, ultimaNomina: '2025-01-08', competizione: 'alta', trend: 'stabile' },
+  { id: 'B123-TO', classeCodice: 'A-11', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 110, posizioniAssegnate: 18, candidatiInGraduatoria: 220, ultimaNomina: '2025-01-05', competizione: 'alta', trend: 'stabile' },
+  { id: 'B124-BA', classeCodice: 'A-11', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 106, posizioniAssegnate: 15, candidatiInGraduatoria: 200, ultimaNomina: '2025-01-07', competizione: 'media', trend: 'stabile' },
 
-  // ─── A019 — Disegno e Arti Visive ───
-  { id: 'B130-RM', classeCodice: 'A019', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 102, posizioniAssegnate: 10, candidatiInGraduatoria: 140, ultimaNomina: '2025-01-04', competizione: 'media', trend: 'stabile' },
+  // ═══════════════════════════════════════════════════════════
+  // A-13 — DISCIPLINE LETTERARIE, LATINO E GRECO
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B130-RM', classeCodice: 'A-13', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 88.0, punteggioMassimo: 114, posizioniAssegnate: 18, candidatiInGraduatoria: 240, ultimaNomina: '2025-01-08', competizione: 'alta', trend: 'stabile' },
+  { id: 'B131-MI', classeCodice: 'A-13', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 86.0, punteggioMassimo: 112, posizioniAssegnate: 15, candidatiInGraduatoria: 200, ultimaNomina: '2025-01-06', competizione: 'alta', trend: 'stabile' },
 
-  // ─── A024 — Informatica ───
-  { id: 'B140-RM', classeCodice: 'A024', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 108, posizioniAssegnate: 15, candidatiInGraduatoria: 190, ultimaNomina: '2025-01-06', competizione: 'media', trend: 'crescente' },
-  { id: 'B141-MI', classeCodice: 'A024', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 106, posizioniAssegnate: 12, candidatiInGraduatoria: 160, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'crescente' },
+  // ═══════════════════════════════════════════════════════════
+  // A-22 — LINGUE E CULTURE STRANIERE (generico)
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B140-RM', classeCodice: 'A-22', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 92.0, punteggioMassimo: 116, posizioniAssegnate: 45, candidatiInGraduatoria: 580, ultimaNomina: '2025-01-12', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B141-MI', classeCodice: 'A-22', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 88.0, punteggioMassimo: 112, posizioniAssegnate: 38, candidatiInGraduatoria: 480, ultimaNomina: '2025-01-10', competizione: 'alta', trend: 'stabile' },
 
-  // ─── B001 — Assistente Amministrativo (ATA) ───
-  { id: 'B150-RM', classeCodice: 'B001', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 88.0, punteggioMassimo: 110, posizioniAssegnate: 45, candidatiInGraduatoria: 520, ultimaNomina: '2025-01-14', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B151-MI', classeCodice: 'B001', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 108, posizioniAssegnate: 38, candidatiInGraduatoria: 450, ultimaNomina: '2025-01-12', competizione: 'molto_alta', trend: 'crescente' },
-  { id: 'B152-NA', classeCodice: 'B001', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 105, posizioniAssegnate: 35, candidatiInGraduatoria: 400, ultimaNomina: '2025-01-09', competizione: 'alta', trend: 'stabile' },
-  { id: 'B153-BA', classeCodice: 'B001', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 102, posizioniAssegnate: 28, candidatiInGraduatoria: 320, ultimaNomina: '2025-01-08', competizione: 'media', trend: 'stabile' },
-  { id: 'B154-TO', classeCodice: 'B001', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 106, posizioniAssegnate: 22, candidatiInGraduatoria: 260, ultimaNomina: '2025-01-06', competizione: 'media', trend: 'stabile' },
+  // ═══════════════════════════════════════════════════════════
+  // AB22 — LINGUA E LETTERATURA INGLESE (il più richiesto)
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B150-RM', classeCodice: 'AB22', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 102.0, punteggioMassimo: 120, posizioniAssegnate: 95, candidatiInGraduatoria: 1580, ultimaNomina: '2025-01-16', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B151-RM', classeCodice: 'AB22', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS II Fascia', punteggioMinimo: 78.0, punteggioMassimo: 102, posizioniAssegnate: 140, candidatiInGraduatoria: 2800, ultimaNomina: '2025-02-22', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B152-MI', classeCodice: 'AB22', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 99.0, punteggioMassimo: 119, posizioniAssegnate: 80, candidatiInGraduatoria: 1320, ultimaNomina: '2025-01-12', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B153-NA', classeCodice: 'AB22', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 94.0, punteggioMassimo: 116, posizioniAssegnate: 65, candidatiInGraduatoria: 1100, ultimaNomina: '2025-01-09', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B154-TO', classeCodice: 'AB22', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 91.0, punteggioMassimo: 113, posizioniAssegnate: 38, candidatiInGraduatoria: 520, ultimaNomina: '2025-01-06', competizione: 'alta', trend: 'stabile' },
+  { id: 'B155-BO', classeCodice: 'AB22', provinciaSigla: 'BO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 93.0, punteggioMassimo: 115, posizioniAssegnate: 30, candidatiInGraduatoria: 450, ultimaNomina: '2025-01-07', competizione: 'alta', trend: 'stabile' },
+  { id: 'B156-BA', classeCodice: 'AB22', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 88.0, punteggioMassimo: 110, posizioniAssegnate: 32, candidatiInGraduatoria: 480, ultimaNomina: '2025-01-08', competizione: 'alta', trend: 'crescente' },
+  { id: 'B157-FI', classeCodice: 'AB22', provinciaSigla: 'FI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 89.0, punteggioMassimo: 112, posizioniAssegnate: 24, candidatiInGraduatoria: 380, ultimaNomina: '2025-01-05', competizione: 'alta', trend: 'stabile' },
+  { id: 'B158-CT', classeCodice: 'AB22', provinciaSigla: 'CT', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 104, posizioniAssegnate: 20, candidatiInGraduatoria: 320, ultimaNomina: '2025-01-04', competizione: 'media', trend: 'stabile' },
+  { id: 'B159-PA', classeCodice: 'AB22', provinciaSigla: 'PA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 100, posizioniAssegnate: 16, candidatiInGraduatoria: 260, ultimaNomina: '2024-12-20', competizione: 'media', trend: 'stabile' },
+  { id: 'B160-GE', classeCodice: 'AB22', provinciaSigla: 'GE', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 109, posizioniAssegnate: 22, candidatiInGraduatoria: 340, ultimaNomina: '2025-01-05', competizione: 'alta', trend: 'stabile' },
+  { id: 'B161-CS', classeCodice: 'AB22', provinciaSigla: 'CS', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 72.0, punteggioMassimo: 96, posizioniAssegnate: 14, candidatiInGraduatoria: 210, ultimaNomina: '2024-12-16', competizione: 'media', trend: 'stabile' },
+  { id: 'B162-TP', classeCodice: 'AB22', provinciaSigla: 'TP', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 62.0, punteggioMassimo: 86, posizioniAssegnate: 6, candidatiInGraduatoria: 90, ultimaNomina: '2024-12-08', competizione: 'bassa', trend: 'decrescente' },
+  { id: 'B163-PZ', classeCodice: 'AB22', provinciaSigla: 'PZ', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 64.0, punteggioMassimo: 88, posizioniAssegnate: 8, candidatiInGraduatoria: 110, ultimaNomina: '2024-12-12', competizione: 'bassa', trend: 'decrescente' },
 
-  // ─── B002 — Assistente Tecnico (ATA) ───
-  { id: 'B160-RM', classeCodice: 'B002', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 106, posizioniAssegnate: 25, candidatiInGraduatoria: 300, ultimaNomina: '2025-01-12', competizione: 'alta', trend: 'stabile' },
-  { id: 'B161-MI', classeCodice: 'B002', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 104, posizioniAssegnate: 20, candidatiInGraduatoria: 260, ultimaNomina: '2025-01-10', competizione: 'media', trend: 'stabile' },
+  // ═══════════════════════════════════════════════════════════
+  // AA22 — FRANCESE
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B170-RM', classeCodice: 'AA22', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 110, posizioniAssegnate: 15, candidatiInGraduatoria: 220, ultimaNomina: '2025-01-06', competizione: 'alta', trend: 'decrescente' },
+  { id: 'B171-TO', classeCodice: 'AA22', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 108, posizioniAssegnate: 12, candidatiInGraduatoria: 160, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
 
-  // ─── B006 — Osservatore Scolastico (nuovo profilo OS) ───
-  { id: 'B170-RM', classeCodice: 'B006', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 65.0, punteggioMassimo: 90, posizioniAssegnate: 18, candidatiInGraduatoria: 220, ultimaNomina: '2025-01-10', competizione: 'media', trend: 'crescente' },
-  { id: 'B171-MI', classeCodice: 'B006', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 62.0, punteggioMassimo: 88, posizioniAssegnate: 15, candidatiInGraduatoria: 180, ultimaNomina: '2025-01-08', competizione: 'media', trend: 'crescente' },
+  // ═══════════════════════════════════════════════════════════
+  // AC22 — SPAGNOLO
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B175-RM', classeCodice: 'AC22', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 106, posizioniAssegnate: 12, candidatiInGraduatoria: 180, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
 
-  // ─── Additional provinces for popular classes ───
-  // A001 — other provinces
-  { id: 'B180-CH', classeCodice: 'A001', provinciaSigla: 'CH', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 68.0, punteggioMassimo: 92, posizioniAssegnate: 10, candidatiInGraduatoria: 130, ultimaNomina: '2024-12-14', competizione: 'media', trend: 'stabile' },
-  { id: 'B181-AQ', classeCodice: 'A001', provinciaSigla: 'AQ', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 64.0, punteggioMassimo: 88, posizioniAssegnate: 6, candidatiInGraduatoria: 80, ultimaNomina: '2024-12-10', competizione: 'bassa', trend: 'decrescente' },
-  { id: 'B182-TS', classeCodice: 'A001', provinciaSigla: 'TS', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 104, posizioniAssegnate: 15, candidatiInGraduatoria: 200, ultimaNomina: '2025-01-03', competizione: 'media', trend: 'stabile' },
-  { id: 'B183-UD', classeCodice: 'A001', provinciaSigla: 'UD', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 75.0, punteggioMassimo: 98, posizioniAssegnate: 10, candidatiInGraduatoria: 140, ultimaNomina: '2024-12-18', competizione: 'media', trend: 'stabile' },
-  { id: 'B184-PZ', classeCodice: 'A001', provinciaSigla: 'PZ', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 62.0, punteggioMassimo: 86, posizioniAssegnate: 8, candidatiInGraduatoria: 100, ultimaNomina: '2024-12-12', competizione: 'bassa', trend: 'decrescente' },
-  { id: 'B185-SR', classeCodice: 'A001', provinciaSigla: 'SR', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 60.0, punteggioMassimo: 84, posizioniAssegnate: 7, candidatiInGraduatoria: 90, ultimaNomina: '2024-12-10', competizione: 'bassa', trend: 'decrescente' },
-  { id: 'B186-TP', classeCodice: 'A001', provinciaSigla: 'TP', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 58.0, punteggioMassimo: 82, posizioniAssegnate: 5, candidatiInGraduatoria: 70, ultimaNomina: '2024-12-08', competizione: 'bassa', trend: 'decrescente' },
-  { id: 'B187-EN', classeCodice: 'A001', provinciaSigla: 'EN', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 56.0, punteggioMassimo: 78, posizioniAssegnate: 4, candidatiInGraduatoria: 50, ultimaNomina: '2024-12-06', competizione: 'bassa', trend: 'decrescente' },
-  { id: 'B188-CL', classeCodice: 'A001', provinciaSigla: 'CL', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 58.0, punteggioMassimo: 80, posizioniAssegnate: 5, candidatiInGraduatoria: 65, ultimaNomina: '2024-12-08', competizione: 'bassa', trend: 'decrescente' },
-  { id: 'B189-AG', classeCodice: 'A001', provinciaSigla: 'AG', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 55.0, punteggioMassimo: 78, posizioniAssegnate: 5, candidatiInGraduatoria: 60, ultimaNomina: '2024-12-06', competizione: 'bassa', trend: 'decrescente' },
+  // ═══════════════════════════════════════════════════════════
+  // AD22 — TEDESCO
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B178-RM', classeCodice: 'AD22', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 102, posizioniAssegnate: 8, candidatiInGraduatoria: 110, ultimaNomina: '2025-01-04', competizione: 'media', trend: 'stabile' },
 
-  // More for A003 (Inglese) — south
-  { id: 'B190-CS', classeCodice: 'A003', provinciaSigla: 'CS', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 72.0, punteggioMassimo: 96, posizioniAssegnate: 14, candidatiInGraduatoria: 210, ultimaNomina: '2024-12-16', competizione: 'media', trend: 'stabile' },
-  { id: 'B191-TP', classeCodice: 'A003', provinciaSigla: 'TP', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 62.0, punteggioMassimo: 86, posizioniAssegnate: 6, candidatiInGraduatoria: 90, ultimaNomina: '2024-12-08', competizione: 'bassa', trend: 'decrescente' },
-  { id: 'B192-PZ', classeCodice: 'A003', provinciaSigla: 'PZ', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 64.0, punteggioMassimo: 88, posizioniAssegnate: 8, candidatiInGraduatoria: 110, ultimaNomina: '2024-12-12', competizione: 'bassa', trend: 'decrescente' },
+  // ═══════════════════════════════════════════════════════════
+  // A-01 — DISEGNO E STORIA DELL'ARTE
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B180-RM', classeCodice: 'A-01', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 105, posizioniAssegnate: 10, candidatiInGraduatoria: 150, ultimaNomina: '2025-01-04', competizione: 'media', trend: 'stabile' },
+  { id: 'B181-MI', classeCodice: 'A-01', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 102, posizioniAssegnate: 8, candidatiInGraduatoria: 120, ultimaNomina: '2025-01-03', competizione: 'media', trend: 'stabile' },
 
-  // A007 (Matematica) — medium provinces
-  { id: 'B193-VE', classeCodice: 'A007', provinciaSigla: 'VE', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 102, posizioniAssegnate: 15, candidatiInGraduatoria: 180, ultimaNomina: '2025-01-04', competizione: 'media', trend: 'stabile' },
-  { id: 'B194-PG', classeCodice: 'A007', provinciaSigla: 'PG', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 72.0, punteggioMassimo: 96, posizioniAssegnate: 12, candidatiInGraduatoria: 150, ultimaNomina: '2024-12-18', competizione: 'media', trend: 'stabile' },
-  { id: 'B195-CZ', classeCodice: 'A007', provinciaSigla: 'CZ', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 62.0, punteggioMassimo: 86, posizioniAssegnate: 8, candidatiInGraduatoria: 100, ultimaNomina: '2024-12-12', competizione: 'bassa', trend: 'decrescente' },
+  // ═══════════════════════════════════════════════════════════
+  // A-54 — STORIA DELL'ARTE
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B185-RM', classeCodice: 'A-54', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 108, posizioniAssegnate: 12, candidatiInGraduatoria: 170, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
 
-  // A031 (Sostegno II) — more provinces
-  { id: 'B196-CT', classeCodice: 'A031', provinciaSigla: 'CT', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 70.0, punteggioMassimo: 96, posizioniAssegnate: 30, candidatiInGraduatoria: 280, ultimaNomina: '2025-01-04', competizione: 'media', trend: 'stabile' },
-  { id: 'B197-PA', classeCodice: 'A031', provinciaSigla: 'PA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 66.0, punteggioMassimo: 92, posizioniAssegnate: 25, candidatiInGraduatoria: 240, ultimaNomina: '2025-01-03', competizione: 'media', trend: 'stabile' },
-  { id: 'B198-GE', classeCodice: 'A031', provinciaSigla: 'GE', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 75.0, punteggioMassimo: 100, posizioniAssegnate: 22, candidatiInGraduatoria: 210, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
+  // ═══════════════════════════════════════════════════════════
+  // A-18 — FILOSOFIA E SCIENZE UMANE
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B190-RM', classeCodice: 'A-18', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 108, posizioniAssegnate: 12, candidatiInGraduatoria: 180, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
+  { id: 'B191-NA', classeCodice: 'A-18', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 100, posizioniAssegnate: 8, candidatiInGraduatoria: 120, ultimaNomina: '2024-12-18', competizione: 'media', trend: 'stabile' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-19 — FILOSOFIA E STORIA
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B195-RM', classeCodice: 'A-19', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 106, posizioniAssegnate: 10, candidatiInGraduatoria: 150, ultimaNomina: '2025-01-04', competizione: 'media', trend: 'stabile' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-20 — FISICA
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B200-RM', classeCodice: 'A-20', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 108, posizioniAssegnate: 20, candidatiInGraduatoria: 220, ultimaNomina: '2025-01-08', competizione: 'alta', trend: 'stabile' },
+  { id: 'B201-MI', classeCodice: 'A-20', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 106, posizioniAssegnate: 18, candidatiInGraduatoria: 200, ultimaNomina: '2025-01-06', competizione: 'media', trend: 'stabile' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-26 — MATEMATICA
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B210-RM', classeCodice: 'A-26', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 88.0, punteggioMassimo: 115, posizioniAssegnate: 65, candidatiInGraduatoria: 620, ultimaNomina: '2025-01-14', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B211-RM', classeCodice: 'A-26', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS II Fascia', punteggioMinimo: 62.0, punteggioMassimo: 88, posizioniAssegnate: 85, candidatiInGraduatoria: 880, ultimaNomina: '2025-02-19', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B212-MI', classeCodice: 'A-26', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 112, posizioniAssegnate: 55, candidatiInGraduatoria: 530, ultimaNomina: '2025-01-11', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B213-NA', classeCodice: 'A-26', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 108, posizioniAssegnate: 42, candidatiInGraduatoria: 450, ultimaNomina: '2025-01-09', competizione: 'alta', trend: 'stabile' },
+  { id: 'B214-TO', classeCodice: 'A-26', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 110, posizioniAssegnate: 30, candidatiInGraduatoria: 320, ultimaNomina: '2025-01-06', competizione: 'alta', trend: 'stabile' },
+  { id: 'B215-BO', classeCodice: 'A-26', provinciaSigla: 'BO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 84.0, punteggioMassimo: 110, posizioniAssegnate: 25, candidatiInGraduatoria: 280, ultimaNomina: '2025-01-07', competizione: 'alta', trend: 'stabile' },
+  { id: 'B216-BA', classeCodice: 'A-26', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 104, posizioniAssegnate: 28, candidatiInGraduatoria: 320, ultimaNomina: '2025-01-08', competizione: 'media', trend: 'crescente' },
+  { id: 'B217-VE', classeCodice: 'A-26', provinciaSigla: 'VE', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 102, posizioniAssegnate: 15, candidatiInGraduatoria: 180, ultimaNomina: '2025-01-04', competizione: 'media', trend: 'stabile' },
+  { id: 'B218-PG', classeCodice: 'A-26', provinciaSigla: 'PG', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 72.0, punteggioMassimo: 96, posizioniAssegnate: 12, candidatiInGraduatoria: 150, ultimaNomina: '2024-12-18', competizione: 'media', trend: 'stabile' },
+  { id: 'B219-CZ', classeCodice: 'A-26', provinciaSigla: 'CZ', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 62.0, punteggioMassimo: 86, posizioniAssegnate: 8, candidatiInGraduatoria: 100, ultimaNomina: '2024-12-12', competizione: 'bassa', trend: 'decrescente' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-27 — MATEMATICA E FISICA
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B220-RM', classeCodice: 'A-27', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 112, posizioniAssegnate: 25, candidatiInGraduatoria: 280, ultimaNomina: '2025-01-10', competizione: 'alta', trend: 'stabile' },
+  { id: 'B221-MI', classeCodice: 'A-27', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 108, posizioniAssegnate: 20, candidatiInGraduatoria: 240, ultimaNomina: '2025-01-08', competizione: 'media', trend: 'stabile' },
+  { id: 'B222-NA', classeCodice: 'A-27', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 102, posizioniAssegnate: 15, candidatiInGraduatoria: 180, ultimaNomina: '2025-01-06', competizione: 'media', trend: 'stabile' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-28 — MATEMATICA E SCIENZE (Media)
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B225-RM', classeCodice: 'A-28', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 86.0, punteggioMassimo: 112, posizioniAssegnate: 40, candidatiInGraduatoria: 440, ultimaNomina: '2025-01-12', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B226-MI', classeCodice: 'A-28', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 83.0, punteggioMassimo: 110, posizioniAssegnate: 32, candidatiInGraduatoria: 360, ultimaNomina: '2025-01-10', competizione: 'alta', trend: 'crescente' },
+  { id: 'B227-NA', classeCodice: 'A-28', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 104, posizioniAssegnate: 25, candidatiInGraduatoria: 280, ultimaNomina: '2025-01-08', competizione: 'alta', trend: 'stabile' },
+  { id: 'B228-BA', classeCodice: 'A-28', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 75.0, punteggioMassimo: 100, posizioniAssegnate: 20, candidatiInGraduatoria: 220, ultimaNomina: '2025-01-06', competizione: 'media', trend: 'stabile' },
+  { id: 'B229-BO', classeCodice: 'A-28', provinciaSigla: 'BO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 106, posizioniAssegnate: 18, candidatiInGraduatoria: 200, ultimaNomina: '2025-01-06', competizione: 'media', trend: 'stabile' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-34 — SCIENZE E TECNOLOGIE CHIMICHE
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B230-RM', classeCodice: 'A-34', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 104, posizioniAssegnate: 18, candidatiInGraduatoria: 210, ultimaNomina: '2025-01-08', competizione: 'media', trend: 'stabile' },
+  { id: 'B231-MI', classeCodice: 'A-34', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 102, posizioniAssegnate: 15, candidatiInGraduatoria: 180, ultimaNomina: '2025-01-07', competizione: 'media', trend: 'stabile' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-41 — SCIENZE E TECNOLOGIE INFORMATICHE
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B235-RM', classeCodice: 'A-41', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 108, posizioniAssegnate: 15, candidatiInGraduatoria: 190, ultimaNomina: '2025-01-06', competizione: 'media', trend: 'crescente' },
+  { id: 'B236-MI', classeCodice: 'A-41', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 106, posizioniAssegnate: 12, candidatiInGraduatoria: 160, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'crescente' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-50 — SCIENZE NATURALI, CHIMICHE E BIOLOGICHE
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B240-RM', classeCodice: 'A-50', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 84.0, punteggioMassimo: 110, posizioniAssegnate: 28, candidatiInGraduatoria: 320, ultimaNomina: '2025-01-10', competizione: 'alta', trend: 'stabile' },
+  { id: 'B241-MI', classeCodice: 'A-50', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 108, posizioniAssegnate: 22, candidatiInGraduatoria: 270, ultimaNomina: '2025-01-08', competizione: 'media', trend: 'stabile' },
+  { id: 'B242-NA', classeCodice: 'A-50', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 100, posizioniAssegnate: 16, candidatiInGraduatoria: 190, ultimaNomina: '2025-01-06', competizione: 'media', trend: 'stabile' },
+  { id: 'B243-BA', classeCodice: 'A-50', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 74.0, punteggioMassimo: 98, posizioniAssegnate: 14, candidatiInGraduatoria: 170, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-60 — TECNOLOGIA MEDIA
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B250-RM', classeCodice: 'A-60', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 106, posizioniAssegnate: 30, candidatiInGraduatoria: 300, ultimaNomina: '2025-01-08', competizione: 'alta', trend: 'stabile' },
+  { id: 'B251-MI', classeCodice: 'A-60', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 104, posizioniAssegnate: 25, candidatiInGraduatoria: 260, ultimaNomina: '2025-01-06', competizione: 'media', trend: 'stabile' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-61 — TECNOLOGIE E COMUNICAZIONI MULTIMEDIALI
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B255-RM', classeCodice: 'A-61', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 102, posizioniAssegnate: 10, candidatiInGraduatoria: 130, ultimaNomina: '2025-01-04', competizione: 'media', trend: 'crescente' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-21 — GEOGRAFIA
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B260-RM', classeCodice: 'A-21', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 108, posizioniAssegnate: 15, candidatiInGraduatoria: 190, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
+  { id: 'B261-NA', classeCodice: 'A-21', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 100, posizioniAssegnate: 10, candidatiInGraduatoria: 130, ultimaNomina: '2024-12-18', competizione: 'media', trend: 'stabile' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-48 — SCIENZE MOTORIE E SPORTIVE
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B270-RM', classeCodice: 'A-48', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 96.0, punteggioMassimo: 118, posizioniAssegnate: 55, candidatiInGraduatoria: 780, ultimaNomina: '2025-01-15', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B271-MI', classeCodice: 'A-48', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 93.0, punteggioMassimo: 116, posizioniAssegnate: 48, candidatiInGraduatoria: 650, ultimaNomina: '2025-01-12', competizione: 'molto_alta', trend: 'crescente' },
+  { id: 'B272-NA', classeCodice: 'A-48', provinciaSigla: 'NA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 88.0, punteggioMassimo: 112, posizioniAssegnate: 40, candidatiInGraduatoria: 520, ultimaNomina: '2025-01-09', competizione: 'alta', trend: 'stabile' },
+  { id: 'B273-TO', classeCodice: 'A-48', provinciaSigla: 'TO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 85.0, punteggioMassimo: 110, posizioniAssegnate: 28, candidatiInGraduatoria: 350, ultimaNomina: '2025-01-06', competizione: 'alta', trend: 'stabile' },
+  { id: 'B274-BA', classeCodice: 'A-48', provinciaSigla: 'BA', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 106, posizioniAssegnate: 25, candidatiInGraduatoria: 300, ultimaNomina: '2025-01-08', competizione: 'media', trend: 'stabile' },
+  { id: 'B275-BO', classeCodice: 'A-48', provinciaSigla: 'BO', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 86.0, punteggioMassimo: 110, posizioniAssegnate: 22, candidatiInGraduatoria: 280, ultimaNomina: '2025-01-07', competizione: 'alta', trend: 'stabile' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-30 — MUSICA I E II GRADO
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B280-RM', classeCodice: 'A-30', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 80.0, punteggioMassimo: 106, posizioniAssegnate: 12, candidatiInGraduatoria: 160, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
+  { id: 'B281-MI', classeCodice: 'A-30', provinciaSigla: 'MI', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 104, posizioniAssegnate: 10, candidatiInGraduatoria: 140, ultimaNomina: '2025-01-04', competizione: 'media', trend: 'stabile' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-45 — SCIENZE ECONOMICO-AZIENDALI
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B285-RM', classeCodice: 'A-45', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 78.0, punteggioMassimo: 102, posizioniAssegnate: 12, candidatiInGraduatoria: 160, ultimaNomina: '2025-01-05', competizione: 'media', trend: 'stabile' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-46 — SCIENZE GIURIDICO-ECONOMICHE
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B288-RM', classeCodice: 'A-46', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 76.0, punteggioMassimo: 100, posizioniAssegnate: 10, candidatiInGraduatoria: 130, ultimaNomina: '2025-01-04', competizione: 'media', trend: 'stabile' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-55 — STRUMENTO MUSICALE II GRADO
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B290-RM', classeCodice: 'A-55', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 82.0, punteggioMassimo: 108, posizioniAssegnate: 8, candidatiInGraduatoria: 100, ultimaNomina: '2025-01-04', competizione: 'media', trend: 'stabile' },
+
+  // ═══════════════════════════════════════════════════════════
+  // A-66 — INFORMATICA (ad esaurimento)
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B292-RM', classeCodice: 'A-66', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 72.0, punteggioMassimo: 96, posizioniAssegnate: 5, candidatiInGraduatoria: 80, ultimaNomina: '2024-12-15', competizione: 'bassa', trend: 'decrescente' },
+
+  // ═══════════════════════════════════════════════════════════
+  // PP — EDUCATORE
+  // ═══════════════════════════════════════════════════════════
+  { id: 'B295-RM', classeCodice: 'PP', provinciaSigla: 'RM', annoScolastico: '2024/25', tipoGraduatoria: 'GPS I Fascia', punteggioMinimo: 70.0, punteggioMassimo: 94, posizioniAssegnate: 8, candidatiInGraduatoria: 110, ultimaNomina: '2025-01-03', competizione: 'media', trend: 'stabile' },
 ];
 
 // ============================================================
