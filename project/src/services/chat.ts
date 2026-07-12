@@ -109,7 +109,7 @@ export async function logGeminiCall(
   await supabaseAdapter.insert('gemini_calls_log', {
     user_id: userId,
     prompt_preview: query.slice(0, 200),
-    model: 'gemini-2.0-flash-lite',
+    model: 'gemini-3.1-flash-lite',
     tokens_in: tokensUsed,
     tokens_out: Math.ceil(response.length / 4),
     latency_ms: latencyMs,
@@ -158,8 +158,19 @@ export async function generateChatResponse(
       };
     }
 
-    // Log the specific error for debugging
-    console.error('[chat-service] Edge function error:', result.error?.message || 'No response');
+    // Propagate the actual error message for debugging
+    const errMsg = result.error?.message || 'No response from edge function';
+    console.error('[chat-service] Edge function error:', errMsg);
+
+    // Return specific error text so the user knows what happened
+    if (errMsg.includes('429') || errMsg.includes('quota') || errMsg.includes('Quota')) {
+      return {
+        text: `⚠️ **Servizio temporaneamente non disponibile**\n\nLa quota API Gemini è esaurita. Il servizio si ricaricherà automaticamente.\n\n**Cosa fare:**\n- Riprova tra qualche minuto\n- Se il problema persiste, il pianista gratuito potrebbe essere terminato per oggi\n- Contatta il supporto: sportelloscuola2.0@gmail.com`,
+        lineage: createLineage('quota_exceeded', 'chat-service', {
+          metadata: { query: userMessage.slice(0, 100), quota: true },
+        }),
+      };
+    }
   } catch (e) {
     console.error('[chat-service] Exception:', e);
   }

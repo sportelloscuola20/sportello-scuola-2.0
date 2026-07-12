@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
-const MODEL = 'gemini-2.0-flash-lite';
+const MODEL = 'gemini-3.1-flash-lite';
 
 // ================================================================
 // SYSTEM PROMPT — Sindacalista AI Sportello Scuola 2.0
@@ -539,11 +539,14 @@ Deno.serve(async (req) => {
 
   } catch (err) {
     console.error('ai-sindacalista error:', err);
+    const msg = err instanceof Error ? err.message : String(err);
+    const isQuota = msg.includes('429') || msg.includes('quota');
     return new Response(JSON.stringify({
-      error: 'Internal error',
-      details: err instanceof Error ? err.message : String(err),
+      error: isQuota ? 'Quota exceeded' : 'Internal error',
+      details: msg,
+      code: isQuota ? 'QUOTA_EXCEEDED' : 'INTERNAL_ERROR',
     }), {
-      status: 500,
+      status: isQuota ? 429 : 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

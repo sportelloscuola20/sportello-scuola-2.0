@@ -386,8 +386,11 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
         if (user?.id) await ChatService.logGeminiCall(user.id, content.trim(), response.text, latencyMs, Math.ceil(content.length / 4));
         trackChatMessage({ latency_ms: latencyMs, has_citations: (response.citations?.length ?? 0) > 0 });
       }
-    } catch {
-      const assistantMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: 'Mi scuso, il servizio è temporaneamente in sovraccarico. Riprova tra qualche istante.', timestamp: new Date().toISOString() };
+    } catch (e: any) {
+      const errText = e?.message?.includes('quota') || e?.message?.includes('429')
+        ? '⚠️ **Quota API esaurita** — Il servizio Gemini ha raggiunto il limite giornaliero. Riprova domani o contatta il supporto.'
+        : 'Mi scuso, il servizio è temporaneamente in sovraccarico. Riprova tra qualche istante.';
+      const assistantMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: errText, timestamp: new Date().toISOString() };
       setMessages(prev => [...prev, assistantMsg]);
     } finally { setIsLoading(false); }
   }, [isLoading, isTyping, messages, isAdmin, user?.id, activeConversationId, typewriterEffect, currentProfile]);
