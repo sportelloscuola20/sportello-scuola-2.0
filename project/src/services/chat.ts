@@ -132,7 +132,8 @@ export async function logGeminiCall(
  */
 export async function generateChatResponse(
   userMessage: string,
-  history: Array<{ role: string; content: string }>
+  history: Array<{ role: string; content: string }>,
+  additionalContext?: string
 ): Promise<ChatResponse> {
   // Route through Gemini edge function — the ONLY response path
   try {
@@ -142,6 +143,7 @@ export async function generateChatResponse(
     }>('ai-sindacalista', {
       message: userMessage,
       history: history.slice(-10),
+      context: additionalContext || '',
     });
 
     if (!result.error && result.data?.response) {
