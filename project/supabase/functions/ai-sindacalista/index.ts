@@ -427,6 +427,7 @@ async function callGemini(
   systemInstruction: string,
   temperature = 0.2,
   maxTokens = 4096,
+  retries = 3,
 ): Promise<string> {
   const url = `${GEMINI_BASE}/${MODEL}:generateContent?key=${GEMINI_KEY}`;
   const body = {
@@ -439,19 +440,32 @@ async function callGemini(
     },
   };
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  let lastError = '';
+  for (let attempt = 0; attempt < retries; attempt++) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Gemini ${res.status}: ${err.slice(0, 300)}`);
+    if (res.status === 429) {
+      const waitMs = (attempt + 1) * 2000;
+      console.warn(`Gemini 429 — retry ${attempt + 1}/${retries} in ${waitMs}ms`);
+      await new Promise(r => setTimeout(r, waitMs));
+      lastError = await res.text();
+      continue;
+    }
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`Gemini ${res.status}: ${err.slice(0, 300)}`);
+    }
+
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
   }
 
-  const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  throw new Error(`Gemini 429: rate limit exceeded after ${retries} retries. ${lastError.slice(0, 200)}`);
 }
 
 // ================================================================

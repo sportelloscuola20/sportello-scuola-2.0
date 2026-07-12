@@ -135,49 +135,57 @@ export async function generateChatResponse(
   history: Array<{ role: string; content: string }>,
   additionalContext?: string
 ): Promise<ChatResponse> {
-  // Route through Gemini edge function — the ONLY response path
-  try {
-    const result = await supabaseAdapter.invoke<{
-      response: string;
-      citations?: Array<{ title: string; confidence: number }>;
-    }>('ai-sindacalista', {
-      message: userMessage,
-      history: history.slice(-10),
-      context: additionalContext || '',
-    });
+  const MAX_RETRIES = 2;
 
-    if (!result.error && result.data?.response) {
-      eventBus.emit('chat.response_generated', 'chat-service', {
-        hasCitations: (result.data.citations?.length ?? 0) > 0,
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const result = await supabaseAdapter.invoke<{
+        response: string;
+        citations?: Array<{ title: string; confidence: number }>;
+      }>('ai-sindacalista', {
+        message: userMessage,
+        history: history.slice(-10),
+        context: additionalContext || '',
       });
 
-      return {
-        text: result.data.response,
-        citations: result.data.citations || [],
-        lineage: result.lineage,
-      };
-    }
+      if (!result.error && result.data?.response) {
+        eventBus.emit('chat.response_generated', 'chat-service', {
+          hasCitations: (result.data.citations?.length ?? 0) > 0,
+        });
 
-    // Propagate the actual error message for debugging
-    const errMsg = result.error?.message || 'No response from edge function';
-    console.error('[chat-service] Edge function error:', errMsg);
+        return {
+          text: result.data.response,
+          citations: result.data.citations || [],
+          lineage: result.lineage,
+        };
+      }
 
-    // Return specific error text so the user knows what happened
-    if (errMsg.includes('429') || errMsg.includes('quota') || errMsg.includes('Quota')) {
-      return {
-        text: `⚠️ **Servizio temporaneamente non disponibile**\n\nLa quota API Gemini è esaurita. Il servizio si ricaricherà automaticamente.\n\n**Cosa fare:**\n- Riprova tra qualche minuto\n- Se il problema persiste, il pianista gratuito potrebbe essere terminato per oggi\n- Contatta il supporto: sportelloscuola2.0@gmail.com`,
-        lineage: createLineage('quota_exceeded', 'chat-service', {
-          metadata: { query: userMessage.slice(0, 100), quota: true },
-        }),
-      };
+      const errMsg = result.error?.message || 'No response from edge function';
+      console.error(`[chat-service] Edge function error (attempt ${attempt + 1}):`, errMsg);
+
+      // Retry on 429/rate limit
+      const isRateLimit = errMsg.includes('429') || errMsg.includes('rate') || errMsg.includes('quota');
+      if (isRateLimit && attempt < MAX_RETRIES) {
+        await new Promise(r => setTimeout(r, (attempt + 1) * 2000));
+        continue;
+      }
+
+      // Return specific error text
+      if (isRateLimit) {
+        return {
+          text: `⚠️ **Servizio temporaneamente non disponibile**\n\nTroppe richieste simultanee. Riprova tra qualche istante.\n\nSe il problema persiste, contatta il supporto: sportelloscuola2.0@gmail.com`,
+          lineage: createLineage('quota_exceeded', 'chat-service', {
+            metadata: { query: userMessage.slice(0, 100), quota: true },
+          }),
+        };
+      }
+    } catch (e) {
+      console.error(`[chat-service] Exception (attempt ${attempt + 1}):`, e);
     }
-  } catch (e) {
-    console.error('[chat-service] Exception:', e);
   }
 
-  // Error fallback — user must retry (no pre-packaged responses)
   return {
-    text: `Mi scuso, il servizio è temporaneamente in sovraccarico. Riprova tra qualche istante. Se il problema persiste, contatta il supporto.`,
+    text: `Mi scuso, il servizio è temporaneamente in sovraccarico. Riprova tra qualche istante.`,
     lineage: createLineage('error_fallback', 'chat-service', {
       metadata: { query: userMessage.slice(0, 100), fallback: true },
     }),

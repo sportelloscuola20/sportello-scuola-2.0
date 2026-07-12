@@ -331,23 +331,33 @@ Deno.serve(async (req) => {
     return count ?? 0;
   }
 
-  async function callGemini(prompt: string, signal: AbortSignal): Promise<Response | null> {
+  async function callGemini(prompt: string, signal: AbortSignal, retries = 2): Promise<Response | null> {
     const url = `${GEMINI_BASE}/${MODEL}:generateContent?key=${geminiApiKey}`;
-    return fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal,
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 16384, responseMimeType: 'application/json' },
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
-        ],
-      }),
-    });
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal,
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 16384, responseMimeType: 'application/json' },
+          safetySettings: [
+            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_ONLY_HIGH' },
+            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' },
+          ],
+        }),
+      });
+      if (res.status === 429 && attempt < retries) {
+        const waitMs = (attempt + 1) * 3000;
+        log.push(`Gemini 429 — retry ${attempt + 1}/${retries} in ${waitMs}ms`);
+        await new Promise(r => setTimeout(r, waitMs));
+        continue;
+      }
+      return res;
+    }
+    return null;
   }
 
   // ─── CIRCUIT BREAKER CHECK ──────────────────────────────────────────────
