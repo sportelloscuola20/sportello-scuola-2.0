@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Search, Filter, BellRing, Lock, Unlock, Loader2, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../foundation/AuthContext';
 import LoginModal from '../../foundation/LoginModal';
+import { InterpelliService } from '../../../services';
 import type { InterpelloNazionale } from '../../../types/database';
 
 const PROVINCE = ['AG', 'AL', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AT', 'AV', 'BA', 'BG', 'BI', 'BL', 'BN', 'BO', 'BR', 'BS', 'BT', 'BZ', 'CA', 'CB', 'CE', 'CH', 'CL', 'CN', 'CO', 'CR', 'CS', 'CT', 'CZ', 'EN', 'FC', 'FE', 'FG', 'FI', 'FM', 'FR', 'GE', 'GO', 'GR', 'IM', 'IS', 'KR', 'LC', 'LE', 'LI', 'LO', 'LT', 'LU', 'MB', 'MC', 'ME', 'MI', 'MN', 'MO', 'MS', 'MT', 'NA', 'NO', 'NU', 'OR', 'PA', 'PC', 'PD', 'PE', 'PG', 'PI', 'PN', 'PO', 'PR', 'PU', 'PV', 'PZ', 'RA', 'RC', 'RE', 'RG', 'RI', 'RM', 'RN', 'RO', 'SA', 'SI', 'SO', 'SP', 'SR', 'SS', 'SV', 'TA', 'TE', 'TN', 'TO', 'TP', 'TR', 'TS', 'TV', 'UD', 'VA', 'VB', 'VC', 'VE', 'VI', 'VR', 'VT', 'VV'];
@@ -17,18 +18,6 @@ const CLASSI_CONCORSO = [
   'AA', 'AT', 'CS', 'OS', 'CU', 'IF', 'GU',
 ];
 
-const MOCK_INTERPELLI: InterpelloNazionale[] = Array.from({ length: 10 }, (_, i) => ({
-  id: `int-${i + 1}`,
-  ufficio_scolastico_provinciale: PROVINCE[i % PROVINCE.length],
-  scuola_istanza: `IC "${['Marconi', 'Einstein', 'Dante', 'Manzoni', 'Verdi', 'Rossini', 'Galilei', 'Leonardo', 'Fermi', 'Volta'][i % 10]}" - ${PROVINCE[i % PROVINCE.length]}`,
-  classe_di_concorso: CLASSI_CONCORSO[i % CLASSI_CONCORSO.length],
-  tipo_posto: (['comune', 'sostegno', 'ata'] as const)[i % 3],
-  data_pubblicazione: new Date(2026, 5, 1 + i).toISOString().split('T')[0],
-  data_scadenza: new Date(2026, 5, 15 + (i % 10)).toISOString().split('T')[0],
-  link_allegato_pdf: '#',
-  stato: i % 4 === 0 ? 'scaduto' : i % 5 === 0 ? 'assegnato' : 'aperto',
-}));
-
 export default function CentroInterpelli() {
   const { user, isAuthenticated } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
@@ -39,26 +28,40 @@ export default function CentroInterpelli() {
   const [filtroTipoPosto, setFiltroTipoPosto] = useState('');
   const [risultati, setRisultati] = useState<InterpelloNazionale[]>([]);
   const [mostraRisultati, setMostraRisultati] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
 
   const canSearch = isAuthenticated ? true : searchCount < 3;
   const isPremium = user?.is_premium || false;
 
-  const cerca = useCallback(() => {
+  useEffect(() => {
+    const loadTotal = async () => {
+      const { count } = await InterpelliService.loadTotalCount();
+      setTotalCount(count);
+    };
+    loadTotal();
+  }, []);
+
+  const cerca = useCallback(async () => {
     if (!canSearch) {
       if (!isAuthenticated) setShowLogin(true);
       return;
     }
     setLoading(true);
     setSearchCount(prev => prev + 1);
-    setTimeout(() => {
-      let filtered = [...MOCK_INTERPELLI];
-      if (filtroProvincia) filtered = filtered.filter(r => r.ufficio_scolastico_provinciale === filtroProvincia);
-      if (filtroClasse) filtered = filtered.filter(r => r.classe_di_concorso === filtroClasse);
-      if (filtroTipoPosto) filtered = filtered.filter(r => r.tipo_posto === filtroTipoPosto);
-      setRisultati(filtered);
+    try {
+      const response = await InterpelliService.searchInterpelli({
+        provincia: filtroProvincia || undefined,
+        classe: filtroClasse || undefined,
+        tipoPosto: filtroTipoPosto || undefined,
+      });
+      setRisultati(response.data as InterpelloNazionale[]);
       setMostraRisultati(true);
+    } catch {
+      setRisultati([]);
+      setMostraRisultati(true);
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   }, [canSearch, isAuthenticated, filtroProvincia, filtroClasse, filtroTipoPosto, searchCount]);
 
   const statoBadge: Record<string, string> = {
@@ -135,8 +138,15 @@ export default function CentroInterpelli() {
         {mostraRisultati && (
           <div className="bg-white/70 backdrop-blur-md rounded-3xl shadow-soft border border-slate-200/60 p-6 sm:p-8">
             <h3 className="text-lg font-semibold text-brand-blu mb-4">
-              Risultati ({risultati.length} disponibilità)
+              Risultati ({risultati.length} disponibilità{totalCount > 0 ? ` / ${totalCount} totali` : ''})
             </h3>
+            {risultati.length === 0 ? (
+              <div className="text-center py-8">
+                <Search size={32} className="text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 text-sm">Nessun interpello trovato con i filtri selezionati.</p>
+                <p className="text-gray-400 text-xs mt-1">Prova a modificare i filtri di ricerca.</p>
+              </div>
+            ) : (
             <div className="space-y-3">
               {risultati.slice(0, 5).map(r => {
                 const isScaduto = r.stato === 'scaduto' || r.stato === 'assegnato';
@@ -164,6 +174,7 @@ export default function CentroInterpelli() {
                 );
               })}
             </div>
+            )}
             <div className="text-center mt-5">
               <a href="/interpelli"
                 className="inline-flex items-center gap-2 px-6 py-2 bg-white border border-slate-200 rounded-2xl text-brand-blu font-medium hover:border-brand-blu/30 transition text-sm">

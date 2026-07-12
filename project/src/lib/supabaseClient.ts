@@ -1,10 +1,14 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = 'https://xawemvuralsgwvypiufl.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhhd2VtdnVyYWxzZ3d2eXBpdWZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0ODg5NDUsImV4cCI6MjA5NjA2NDk0NX0.KfJ94SAE6RStG8XH3d4h2sMcsZDwJBFGkCvafItHs_U';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || SUPABASE_ANON_KEY;
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn(
+    '⚠️ Supabase non configurato: VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY mancanti. ' +
+    'Configura le variabili d\'ambiente nel file .env per abilitare la connessione.'
+  );
+}
 
 let supabaseInstance: SupabaseClient;
 

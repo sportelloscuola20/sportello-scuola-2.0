@@ -1,3 +1,5 @@
+import type { DataLineageObject } from '../foundation/types';
+
 export interface Document {
   id: string;
   title: string;
@@ -44,4 +46,5 @@ export interface RagQueryRequest {
 export interface RagQueryResponse {
   answer: string;
   citations: Citation[];
+  lineage?: DataLineageObject;
 }

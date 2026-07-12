@@ -1,0 +1,112 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality-gates:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: project/package-lock.json
+
+      - name: Install dependencies
+        working-directory: project
+        run: npm ci
+
+      - name: Type check
+        working-directory: project
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: project
+        run: npm run lint
+
+      - name: Run tests
+        working-directory: project
+        run: npm run test
+
+      - name: Build
+        working-directory: project
+        run: npm run build
+
+  architecture-gate:
+    name: Architecture Gate (EMA §10.14)
+    runs-on: ubuntu-latest
+    needs: quality-gates
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: project/package-lock.json
+
+      - name: Install dependencies
+        working-directory: project
+        run: npm ci
+
+      - name: Verify no hardcoded secrets
+        working-directory: project
+        run: |
+          if grep -rn "eyJ" src/ --include="*.ts" --include="*.tsx" | grep -v "node_modules" | grep -v ".test." | grep -v "vitest"; then
+            echo "❌ Hardcoded secrets detected!"
+            exit 1
+          fi
+          echo "✅ No hardcoded secrets found"
+
+      - name: Verify no direct Supabase calls from L5
+        working-directory: project
+        run: |
+          if grep -rn "from.*supabaseClient" src/components/ui/ src/pages/ | grep -v "node_modules"; then
+            echo "⚠️  Direct Supabase imports from L5 components (should use Service Layer)"
+          fi
+          echo "✅ Architecture gate check complete"
+
+      - name: Verify DataLineage usage
+        working-directory: project
+        run: |
+          echo "DataLineage imports:"
+          grep -rn "createLineage\|withLineage\|DataLineageObject" src/ --include="*.ts" --include="*.tsx" | wc -l
+          echo "✅ DataLineage verification complete"
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [quality-gates, architecture-gate]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: project/package-lock.json
+
+      - name: Install and build
+        working-directory: project
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3
+        with:
+          publish-dir: project/dist
+          production-deploy: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}

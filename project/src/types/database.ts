@@ -24,6 +24,11 @@ export interface InterpellAlert {
   created_at: string;
 }
 
+/**
+ * @deprecated Use NotiziaIntelligence from './intelligence' instead.
+ * This type exists for backward compatibility with UserBookmarks and News.tsx.
+ * Migrate all usages to NotiziaIntelligence for canonical source.
+ */
 export interface NewsCache {
   id: string;
   title: string;
@@ -44,6 +49,11 @@ export interface Appointment {
   created_at: string;
 }
 
+/**
+ * @deprecated Use DocumentoNormativo from './database' (this file) instead.
+ * DocumentNorma is a legacy simplified type kept for backward compatibility.
+ * The canonical type is DocumentoNormativo with full fields.
+ */
 export interface DocumentNorma {
   id: string;
   title: string;

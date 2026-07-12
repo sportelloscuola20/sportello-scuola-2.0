@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, FileText, Search, RefreshCw, AlertCircle, ExternalLink, Shield, Calendar } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
+import { DocumentiService } from '../services';
 import type { DocumentoNormativo } from '../types/database';
 
 const CATEGORIA_STILI: Record<string, string> = {
@@ -22,18 +22,8 @@ export default function DocumentiApprovalPageAR() {
   const fetchDocumenti = async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('documenti_normativi')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (filterValidated === 'validated') query = query.eq('validated', true);
-      else if (filterValidated === 'pending') query = query.eq('validated', false).eq('is_archived', false);
-      else if (filterValidated === 'archived') query = query.eq('is_archived', true);
-
-      const { data, error } = await query;
-      if (!error && data) setDocumenti(data as DocumentoNormativo[]);
+      const { data } = await DocumentiService.loadDocumenti(filterValidated as 'all' | 'validated' | 'pending' | 'archived');
+      setDocumenti(data as DocumentoNormativo[]);
     } catch {}
     setLoading(false);
   };
@@ -42,20 +32,14 @@ export default function DocumentiApprovalPageAR() {
 
   const handleApprove = async (doc: DocumentoNormativo) => {
     setApproving(doc.id);
-    await supabase
-      .from('documenti_normativi')
-      .update({ validated: true, validated_at: new Date().toISOString(), validated_by: 'admin' })
-      .eq('id', doc.id);
+    await DocumentiService.approveDocumento(doc.id);
     setDocumenti(prev => prev.map(d => d.id === doc.id ? { ...d, validated: true, validated_at: new Date().toISOString() } : d));
     setApproving(null);
   };
 
   const handleReject = async (doc: DocumentoNormativo) => {
     setApproving(doc.id);
-    await supabase
-      .from('documenti_normativi')
-      .update({ is_archived: true })
-      .eq('id', doc.id);
+    await DocumentiService.archiveDocumento(doc.id);
     setDocumenti(prev => prev.filter(d => d.id !== doc.id));
     setApproving(null);
   };

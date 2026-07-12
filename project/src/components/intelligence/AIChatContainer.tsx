@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../foundation/AuthContext';
-import { getKnowledgeResponse } from '../../rag/knowledge-base';
+import { ChatService } from '../../services';
+import { trackChatMessage } from '../../lib/analytics';
 import { MessageSquare, Plus, Trash2, Clock } from 'lucide-react';
 import type { ChatMessage } from '../../types/database';
 
@@ -117,21 +117,12 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
 
   const loadConversations = async () => {
     if (!user?.id) return;
-    const { data } = await supabase
-      .from('chat_conversations')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false })
-      .limit(20);
+    const { data } = await ChatService.loadConversations(user.id);
     if (data) setConversations(data);
   };
 
   const loadConversationMessages = async (convId: string) => {
-    const { data } = await supabase
-      .from('chat_messages')
-      .select('*')
-      .eq('conversation_id', convId)
-      .order('created_at', { ascending: true });
+    const { data } = await ChatService.loadConversationMessages(convId);
     if (data) {
       setMessages(data.map(m => ({
         id: m.id,
@@ -146,11 +137,7 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
 
   const createNewConversation = async (): Promise<string | null> => {
     if (!user?.id) return null;
-    const { data } = await supabase
-      .from('chat_conversations')
-      .insert({ user_id: user.id, title: 'Nuova conversazione' })
-      .select()
-      .single();
+    const { data } = await ChatService.createConversation(user.id);
     if (data) {
       setConversations(prev => [data, ...prev]);
       return data.id;
@@ -159,7 +146,7 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
   };
 
   const deleteConversation = async (convId: string) => {
-    await supabase.from('chat_conversations').delete().eq('id', convId);
+    await ChatService.deleteConversation(convId);
     setConversations(prev => prev.filter(c => c.id !== convId));
     if (activeConversationId === convId) {
       setActiveConversationId(null);
@@ -167,55 +154,12 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
     }
   };
 
-  const saveMessage = async (convId: string, role: 'user' | 'assistant', content: string, citations?: Array<{ title: string; confidence: number }>, latencyMs?: number) => {
-    await supabase.from('chat_messages').insert({
-      conversation_id: convId,
-      role,
-      content,
-      citations: citations || [],
-      latency_ms: latencyMs || 0,
-    });
-  };
-
-  const logGeminiCall = async (query: string, response: string, latencyMs: number, tokensUsed: number) => {
-    if (!user?.id) return;
-    await supabase.from('gemini_calls_log').insert({
-      user_id: user.id,
-      prompt_preview: query.slice(0, 200),
-      model: 'gemini-3.1-flash-lite',
-      tokens_in: tokensUsed,
-      tokens_out: Math.ceil(response.length / 4),
-      latency_ms: latencyMs,
-      status: 'ok',
-    }).then(() => {}).catch(() => {});
-  };
-
   const generateResponse = useCallback(async (userMessage: string): Promise<{ text: string; citations?: Array<{ title: string; confidence: number }> }> => {
-    const localResponse = getKnowledgeResponse(userMessage);
-    if (localResponse) return { text: localResponse };
-
-    try {
-      const { data, error } = await supabase.functions.invoke('ai-sindacalista', {
-        body: {
-          message: userMessage,
-          history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
-        },
-      });
-      if (!error && data?.response) {
-        return { text: data.response, citations: data.citations || [] };
-      }
-    } catch {
-    }
-
-    return { text: `Grazie per la tua domanda su "${userMessage}". Ecco cosa posso dirti in base alla normativa vigente:
-
-Il Sindacalista AI ha consultato la banca dati documentale del portale. Per una risposta più specifica, ti consiglio di:
-
-1. **Consultare la sezione Normative** del nostro portale, dove troverai i documenti ufficiali
-2. **Utilizzare il Simulatore GPS/ATA** per verificare il tuo punteggio personalizzato
-3. **Contattarci via email** all'indirizzo sportelloscuola2.0@gmail.com per assistenza personalizzata
-
-Se desideri maggiori dettagli su un argomento specifico (CCNL, GPS, interpelli, maternità, ferie, permessi), chiedimi pure in modo più mirato e sarà mia cura fornirti la risposta normativa esatta.` };
+    const response = await ChatService.generateChatResponse(
+      userMessage,
+      messages.slice(-10).map(m => ({ role: m.role, content: m.content }))
+    );
+    return { text: response.text, citations: response.citations };
   }, [messages]);
 
   const sendMessage = useCallback(async (content: string) => {
@@ -264,9 +208,12 @@ Se desideri maggiori dettagli su un argomento specifico (CCNL, GPS, interpelli, 
       setMessages(prev => [...prev, assistantMsg]);
 
       if (convId) {
-        await saveMessage(convId, 'user', content.trim());
-        await saveMessage(convId, 'assistant', result.text, result.citations, latencyMs);
-        await logGeminiCall(content.trim(), result.text, latencyMs, Math.ceil(content.length / 4));
+        await ChatService.saveMessage(convId, 'user', content.trim());
+        await ChatService.saveMessage(convId, 'assistant', result.text, result.citations, latencyMs);
+        if (user?.id) {
+          await ChatService.logGeminiCall(user.id, content.trim(), result.text, latencyMs, Math.ceil(content.length / 4));
+        }
+        trackChatMessage({ latency_ms: latencyMs, has_citations: (result.citations?.length ?? 0) > 0 });
       }
     } catch {
       const assistantMsg: ChatMessage = {

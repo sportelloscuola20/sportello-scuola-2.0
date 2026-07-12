@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Search, X, Newspaper, CalendarClock, FileText, HelpCircle, ArrowRight, Loader2, GraduationCap, Calculator, MessageSquare, Scale, BookOpen, ExternalLink, ChevronRight, Command } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../../lib/supabaseClient';
+import { SearchService } from '../../../services';
+import { trackSearch } from '../../../lib/analytics';
 
 interface SearchResult {
   id: string;
@@ -89,66 +90,18 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
       const q = query.toLowerCase().trim();
       const allResults: SearchResult[] = [];
 
-      const [newsRes, scadenzeRes, docRes, interpRes] = await Promise.allSettled([
-        supabase.from('intelligence_news').select('id, titolo, descrizione, categoria, link').or(`titolo.ilike.%${q}%,descrizione.ilike.%${q}%`).limit(5),
-        supabase.from('intelligence_scadenze').select('id, titolo, descrizione, tipo, link, data_scadenza, priorita').or(`titolo.ilike.%${q}%,descrizione.ilike.%${q}%`).limit(5),
-        supabase.from('documenti_normativi').select('id, titolo, descrizione, tipo, categoria, ente').or(`titolo.ilike.%${q}%,descrizione.ilike.%${q}%`).limit(5),
-        supabase.from('interpelli_nazionali').select('id, titolo, descrizione, tipo, link, provincia').or(`titolo.ilike.%${q}%,descrizione.ilike.%${q}%`).limit(5),
-      ]);
+      const searchResponse = await SearchService.searchAll(query, 5);
 
-      if (newsRes.status === 'fulfilled' && newsRes.value.data) {
-        newsRes.value.data.forEach((n: any) => {
-          allResults.push({
-            id: `news-${n.id}`,
-            title: n.titolo,
-            description: (n.descrizione || '').slice(0, 150),
-            type: 'notizia',
-            url: '/notizie-scadenze',
-            category: n.categoria,
-          });
+      searchResponse.results.forEach(r => {
+        allResults.push({
+          id: r.id,
+          title: r.title,
+          description: r.description,
+          type: r.type,
+          url: r.url,
+          category: r.category,
         });
-      }
-
-      if (scadenzeRes.status === 'fulfilled' && scadenzeRes.value.data) {
-        scadenzeRes.value.data.forEach((d: any) => {
-          const isExpired = new Date(d.data_scadenza) < new Date();
-          allResults.push({
-            id: `scad-${d.id}`,
-            title: `${d.titolo}${isExpired ? ' (scaduta)' : ''}`,
-            description: `${d.descrizione || ''} — Scade: ${new Date(d.data_scadenza).toLocaleDateString('it-IT')}`,
-            type: 'scadenza',
-            url: '/notizie-scadenze?tab=scadenze',
-            category: `${d.priorita} · ${d.tipo}`,
-          });
-        });
-      }
-
-      if (docRes.status === 'fulfilled' && docRes.value.data) {
-        docRes.value.data.forEach((d: any) => {
-          allResults.push({
-            id: `doc-${d.id}`,
-            title: d.titolo,
-            description: `${d.descrizione || ''} — ${d.ente || d.tipo}`,
-            type: 'documento',
-            url: '/normative-e-documenti',
-            category: d.categoria || d.tipo,
-          });
-        });
-      }
-
-      if (interpRes.status === 'fulfilled' && interpRes.value.data) {
-        interpRes.value.data.forEach((i: any) => {
-          const isExpired = new Date(i.data_scadenza) < new Date();
-          allResults.push({
-            id: `interp-${i.id}`,
-            title: i.titolo,
-            description: `${i.descrizione || ''} — ${i.provincia || i.tipo}`,
-            type: 'interpello',
-            url: '/interpelli',
-            category: isExpired ? 'Scaduto' : i.tipo,
-          });
-        });
-      }
+      });
 
       FAQ_DATA.forEach(f => {
         if (f.q.toLowerCase().includes(q) || f.a.toLowerCase().includes(q)) {
@@ -178,6 +131,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
       setResults(allResults.slice(0, 12));
       setSelectedIndex(0);
       setIsSearching(false);
+      if (q.length >= 2) trackSearch(q, allResults.length);
     }, 200);
 
     return () => clearTimeout(timer);
@@ -227,17 +181,25 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
     <div
       className="fixed inset-0 z-[200] flex items-start justify-center pt-[8vh] sm:pt-[12vh]"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Cerca nel sito"
     >
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-md" />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-md" aria-hidden="true" />
 
       <div
         className="relative w-full max-w-2xl mx-4 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-scale-in"
         onClick={e => e.stopPropagation()}
+        role="combobox"
+        aria-expanded={query.trim() ? results.length > 0 : true}
+        aria-haspopup="listbox"
       >
         <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
-          <Search size={20} className="text-gray-400 flex-shrink-0" />
+          <Search size={20} className="text-gray-400 flex-shrink-0" aria-hidden="true" />
+          <label htmlFor="global-search-input" className="sr-only">Cerca notizie, normative, interpelli, FAQ</label>
           <input
             ref={inputRef}
+            id="global-search-input"
             type="text"
             value={query}
             onChange={e => { setQuery(e.target.value); setSelectedIndex(0); }}
@@ -246,23 +208,30 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             className="flex-1 text-base outline-none bg-transparent placeholder-gray-400 font-medium"
             autoComplete="off"
             spellCheck={false}
+            aria-autocomplete="list"
+            aria-controls="search-results-list"
+            aria-activedescendant={query.trim() && results[selectedIndex] ? `search-result-${results[selectedIndex].id}` : undefined}
+            role="searchbox"
           />
-          {isSearching && <Loader2 size={16} className="animate-spin text-gray-400" />}
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition">
+          {isSearching && <Loader2 size={16} className="animate-spin text-gray-400" aria-hidden="true" />}
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition" aria-label="Chiudi ricerca">
             <X size={16} className="text-gray-400" />
           </button>
         </div>
 
-        <div ref={resultsRef} className="max-h-[55vh] overflow-y-auto">
+        <div ref={resultsRef} id="search-results-list" className="max-h-[55vh] overflow-y-auto" role="listbox" aria-label="Risultati di ricerca">
           {showNav && (
             <div className="p-3">
-              <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Navigazione rapida</p>
-              <div className="mt-1">
+              <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest" id="nav-heading">Navigazione rapida</p>
+              <div className="mt-1" role="group" aria-labelledby="nav-heading">
                 {NAVIGATION_LINKS.map((nav, i) => (
                   <button
                     key={nav.url}
+                    id={`nav-result-${nav.url}`}
                     onClick={() => { navigate(nav.url); onClose(); }}
                     onMouseEnter={() => setSelectedIndex(i)}
+                    role="option"
+                    aria-selected={i === selectedIndex}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
                       i === selectedIndex
                         ? 'bg-brand-blu/8 text-brand-blu'
@@ -301,17 +270,21 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
           {query.trim() && results.length > 0 && (
             <div className="p-3">
-              <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest" id="results-heading">
                 {results.length} risultat{results.length === 1 ? 'o' : 'i'}
               </p>
-              <div className="mt-1">
+              <div className="mt-1" role="group" aria-labelledby="results-heading">
                 {results.map((result, i) => {
                   const config = TYPE_CONFIG[result.type];
                   return (
                     <button
                       key={result.id}
+                      id={`search-result-${result.id}`}
                       onClick={() => handleSelect(result)}
                       onMouseEnter={() => setSelectedIndex(i)}
+                      role="option"
+                      aria-selected={i === selectedIndex}
+                      aria-label={`${config.label}: ${result.title}`}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
                         i === selectedIndex
                           ? 'bg-brand-blu/8 text-brand-blu'

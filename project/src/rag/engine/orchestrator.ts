@@ -16,6 +16,7 @@
 import { SOURCE_MATRIX, AuthorityLevel, type SourceFeed } from './sources';
 import { DEFAULT_ENGINE_CONFIG, type RawFeedItem, type CuratedArticle } from './schema';
 import { SYSTEM_PROMPT_V1 } from '../system-prompt';
+import { geminiAdapter } from '../../foundation/adapters/gemini-adapter';
 
 /* ─── STADIO 1: POLLING ASINCRONO ────────────────────────────────────── */
 
@@ -102,31 +103,13 @@ async function rewriteWithLLM(item: RawFeedItem): Promise<CuratedArticle | null>
   ].join('\n');
 
   try {
-    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    const geminiUrl = import.meta.env.VITE_GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta';
-    const geminiModel = import.meta.env.VITE_GEMINI_MODEL || 'gemini-3.1-flash-lite';
+    const { text: rewritten } = await geminiAdapter.generateText(userMessage, {
+      systemInstruction: systemPrompt,
+      temperature: DEFAULT_ENGINE_CONFIG.llmTemperature,
+      maxTokens: DEFAULT_ENGINE_CONFIG.llmMaxTokens,
+    });
 
-    const response = await fetch(
-      `${geminiUrl}/models/${geminiModel}:generateContent?key=${geminiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: userMessage }] }],
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          generationConfig: {
-            temperature: DEFAULT_ENGINE_CONFIG.llmTemperature,
-            maxOutputTokens: DEFAULT_ENGINE_CONFIG.llmMaxTokens,
-            responseMimeType: 'text/plain',
-          },
-        }),
-      }
-    );
-
-    if (!response.ok) return null;
-
-    const data = await response.json();
-    const rewritten = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!rewritten) return null;
 
     return {
       validated: null as any,

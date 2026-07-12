@@ -1,6 +1,7 @@
 import { supabase } from './supabaseClient';
 import { generateEmbedding, generateChatCompletion } from './gemini';
 import { Document, DocumentChunk, Citation, RagQueryRequest, RagQueryResponse } from './types';
+import { createLineage } from '../foundation/types';
 
 /**
  * Retrieve relevant document chunks for a given query
@@ -192,6 +193,13 @@ export async function generateResponseWithCitations(
   return {
     answer,
     citations,
+    lineage: createLineage('ai_generation', 'rag-retrieval', {
+      metadata: {
+        query: query.slice(0, 100),
+        chunkCount: retrievedChunks.length,
+        avgSimilarity: retrievedChunks.reduce((s, c) => s + c.similarity, 0) / retrievedChunks.length,
+      },
+    }),
   };
 }
 
@@ -215,6 +223,9 @@ export async function ragQuery(
     return {
       answer: 'Non sono riuscito a trovare informazioni pertinenti nel mio sapere per rispondere alla tua domanda. Puoi provare a riformulare la domanda o verificare se le informazioni sono disponibili nelle normative caricate.',
       citations: [],
+      lineage: createLineage('rag_retrieval', 'rag-retrieval', {
+        metadata: { query: query.slice(0, 100), chunksFound: 0 },
+      }),
     };
   }
 

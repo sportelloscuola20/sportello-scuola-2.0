@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Mail, Lock, User, Eye, EyeOff, Loader2, CheckCircle } from 'lucide-react';
 import { useAuth } from './AuthContext';
@@ -42,6 +42,26 @@ export default function LoginModal({ onClose }: LoginModalProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState<SignupStatus>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const modalRef = useRef<HTMLDivElement>(null);
+  const firstInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    firstInputRef.current?.focus();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key !== 'Tab' || !modalRef.current) return;
+      const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+        'input, button, select, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const isSubmitting = status === 'loading';
   const isSignup = mode === 'signup';
@@ -164,7 +184,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
 
   if (status === 'success') {
     return (
-      <div className="modal-overlay" style={{
+      <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Registrazione completata" style={{
         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
         width: '100vw', height: '100vh',
         backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(8px)',
@@ -209,7 +229,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
   }
 
   return (
-    <div className="modal-overlay" style={{
+    <div className="modal-overlay" role="dialog" aria-modal="true" aria-label={isSignup ? 'Registrati' : 'Accedi'} ref={modalRef} style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
       width: '100vw', height: '100vh',
       backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(8px)',
@@ -258,12 +278,14 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           {isSignup && (
             <>
               <div>
-                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 4 }}>
+                <label htmlFor="login-first-name" style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 4 }}>
                   Nome
                 </label>
                 <div style={{ position: 'relative' }}>
                   <User style={ICON_STYLE} size={18} />
                   <input
+                    id="login-first-name"
+                    ref={firstInputRef}
                     type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
                     placeholder="Mario" required disabled={isSubmitting}
                     style={{ ...INPUT_STYLE, opacity: isSubmitting ? 0.6 : 1 }}
@@ -272,12 +294,13 @@ export default function LoginModal({ onClose }: LoginModalProps) {
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 4 }}>
+                <label htmlFor="login-last-name" style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 4 }}>
                   Cognome
                 </label>
                 <div style={{ position: 'relative' }}>
                   <User style={ICON_STYLE} size={18} />
                   <input
+                    id="login-last-name"
                     type="text" value={lastName} onChange={e => setLastName(e.target.value)}
                     placeholder="Rossi" required disabled={isSubmitting}
                     style={{ ...INPUT_STYLE, opacity: isSubmitting ? 0.6 : 1 }}
@@ -289,12 +312,14 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           )}
 
           <div>
-            <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 4 }}>
+            <label htmlFor="login-email" style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 4 }}>
               Email
             </label>
             <div style={{ position: 'relative' }}>
               <Mail style={ICON_STYLE} size={18} />
               <input
+                id="login-email"
+                ref={!isSignup ? firstInputRef : undefined}
                 type="email" value={email} onChange={e => setEmail(e.target.value)}
                 placeholder="nome@esempio.com" required disabled={isSubmitting}
                 style={{ ...INPUT_STYLE, opacity: isSubmitting ? 0.6 : 1 }}
@@ -304,12 +329,13 @@ export default function LoginModal({ onClose }: LoginModalProps) {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 4 }}>
+            <label htmlFor="login-password" style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 4 }}>
               Password
             </label>
             <div style={{ position: 'relative' }}>
               <Lock style={ICON_STYLE} size={18} />
               <input
+                id="login-password"
                 type={showPassword ? 'text' : 'password'}
                 value={password} onChange={e => setPassword(e.target.value)}
                 placeholder="Minimo 6 caratteri" minLength={6} required disabled={isSubmitting}
@@ -319,7 +345,10 @@ export default function LoginModal({ onClose }: LoginModalProps) {
                 }}
                 onFocus={onFocus} onBlur={onBlur}
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} style={{
+              <button type="button" onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
+                aria-pressed={showPassword}
+                style={{
                 position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
                 color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex',
               }}>
@@ -330,10 +359,11 @@ export default function LoginModal({ onClose }: LoginModalProps) {
 
           {isSignup && (
             <div>
-              <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 4 }}>
+              <label htmlFor="login-ruolo" style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 4 }}>
                 Ruolo
               </label>
               <select
+                id="login-ruolo"
                 value={ruolo} onChange={e => setRuolo(e.target.value as typeof ruolo)}
                 disabled={isSubmitting}
                 style={{

@@ -58,10 +58,10 @@ export default function Header({ onSearchOpen }: HeaderProps) {
   ];
 
   return (
-    <header id="main-navbar" className="bg-white/80 backdrop-blur-md shadow-soft border-b border-slate-200/60 fixed w-full top-0 z-50">
+    <header id="main-navbar" className="bg-white/80 backdrop-blur-md shadow-soft border-b border-slate-200/60 fixed w-full top-0 z-50" role="banner">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          <Link to="/" className="flex items-center gap-3 group" onClick={handleNavClick}>
+          <Link to="/" className="flex items-center gap-3 group" onClick={handleNavClick} aria-label="Sportello Scuola 2.0 - Torna alla home">
             <img
               src="/logo.png"
               alt="Sportello Scuola 2.0"
@@ -73,7 +73,7 @@ export default function Header({ onSearchOpen }: HeaderProps) {
             </span>
           </Link>
 
-          <nav className="hidden md:flex space-x-1">
+          <nav className="hidden md:flex space-x-1" aria-label="Menu principale">
             {menuItems.map((item) => (
               <Link
                 key={item.label}
@@ -93,7 +93,8 @@ export default function Header({ onSearchOpen }: HeaderProps) {
           <div className="hidden md:flex items-center gap-3">
             <button onClick={onSearchOpen}
               className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-brand-blu bg-gray-100/80 hover:bg-brand-blu/5 rounded-xl text-sm transition group"
-              title="Cerca (Ctrl+K)">
+              title="Cerca (Ctrl+K)"
+              aria-label="Apri ricerca globale, scorciatoia Ctrl+K">
               <Search size={16} />
               <span className="text-xs text-gray-400 hidden lg:inline group-hover:text-brand-blu transition">Cerca...</span>
               <kbd className="hidden lg:inline text-[10px] px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-400 font-mono group-hover:border-brand-blu/30 transition">⌘K</kbd>
@@ -103,6 +104,9 @@ export default function Header({ onSearchOpen }: HeaderProps) {
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 bg-brand-blu/10 text-brand-blu px-3 py-1.5 rounded-2xl font-medium text-sm hover:bg-brand-blu/20 transition"
+                  aria-expanded={showUserMenu}
+                  aria-haspopup="true"
+                  aria-label="Menu utente"
                 >
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-verde to-brand-ottanio flex items-center justify-center text-white text-[10px] font-bold">
                     {initials}
@@ -111,7 +115,7 @@ export default function Header({ onSearchOpen }: HeaderProps) {
                   <ChevronDown size={14} className={`transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
                 </button>
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200/60 rounded-2xl shadow-xl animate-fade-in-up overflow-hidden">
+                  <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200/60 rounded-2xl shadow-xl animate-fade-in-up overflow-hidden" role="menu" aria-label="Menu utente">
                     <div className="p-4 border-b border-slate-100">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-verde to-brand-ottanio flex items-center justify-center text-white text-sm font-bold shrink-0">
@@ -195,12 +199,16 @@ export default function Header({ onSearchOpen }: HeaderProps) {
           <div className="flex md:hidden items-center gap-2">
             <button onClick={onSearchOpen}
               className="p-2 text-gray-500 hover:text-brand-blu rounded-xl transition"
-              title="Cerca">
+              title="Cerca"
+              aria-label="Apri ricerca">
               <Search size={20} />
             </button>
             <button
               className="text-gray-700"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-menu"
+              aria-label={isMenuOpen ? 'Chiudi menu' : 'Apri menu'}
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -208,7 +216,7 @@ export default function Header({ onSearchOpen }: HeaderProps) {
         </div>
 
         {isMenuOpen && (
-          <div className="md:hidden pb-4">
+          <div id="mobile-menu" className="md:hidden pb-4" role="navigation" aria-label="Menu mobile">
             <nav className="flex flex-col space-y-2">
               {menuItems.map((item) => (
                 <Link

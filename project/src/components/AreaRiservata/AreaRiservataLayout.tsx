@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   LayoutDashboard, TrendingUp, Bookmark, FileText, Bell, CreditCard, Settings,
-  LogOut, Sparkles, ChevronRight, Shield,
+  LogOut, Sparkles, ChevronRight, Shield, BarChart3,
 } from 'lucide-react';
 import { useAuth } from '../foundation/AuthContext';
 import { useProfileStore } from '../../store/useProfileStore';
@@ -28,6 +28,7 @@ const navItems: NavItem[] = [
 
 const adminNavItems: NavItem[] = [
   { id: 'documenti-approval', label: 'Gestione Documenti', path: '/area-riservata/documenti-approval', icon: <Shield size={18} /> },
+  { id: 'observability', label: 'AI Observability', path: '/area-riservata/observability', icon: <BarChart3 size={18} /> },
 ];
 
 export default function AreaRiservataLayout({ children }: { children: React.ReactNode }) {
