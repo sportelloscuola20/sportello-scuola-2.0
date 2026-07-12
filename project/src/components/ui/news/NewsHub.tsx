@@ -120,7 +120,7 @@ export default function NewsHub({ isHomePage = true }: NewsHubProps) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const AUTHORITATIVE_SOURCES = ['MIM', 'MIMUR', 'Gazzetta Ufficiale', 'ARAN', 'Orizzonte Scuola', 'INVALSI', 'INPS', 'Normattiva'];
+      const AUTHORITATIVE_SOURCES = ['MIM', 'MIMUR', 'Gazzetta Ufficiale', 'Orizzonte Scuola', 'INVALSI', 'INPS', 'Normattiva'];
       const [newsResult, scadenzeResult] = await Promise.all([
         supabase.from('intelligence_news').select('*').eq('is_archived', false).in('fonte_nome', AUTHORITATIVE_SOURCES).order('data_pubblicazione', { ascending: false }).limit(60),
         supabase.from('intelligence_scadenze').select('*').order('data_scadenza', { ascending: true }).limit(40),

@@ -109,7 +109,7 @@ export async function logGeminiCall(
   await supabaseAdapter.insert('gemini_calls_log', {
     user_id: userId,
     prompt_preview: query.slice(0, 200),
-    model: 'gemini-3.1-flash-lite',
+    model: 'gemini-2.0-flash-lite',
     tokens_in: tokensUsed,
     tokens_out: Math.ceil(response.length / 4),
     latency_ms: latencyMs,
@@ -157,8 +157,11 @@ export async function generateChatResponse(
         lineage: result.lineage,
       };
     }
-  } catch {
-    // Fall through to error message
+
+    // Log the specific error for debugging
+    console.error('[chat-service] Edge function error:', result.error?.message || 'No response');
+  } catch (e) {
+    console.error('[chat-service] Exception:', e);
   }
 
   // Error fallback — user must retry (no pre-packaged responses)
