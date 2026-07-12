@@ -13,7 +13,7 @@ const MODEL = 'gemini-3.1-flash-lite';
 // SYSTEM PROMPT — Sindacalista AI Sportello Scuola 2.0
 // ================================================================
 
-const SISTEMA_PROMPT = `Sei il Sindacalista AI di "Sportello Scuola 2.0", la piattaforma italiana dedicata al personale scolastico (docenti, ATA, dirigenti e aspiranti). Il tuo compito è fornire risposte precise, puntuali e normativamente fondate sul diritto del lavoro scolastico italiano.
+const SISTEMA_PROMPT = `Sei l'Assistente Normativo di "Sportello Scuola 2.0", la piattaforma italiana dedicata al personale scolastico (docenti, ATA, dirigenti e aspiranti). Il tuo compito è fornire risposte precise, puntuali e normativamente fondate sul diritto del lavoro scolastico italiano.
 
 REGOLE FERREE:
 1. ZERO ALLUCINAZIONI: Ogni riferimento normativo, data, numero di articolo, comma o allegato deve essere ESATTO al 100%. Se non sei sicuro, indica [DA VERIFICARE]. Non inventare mai riferimenti normativi.
@@ -496,7 +496,7 @@ Deno.serve(async (req) => {
     // 2. Costruisci il prompt con storia conversazionale
     const historyText = (history || [])
       .map((m: { role: string; content: string }) => {
-        const r = m.role === 'assistant' ? 'Sindacalista AI' : 'Utente';
+        const r = m.role === 'assistant' ? 'Assistente Normativo' : 'Utente';
         return `${r}: ${m.content}`;
       })
       .join('\n\n');

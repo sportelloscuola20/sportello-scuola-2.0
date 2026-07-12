@@ -18,14 +18,14 @@ const promptCards = [
 
 export default function AssistantsAI() {
   return (
-    <section id="sindacalista-ai" className="py-20 bg-white">
+    <section id="assistente-normativo" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-6">
           <h2 className="text-4xl font-extrabold text-[#0F172A] mb-4 tracking-tight">
-            Sindacalista AI
+            Assistente Normativo
           </h2>
           <p className="text-gray-600 font-normal max-w-2xl mx-auto">
-            Il tuo consulente sindacale digitale attivo 24/7 per risolvere dubbi normativi, contrattuali e di reclutamento.
+            Assistente virtuale specializzato su normativa scolastica, attivo 24/7 per risolvere dubbi su CCNL, concorsi, interpelli e diritti del personale scolastico.
           </p>
         </div>
 
@@ -36,20 +36,20 @@ export default function AssistantsAI() {
                 <Bot className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-[#0F172A]">Sindacalista AI</h3>
-                <p className="text-sm text-gray-500">Assistente sindacale digitale — CCNL, normative, GPS, interpelli</p>
+                <h3 className="text-xl font-bold text-[#0F172A]">Assistente Normativo</h3>
+                <p className="text-sm text-gray-500">Assistente virtuale — CCNL, normative, GPS, interpelli</p>
               </div>
             </div>
 
             <p className="text-gray-600 text-sm leading-relaxed mb-6">
-              Il tuo consulente sindacale digitale attivo 24/7 per risolvere dubbi normativi, contrattuali e di reclutamento. Basato sulla knowledge base ufficiale di CCNL Istruzione e Ricerca, Ordinanze Ministeriali e decreti del settore istruzione.
+              Assistente virtuale attivo 24/7 per risolvere dubbi normativi, contrattuali e di reclutamento. Basato su fonti primarie certificate (G.U., MIM, Normattiva, ARAN) con modello di produzione EMA a 7 livelli di approfondimento.
             </p>
 
             <div className="grid md:grid-cols-3 gap-4 mb-8">
               {promptCards.map((card, i) => (
                 <Link
                   key={i}
-                  to="/sindacalista-ai"
+                  to="/assistente"
                   className="block p-4 bg-brand-verde/5 border border-brand-verde/10 rounded-2xl hover:bg-brand-verde/10 hover:border-brand-verde/30 transition-all duration-200 group"
                 >
                   <p className="text-xs font-semibold text-brand-verde mb-1">{card.title}</p>
@@ -59,11 +59,11 @@ export default function AssistantsAI() {
             </div>
 
             <Link
-              to="/sindacalista-ai"
+              to="/assistente"
               className="block w-full py-4 bg-gradient-to-r from-brand-verde to-brand-ottanio text-white rounded-2xl font-bold text-lg hover:opacity-90 transition text-center shadow-lg"
             >
               <Sparkles size={20} className="inline mr-2" />
-              Apri il Sindacalista AI
+              Apri l'Assistente Normativo
               <ArrowRight size={18} className="inline ml-2" />
             </Link>
           </div>

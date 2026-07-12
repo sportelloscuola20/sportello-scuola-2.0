@@ -220,7 +220,7 @@ export const PRODUCT_REGISTRY: Record<ProductId, ProductMeta> = {
   consulente: {
     id: 'consulente',
     name: 'Consulente Intelligente',
-    description: 'AI sindacalista per consulenza personalizzata sul lavoro scolastico',
+    description: 'Assistente normativo IA per consulenza personalizzata sul lavoro scolastico',
     icon: '🤖',
     route: '/assistente',
     color: 'text-amber-600',

@@ -3,8 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 
 const routeLabels: Record<string, string> = {
   '/': 'Home',
-  '/assistente': 'Assistente AI',
-  '/sindacalista-ai': 'Sindacalista AI',
+  '/assistente': 'Assistente Normativo',
   '/calcolo-punteggio': 'Calcolo Punteggio',
   '/normative': 'Normative e Documenti',
   '/notizie-scadenze': 'Notizie e Scadenze',

@@ -25,7 +25,7 @@ const TYPE_CONFIG: Record<SearchResult['type'], { icon: React.ReactNode; label: 
 
 const NAVIGATION_LINKS: { label: string; description: string; url: string; icon: React.ReactNode }[] = [
   { label: 'Calcolo Punteggio GPS/ATA', description: 'Simulatore interattivo', url: '/calcolo-punteggio', icon: <Calculator size={18} /> },
-  { label: 'Sindacalista AI', description: 'Chat con l\'assistente intelligente', url: '/sindacalista-ai', icon: <MessageSquare size={18} /> },
+  { label: 'Assistente Normativo', description: 'Chat con assistente IA normativo', url: '/assistente', icon: <MessageSquare size={18} /> },
   { label: 'Interpelli Nazionali', description: 'Centro interpelli e bandi', url: '/interpelli', icon: <FileText size={18} /> },
   { label: 'Normative e Documenti', description: 'Gazzette, CCNL, circolari', url: '/normative-e-documenti', icon: <Scale size={18} /> },
   { label: 'Notizie e Scadenze', description: 'Intelligence settore scuola', url: '/notizie-scadenze', icon: <Newspaper size={18} /> },
@@ -40,7 +40,7 @@ const FAQ_DATA = [
   { q: 'Come si calcola il punteggio GPS?', a: 'Usa il simulatore GPS per calcolare il tuo punteggio', url: '/calcolo-punteggio' },
   { q: 'Come funziona la mobilità del personale?', a: 'Informazioni sulla mobilità annuale', url: '/notizie-scadenze' },
   { q: 'Cosa sono gli interpelli?', a: 'Centro nazionale interpelli scuola', url: '/interpelli' },
-  { q: 'Come funziona il Sindacalista AI?', a: 'Chat con assistente AI specializzato', url: '/sindacalista-ai' },
+  { q: 'Come funziona l\'Assistente Normativo?', a: 'Chat con assistente IA normativo', url: '/assistente' },
   { q: 'Quali sono i diritti del personale ATA?', a: 'Informazioni CCNL e diritti', url: '/normative-e-documenti' },
   { q: 'Come iscriversi alle GPS?', a: 'Aggiornamento graduatorie provinciali', url: '/notizie-scadenze' },
   { q: 'TFA Sostegno requisiti e bando', a: 'Informazioni TFA Sostegno', url: '/interpelli' },

@@ -12,7 +12,7 @@ export default function Hero() {
         <div className="text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-brand-ambra/10 to-brand-oro/10 border border-brand-ambra/20 text-brand-oro text-xs font-bold uppercase tracking-wider mb-6 shadow-sm hover:scale-105 transition-all">
             <Sparkles size={14} />
-            <span>Novità: Sindacalista AI — Assistente sindacale digitale 24/7</span>
+            <span>Novità: Assistente Normativo — IA specializzata in normativa scolastica 24/7</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight leading-tight text-[#0F172A]">
@@ -24,11 +24,11 @@ export default function Hero() {
 
           <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
             <Link
-              to="/sindacalista-ai"
+              to="/assistente"
               className="w-full sm:w-auto flex items-center justify-center gap-2 bg-brand-verde text-white px-8 py-4 rounded-2xl hover:bg-brand-verde/90 transition-all duration-300 font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1"
             >
               <Sparkles size={22} />
-              Prova il Sindacalista AI
+              Prova l'Assistente Normativo
             </Link>
             <Link
               to="/calcolo-punteggio"
@@ -42,7 +42,7 @@ export default function Hero() {
           <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {[
               { icon: Calculator, label: 'Simulazione GPS/ATA', desc: 'Algoritmo aggiornato ai decreti ministeriali vigenti', color: 'text-brand-blu' },
-              { icon: Sparkles, label: 'Sindacalista AI', desc: 'Consulente digitale attivo 24/7 su normativa e contratti', color: 'text-brand-verde' },
+              { icon: Sparkles, label: 'Assistente Normativo', desc: 'Consulente IA attivo 24/7 su normativa e contratti', color: 'text-brand-verde' },
               { icon: BellRing, label: 'Interpelli e Scadenze', desc: 'Monitoraggio nazionale in tempo reale con notifiche', color: 'text-brand-ambra' },
             ].map(item => (
               <div key={item.label} className="bg-white/70 backdrop-blur-md rounded-3xl p-5 border border-slate-200/60 shadow-soft text-center hover:shadow-medium transition-all duration-300">

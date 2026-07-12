@@ -2,6 +2,8 @@
  * ============================================================================
  *  EMA §1.6 — CHAT SERVICE
  *  Provides chat/conversation operations without direct Supabase from Layer 5.
+ *  All AI responses are routed through the Gemini edge function (no local
+ *  knowledge base fallback — EMA §7 compliance).
  * ============================================================================
  */
 
@@ -9,7 +11,6 @@ import { supabaseAdapter } from '../foundation/adapters';
 import { eventBus } from '../foundation/events';
 import { createLineage } from '../foundation/types';
 import type { DataLineageObject } from '../foundation/types';
-import { getKnowledgeResponse } from '../rag/knowledge-base';
 
 export interface ChatConversation {
   id: string;
@@ -117,25 +118,23 @@ export async function logGeminiCall(
 }
 
 /**
- * Generate AI response with lineage tracking (EMA §3.13).
- * Tries knowledge base first, then falls back to edge function.
+ * Generate AI response — routes ALL queries through Gemini edge function.
+ * EMA §7: No local knowledge base. All responses are AI-generated with
+ * source citations from the RAG pipeline.
+ *
+ * System prompt includes:
+ * - 107 Italian USP provinces data
+ * - CCNL Istruzione e Ricerca 2019-2021
+ * - OM 88/2024 (GPS)
+ * - DM 89/2024 (ATA)
+ * - L. 104/1992, D.Lgs. 151/2001, L. 68/1999
+ * - All EMA document products
  */
 export async function generateChatResponse(
   userMessage: string,
   history: Array<{ role: string; content: string }>
 ): Promise<ChatResponse> {
-  // 1. Try deterministic knowledge base first
-  const localResponse = getKnowledgeResponse(userMessage);
-  if (localResponse) {
-    return {
-      text: localResponse,
-      lineage: createLineage('knowledge_base', 'chat-service', {
-        metadata: { query: userMessage.slice(0, 100) },
-      }),
-    };
-  }
-
-  // 2. Try edge function (AI Core)
+  // Route through Gemini edge function — the ONLY response path
   try {
     const result = await supabaseAdapter.invoke<{
       response: string;
@@ -157,14 +156,14 @@ export async function generateChatResponse(
       };
     }
   } catch {
-    // Fall through to fallback
+    // Fall through to error message
   }
 
-  // 3. Fallback
+  // Error fallback — user must retry (no pre-packaged responses)
   return {
-    text: `Grazie per la tua domanda su "${userMessage}". Il servizio è temporaneamente in sovraccarico. Ti prego di riprovare tra qualche istante.`,
-    lineage: createLineage('static_data', 'chat-service', {
-      metadata: { fallback: true },
+    text: `Mi scuso, il servizio è temporaneamente in sovraccarico. Riprova tra qualche istante. Se il problema persiste, contatta il supporto.`,
+    lineage: createLineage('error_fallback', 'chat-service', {
+      metadata: { query: userMessage.slice(0, 100), fallback: true },
     }),
   };
 }

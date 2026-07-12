@@ -50,36 +50,36 @@ export default function Header({ onSearchOpen }: HeaderProps) {
 
   const menuItems = [
     { label: 'Calcolo Punteggio', href: '/calcolo-punteggio' },
-    { label: 'Servizi', href: '/servizi' },
-    { label: 'Sindacalista AI', href: '/sindacalista-ai' },
+    { label: 'Nomine', href: '/nomine' },
     { label: 'Interpelli', href: '/interpelli' },
-    { label: 'Normative e Documenti', href: '/normative-e-documenti' },
-    { label: 'Notizie e Scadenze', href: '/notizie-scadenze' },
+    { label: 'Normative', href: '/normative-e-documenti' },
+    { label: 'Notizie', href: '/notizie-scadenze' },
+    { label: 'Assistente', href: '/assistente' },
   ];
 
   return (
     <header id="main-navbar" className="bg-white/80 backdrop-blur-md shadow-soft border-b border-slate-200/60 fixed w-full top-0 z-50" role="banner">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
-          <Link to="/" className="flex items-center gap-3 group" onClick={handleNavClick} aria-label="Sportello Scuola 2.0 - Torna alla home">
+        <div className="flex items-center justify-between h-16">
+          <Link to="/" className="flex items-center gap-2.5 group shrink-0" onClick={handleNavClick} aria-label="Sportello Scuola 2.0 - Torna alla home">
             <img
               src="/logo.png"
               alt="Sportello Scuola 2.0"
-              className="h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+              className="h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
             />
-            <span className="h-12 flex flex-col justify-center font-display uppercase text-lg sm:text-2xl leading-none tracking-[0.06em] font-bold">
+            <span className="flex flex-col justify-center font-display uppercase text-base sm:text-lg leading-none tracking-[0.06em] font-bold">
               <span className="text-brand-blu">Sportello</span>
               <span className="text-brand-verde">Scuola <span className="text-brand-ottanio">2.0</span></span>
             </span>
           </Link>
 
-          <nav className="hidden md:flex space-x-1" aria-label="Menu principale">
+          <nav className="hidden lg:flex items-center gap-0.5" aria-label="Menu principale">
             {menuItems.map((item) => (
               <Link
                 key={item.label}
                 to={item.href}
                 onClick={handleNavClick}
-                className={`px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`px-2.5 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200 whitespace-nowrap ${
                   isActive(item.href)
                     ? 'bg-brand-blu/10 text-brand-blu'
                     : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
@@ -90,35 +90,35 @@ export default function Header({ onSearchOpen }: HeaderProps) {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2 shrink-0">
             <button onClick={onSearchOpen}
-              className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-brand-blu bg-gray-100/80 hover:bg-brand-blu/5 rounded-xl text-sm transition group"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-gray-500 hover:text-brand-blu bg-gray-100/80 hover:bg-brand-blu/5 rounded-lg text-sm transition group"
               title="Cerca (Ctrl+K)"
               aria-label="Apri ricerca globale, scorciatoia Ctrl+K">
-              <Search size={16} />
-              <span className="text-xs text-gray-400 hidden lg:inline group-hover:text-brand-blu transition">Cerca...</span>
-              <kbd className="hidden lg:inline text-[10px] px-1.5 py-0.5 bg-white border border-gray-200 rounded text-gray-400 font-mono group-hover:border-brand-blu/30 transition">⌘K</kbd>
+              <Search size={15} />
+              <span className="text-[11px] text-gray-400 hidden xl:inline group-hover:text-brand-blu transition">Cerca</span>
+              <kbd className="hidden xl:inline text-[9px] px-1 py-0.5 bg-white border border-gray-200 rounded text-gray-400 font-mono group-hover:border-brand-blu/30 transition">⌘K</kbd>
             </button>
             {isAuthenticated && user ? (
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 bg-brand-blu/10 text-brand-blu px-3 py-1.5 rounded-2xl font-medium text-sm hover:bg-brand-blu/20 transition"
+                  className="flex items-center gap-1.5 bg-brand-blu/10 text-brand-blu px-2.5 py-1.5 rounded-lg font-medium text-[13px] hover:bg-brand-blu/20 transition"
                   aria-expanded={showUserMenu}
                   aria-haspopup="true"
                   aria-label="Menu utente"
                 >
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-verde to-brand-ottanio flex items-center justify-center text-white text-[10px] font-bold">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-brand-verde to-brand-ottanio flex items-center justify-center text-white text-[9px] font-bold">
                     {initials}
                   </div>
-                  <span className="max-w-[120px] truncate">{user.full_name || user.email}</span>
-                  <ChevronDown size={14} className={`transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
+                  <span className="max-w-[100px] truncate hidden xl:inline">{user.full_name || user.email}</span>
+                  <ChevronDown size={12} className={`transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
                 </button>
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200/60 rounded-2xl shadow-xl animate-fade-in-up overflow-hidden" role="menu" aria-label="Menu utente">
                     <div className="p-4 border-b border-slate-100">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-verde to-brand-ottanio flex items-center justify-center text-white text-sm font-bold shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-verde to-brand-ottanio flex items-center justify-center text-white text-sm font-bold shrink-0">
                           {initials}
                         </div>
                         <div className="min-w-0">
@@ -188,15 +188,15 @@ export default function Header({ onSearchOpen }: HeaderProps) {
             ) : (
               <button
                 onClick={() => setShowLogin(true)}
-                className="bg-brand-blu text-white px-5 py-2 rounded-xl hover:bg-brand-blu/90 transition-colors duration-200 font-medium text-sm flex items-center gap-2"
+                className="bg-brand-blu text-white px-4 py-1.5 rounded-lg hover:bg-brand-blu/90 transition-colors duration-200 font-medium text-[13px] flex items-center gap-1.5"
               >
-                <User size={16} />
+                <User size={14} />
                 Accedi
               </button>
             )}
           </div>
 
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex lg:hidden items-center gap-1">
             <button onClick={onSearchOpen}
               className="p-2 text-gray-500 hover:text-brand-blu rounded-xl transition"
               title="Cerca"
@@ -216,14 +216,14 @@ export default function Header({ onSearchOpen }: HeaderProps) {
         </div>
 
         {isMenuOpen && (
-          <div id="mobile-menu" className="md:hidden pb-4" role="navigation" aria-label="Menu mobile">
-            <nav className="flex flex-col space-y-2">
+          <div id="mobile-menu" className="lg:hidden pb-4" role="navigation" aria-label="Menu mobile">
+            <nav className="flex flex-col space-y-1">
               {menuItems.map((item) => (
                 <Link
                   key={item.label}
                   to={item.href}
                   onClick={handleNavClick}
-                  className={`px-3 py-2 rounded-xl text-sm font-medium transition ${
+                  className={`px-3 py-2.5 rounded-xl text-sm font-medium transition ${
                     isActive(item.href)
                       ? 'bg-brand-blu/10 text-brand-blu'
                       : 'text-gray-600 hover:text-brand-blu hover:bg-brand-blu/5'
@@ -237,13 +237,13 @@ export default function Header({ onSearchOpen }: HeaderProps) {
                   <Link
                     to="/area-riservata"
                     onClick={() => setIsMenuOpen(false)}
-                    className="px-3 py-2 text-brand-blu font-medium"
+                    className="px-3 py-2.5 text-brand-blu font-medium"
                   >
                     Area Riservata
                   </Link>
                   <button
                     onClick={() => { logout(); setIsMenuOpen(false); }}
-                    className="px-3 py-2 text-left text-red-600 hover:bg-red-50 rounded-xl font-medium"
+                    className="px-3 py-2.5 text-left text-red-600 hover:bg-red-50 rounded-xl font-medium"
                   >
                     Esci
                   </button>
@@ -251,7 +251,7 @@ export default function Header({ onSearchOpen }: HeaderProps) {
               ) : (
                 <button
                   onClick={() => { setShowLogin(true); setIsMenuOpen(false); }}
-                  className="px-3 py-2 text-left text-brand-blu font-medium"
+                  className="px-3 py-2.5 text-left text-brand-blu font-medium"
                 >
                   Accedi
                 </button>

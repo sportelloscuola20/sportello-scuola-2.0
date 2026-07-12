@@ -21,6 +21,7 @@ const FAQPage = lazy(() => import('./pages/FAQPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const ServicesPage = lazy(() => import('./pages/ServicesPage'));
 const InterpelliPage = lazy(() => import('./pages/InterpelliPage'));
+const NominePage = lazy(() => import('./pages/NominePage'));
 const AreaRiservataPage = lazy(() => import('./pages/AreaRiservataPage'));
 const ScorePageAR = lazy(() => import('./pages/ScorePageAR'));
 const BookmarksPageAR = lazy(() => import('./pages/BookmarksPageAR'));
@@ -65,18 +66,19 @@ function App() {
         <div className="min-h-screen bg-surface">
           <ScrollToTop />
           <Header onSearchOpen={() => setShowSearch(true)} />
-          <div className="pt-20">
+          <div className="pt-16">
             <Breadcrumb />
             <Suspense fallback={<div className="flex justify-center items-center h-64"><div className="text-sm text-muted">Caricamento...</div></div>}>
               <Routes>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/assistente/*" element={<AssistantPage />} />
-                <Route path="/sindacalista-ai" element={<AssistantPage />} />
+                <Route path="/assistente" element={<AssistantPage />} />
+                <Route path="/assistente/:type" element={<AssistantPage />} />
                 <Route path="/calcolo-punteggio" element={<ScorePage />} />
                 <Route path="/normative" element={<NormativePage />} />
                 <Route path="/normative-e-documenti" element={<NormativeEDocumentiPage />} />
                 <Route path="/notizie-scadenze" element={<NewsPage />} />
                 <Route path="/notizie-scadenze/archivio" element={<ArchivePage />} />
+                <Route path="/nomine" element={<NominePage />} />
                 <Route path="/faq" element={<FAQPage />} />
                 <Route path="/contatti" element={<ContactPage />} />
                 <Route path="/servizi" element={<ServicesPage />} />
