@@ -45,8 +45,8 @@ const FALL_NEWS: NotiziaIntelligence[] = [
   {
     id: 'fn-3', titolo: '**CCNL 2024-2026**: avvio trattative per il rinnovo del comparto Istruzione',
     descrizione: 'L\'ARAN ha convocato le organizzazioni sindacali per l\'avvio delle trattative per il rinnovo del CCNL Comparto Istruzione e Ricerca. In scadenza il 31 dicembre 2026.',
-    dataPubblicazione: '2026-07-05', fonte: { livello: 'A', nome: 'ARAN', url: 'https://www.aran.it', peso: 100 },
-    classifica: { criticita: 'strategica', impatto: 'nazionale', platea: 'intero_sistema', target: ['docenti', 'ata', 'dirigenti'], categoria: 'Contratti, Salari e Personale ATA', livelloFonte: 'A', fontePrimaria: 'ARAN - Avvio trattative CCNL', fonteUrl: '', dataAcquisizione: '2026-07-05' },
+    dataPubblicazione: '2026-07-05', fonte: { livello: 'A', nome: 'Gazzetta Ufficiale', url: 'https://www.gazzettaufficiale.it', peso: 100 },
+    classifica: { criticita: 'strategica', impatto: 'nazionale', platea: 'intero_sistema', target: ['docenti', 'ata', 'dirigenti'], categoria: 'Contratti, Salari e Personale ATA', livelloFonte: 'A', fontePrimaria: 'Gazzetta Ufficiale - Avvio trattative CCNL', fonteUrl: '', dataAcquisizione: '2026-07-05' },
     contenuti: [], tag: ['CCNL', 'rinnovo', 'trattative'], link: '', isPinned: false,
   },
   {
@@ -120,7 +120,7 @@ export default function NewsHub({ isHomePage = true }: NewsHubProps) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const AUTHORITATIVE_SOURCES = ['MIM', 'MIMUR', 'Gazzetta Ufficiale', 'Orizzonte Scuola', 'INVALSI', 'INPS', 'Normattiva'];
+      const AUTHORITATIVE_SOURCES = ['MIM', 'MIMUR', 'Orizzonte Scuola', 'Gazzetta Ufficiale'];
       const [newsResult, scadenzeResult] = await Promise.all([
         supabase.from('intelligence_news').select('*').eq('is_archived', false).in('fonte_nome', AUTHORITATIVE_SOURCES).order('data_pubblicazione', { ascending: false }).limit(60),
         supabase.from('intelligence_scadenze').select('*').order('data_scadenza', { ascending: true }).limit(40),

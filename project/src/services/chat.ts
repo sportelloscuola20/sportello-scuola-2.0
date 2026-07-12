@@ -12,6 +12,9 @@ import { eventBus } from '../foundation/events';
 import { createLineage } from '../foundation/types';
 import type { DataLineageObject } from '../foundation/types';
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+
 export interface ChatConversation {
   id: string;
   title: string;
@@ -135,52 +138,96 @@ export async function generateChatResponse(
   history: Array<{ role: string; content: string }>,
   additionalContext?: string
 ): Promise<ChatResponse> {
-  const MAX_RETRIES = 2;
+  const MAX_RETRIES = 3;
 
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      const result = await supabaseAdapter.invoke<{
-        response: string;
-        citations?: Array<{ title: string; confidence: number }>;
-      }>('ai-sindacalista', {
-        message: userMessage,
-        history: history.slice(-10),
-        context: additionalContext || '',
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-sindacalista`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          history: history.slice(-10),
+          context: additionalContext || '',
+        }),
+        signal: controller.signal,
       });
 
-      if (!result.error && result.data?.response) {
-        eventBus.emit('chat.response_generated', 'chat-service', {
-          hasCitations: (result.data.citations?.length ?? 0) > 0,
-        });
+      clearTimeout(timeoutId);
 
-        return {
-          text: result.data.response,
-          citations: result.data.citations || [],
-          lineage: result.lineage,
-        };
+      if (res.ok) {
+        const data = await res.json();
+        if (data.response) {
+          eventBus.emit('chat.response_generated', 'chat-service', {
+            hasCitations: (data.citations?.length ?? 0) > 0,
+          });
+          return {
+            text: data.response,
+            citations: data.citations || [],
+            lineage: createLineage('gemini_response', 'chat-service', {
+              metadata: { query: userMessage.slice(0, 100), model: 'gemini-3.1-flash-lite' },
+            }),
+          };
+        }
       }
 
-      const errMsg = result.error?.message || 'No response from edge function';
-      console.error(`[chat-service] Edge function error (attempt ${attempt + 1}):`, errMsg);
+      // Parse error details from response
+      let errorBody = '';
+      try { errorBody = await res.text(); } catch { errorBody = res.statusText; }
 
-      // Retry on 429/rate limit
-      const isRateLimit = errMsg.includes('429') || errMsg.includes('rate') || errMsg.includes('quota');
-      if (isRateLimit && attempt < MAX_RETRIES) {
-        await new Promise(r => setTimeout(r, (attempt + 1) * 2000));
+      const isRateLimit = res.status === 429 || errorBody.includes('429') || errorBody.includes('rate') || errorBody.includes('quota');
+      console.error(`[chat-service] Edge function HTTP ${res.status} (attempt ${attempt + 1}):`, errorBody.slice(0, 300));
+
+      if (isRateLimit && attempt < MAX_RETRIES - 1) {
+        const waitMs = (attempt + 1) * 3000;
+        await new Promise(r => setTimeout(r, waitMs));
         continue;
       }
 
-      // Return specific error text
       if (isRateLimit) {
         return {
           text: `⚠️ **Servizio temporaneamente non disponibile**\n\nTroppe richieste simultanee. Riprova tra qualche istante.\n\nSe il problema persiste, contatta il supporto: sportelloscuola2.0@gmail.com`,
-          lineage: createLineage('quota_exceeded', 'chat-service', {
-            metadata: { query: userMessage.slice(0, 100), quota: true },
+          lineage: createLineage('rate_limited', 'chat-service', {
+            metadata: { query: userMessage.slice(0, 100) },
           }),
         };
       }
-    } catch (e) {
-      console.error(`[chat-service] Exception (attempt ${attempt + 1}):`, e);
+
+      // Non-rate-limit error — retry once
+      if (attempt < MAX_RETRIES - 1) {
+        await new Promise(r => setTimeout(r, 1500));
+        continue;
+      }
+
+      return {
+        text: `Mi scuso, il servizio è temporaneamente non disponibile. Riprova tra qualche istante.`,
+        lineage: createLineage('error', 'chat-service', {
+          metadata: { query: userMessage.slice(0, 100), status: res.status },
+        }),
+      };
+    } catch (e: any) {
+      const isAbort = e?.name === 'AbortError';
+      console.error(`[chat-service] ${isAbort ? 'Timeout' : 'Exception'} (attempt ${attempt + 1}):`, e?.message || e);
+
+      if (isAbort) {
+        return {
+          text: `⚠️ **Timeout della richiesta**\n\nLa risposta sta prendendo più del previsto. Riprova con una domanda più breve.`,
+          lineage: createLineage('timeout', 'chat-service', {
+            metadata: { query: userMessage.slice(0, 100) },
+          }),
+        };
+      }
+
+      if (attempt < MAX_RETRIES - 1) {
+        await new Promise(r => setTimeout(r, 1500));
+        continue;
+      }
     }
   }
 

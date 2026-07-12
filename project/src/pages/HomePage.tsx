@@ -163,12 +163,12 @@ export default function HomePage() {
       </section>
       <Hero />
       <PunteggioGPS />
-      <ServiziGrid />
       <NominePreview />
       <CentroInterpelli />
       <NormativeDocuments />
       <NewsHub />
       <AssistantsAI />
+      <ServiziGrid />
       <UniversitaHub />
       <FAQ />
       <Contact />

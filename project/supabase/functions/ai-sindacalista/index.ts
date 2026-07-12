@@ -391,6 +391,165 @@ Entro 24 ore dalla convocazione: accettazione supplenza`
 Utilizzare il Simulatore GPS di Sportello Scuola 2.0 per calcolo personalizzato.
 OM 88/2024 Allegato 3; Tabelle A/1-A/10`
   },
+  {
+    keywords: ['dpr 19', 'dpr 19/2016', 'tabella a', 'allegato a', 'classi di concorso', 'classe concorso', 'classe a-01', 'classe a-02', 'classe a-03', 'classe b-01', 'classe b-05', 'classe b-10', 'requisiti accesso', 'scuola secondaria', 'liceo', 'istituto tecnico', 'istituto professionale'],
+    title: 'DPR 19/2016 - Classi di concorso (Tabella A / Allegato A)',
+    context: `DPR 19 giugno 2016, n. 19 — Allegato A (Tabella A): Classi di concorso per la scuola secondaria di I e II grado.
+
+CLASSI DI CONCORSO — SCUOLA SECONDARIA DI I GRADO (Grado musicale e coreutico):
+- Classe A-34: Discipline musicali (ISTS, Liceo musicale e coreutico)
+- Classe A-35: Discipline coreutiche (ISTC, Liceo musicale e coreutico)
+- Classe A-36: Discipline musicale e coreutiche (ISTP)
+
+CLASSI DI CONCORSO — SCUOLA SECONDARIA DI II GRADO:
+
+GRUPPO A — Discipline letterarie, giuridico-economiche e filosofico-pedagogiche:
+- A-01: Italiano e Latino (Liceo classico, Liceo linguistico)
+- A-02: Storia (tutti gli indirizzi)
+- A-03: Lingua e letteratura straniera — Inglese (tutti gli indirizzi)
+- A-04: Lingua e letteratura straniera — Francese
+- A-15: Filosofia (Liceo classico, Liceo delle scienze umane)
+- A-16: Pedagogia e psicologia (Liceo delle scienze umane)
+- A-17: Diritto ed economia (Liceo economico-sociale)
+- A-19: Religione cattolica / Attività alternative
+
+GRUPPO B — Discipline scientifico-matematiche, fisiche e naturalistiche:
+- A-05: Matematica (tutti gli indirizzi)
+- A-06: Fisica (tutti gli indirizzi)
+- A-07: Scienze della Terra (tutti gli indirizzi)
+- A-08: Biologia (tutti gli indirizzi)
+- A-09: Chimica (tutti gli indirizzi)
+- A-10: Scienze applicate (tutti gli indirizzi)
+
+GRUPPO C — Discipline artistiche, grafiche e dello spettacolo:
+- A-11: Disegno e storia dell'arte (Liceo artistico)
+- A-12: Disegno e storia dell'arte — Indirizzo figurativo e architettonico
+- A-13: Disegno e storia dell'arte — Indirizzo scenico
+- A-18: Storia dell'arte (Liceo artistico)
+
+GRUPPO D — Discipline motorie:
+- A-14: Educazione fisica (tutti gli indirizzi)
+
+GRUPPO E — Lingue straniere:
+- A-20: Lingua e letteratura tedesca
+- A-21: Lingua e letteratura spagnola
+- A-22: Lingua e letteratura russa
+- A-23: Lingua e letteratura araba
+
+GRUPPO F — Tecnologie (IPSIA/IPSAA/ITIS/ITS):
+- A-24: Tecnologie e tecniche di rappresentazione grafica (IPSIA/IPSAA)
+- A-25: Tecnologie meccaniche e costruzioni meccaniche (IPSIA)
+- A-26: Tecnologie elettriche ed elettroniche (IPSIA)
+- A-27: Tecnologie chimiche (IPSIA)
+- A-28: Tecnologie tessili e dell'abbigliamento (IPSIA)
+- A-29: Tecnologie grafiche e della comunicazione (IPSIA)
+- A-30: Tecnologie dell'informatica (IPSIA/ITIS)
+- A-31: Tecnologie agrarie e agroalimentari (IPSIA agrario)
+- A-32: Tecnologie del legno e dell'arredamento (IPSIA)
+- A-33: Tecniche dell'industria alimentare (IPSIA)
+- A-34: Chimica e materiali (ITS)
+- A-35: Costruzioni, ambiente e territorio (IPSIA)
+- A-36: Trasporti e logistica (IPSIA)
+- A-37: Affari e relazioni internazionali (Istituto tecnico)
+- A-38: Amministrazione, finanza e marketing (Istituto tecnico)
+- A-39: Commercio e marketing (Istituto tecnico)
+- A-40: Turismo (Istituto tecnico)
+- A-41: Agraria, agroalimentare e agroindustria (Istituto tecnico)
+- A-42: Pesca e acquacoltura (Istituto tecnico)
+- A-43: Manutenzione e assistenza tecnica (Istituto tecnico)
+- A-44: Logistica, marketing e commercio estero (Istituto tecnico)
+
+GRUPPO B (secondaria I grado — classi B):
+- B-01: Filosofia e storia
+- B-02: Filosofia
+- B-03: Storia
+- B-04: Geografia
+- B-05: Matematica e fisica
+- B-06: Matematica
+- B-07: Fisica
+- B-08: Scienze naturali
+- B-09: Biologia e scienze della terra
+- B-10: Chimica
+- B-11: Scienze chimiche e biologiche
+
+REQUISITI DI ACCESSO PER CLASSE DI CONCORSO (art. 5 DPR 19/2016):
+Per ogni classe di concorso è richiesto:
+1. Titolo di studio (laurea magistrale, specialistica o magistrale a ciclo unico, con crediti nelle discipline della classe)
+2. Abilitazione (concorso ordinario, TFA, PAS, percorsi 30/36/60 CFU) oppure 24 CFU nelle discipline della classe + laurea magistrale
+Il DM 259/2017 (Regolamento recante norme speciali per l'accesso all'insegnamento) e il DM 22/12/2023 hanno aggiornato alcuni profili e requisiti delle classi di concorso.
+
+Fonte: DPR 19/2016 G.U. n. 175 del 29 luglio 2016; DM 259/2017; DM 22/12/2023.`
+  },
+  {
+    keywords: ['congedo straordinario', 'congedo 104', '2 anni congedo', 'congedo assistenza disabile', 'art. 42 d.lgs 151', 'art. 33 legge 104', 'astensione straordinaria'],
+    title: 'Congedo straordinario retribuito L.104/1992 e D.Lgs. 151/2001',
+    context: `Congedo straordinario per assistenza familiare disabile grave:
+- Durata: 2 anni nell'arco della vita lavorativa (art. 42 D.Lgs. 151/2001, conv. L. 53/2000)
+- Retribuzione: 100% a carico INPS (fino a 3 volte il trattamento minimo annuo; eccedenza a carico datore di lavoro solo per pubbliche amministrazioni)
+- Beneficiari (ordine di priorità art. 42 comma 5):
+  1. Coniuge o convivente
+  2. Genitore
+  3. Figlio convivente (unico genitore)
+  4. Fratello/sorella convivente (unico)
+  5. Parente/affine di 2° grado convivente (se genitore >65 o disabile)
+- Referente unico: obbligatorio (art. 33 comma 3 L. 104/1992)
+- Frazionamento: giornaliero o orario (minimo 2 ore/giorno; frazioni di mezza giornata per lavoratori a tempo pieno)
+- Differimento: massimo 12 mesi, con preavviso di 30 giorni
+- Esclusione: non cumulabile con congedo parentale; diritto precedenza rispetto a permessi orari L.104 art. 33
+- CCNL 2019-2021 art. 35 comma 6: riconoscimento anche al personale a tempo determinato
+- Incompatibilità: non esonera dall'obbligo di reperibilità nelle fasce orarie (salvo provvedimento del DS)
+- Note MIM: annualmente il MIM pubblica istruzioni su gestione congedi straordinari del personale scolastico
+
+Fonte: art. 42 D.Lgs. 151/2001; art. 33 L. 104/1992; art. 35 CCNL 2019-2021.`
+  },
+  {
+    keywords: ['orario docenti', 'ore insegnamento', '25 ore infanzia', '22 ore primaria', '18 ore secondaria', 'ore lezione', 'orario scuola', 'monte ore', 'orario annuale'],
+    title: 'Orario di lavoro docenti — Monte ore per ordine e grado di scuola',
+    context: `Orario di insegnamento annuale (art. 28 CCNL 2006-2009, vigente):
+- Scuola dell'infanzia: 25 ore settimanali (+ 25 ore annue attività funzionali = 950 ore/anno)
+- Scuola primaria: 22 ore settimanali + 2 ore programmazione (+ 25 ore annue attività funzionali = 900 ore/anno)
+- Scuola secondaria di I e II grado: 18 ore settimanali (+ 40 ore annue attività funzionali = 720 ore/anno)
+
+Monte ore complessivo annuo (insegnamento + attività funzionali):
+- Infanzia: 950 ore
+- Primaria: 900 ore
+- Secondaria: 720 ore
+
+Attività funzionali (art. 29 CCNL 2006-2009):
+- Consigli di classe/quipe: 40 ore/anno
+- Colleghi dei docenti: 32 ore/anno (a 2 turni di 16 ore)
+- Ricevimento famiglie: 2 ore/mese + 2 incontri annui (art. 30)
+- Programmazione interclasse e di dipartimento
+- scrutinio e verifiche intermedie
+- Orario straordinario: non previsto per i docenti di ruolo
+
+Fonte: art. 28-30 CCNL Comparto Scuola 2006-2009; art. 47 D.Lgs. 297/1994; circ. MI n. 89/2001.`
+  },
+  {
+    keywords: ['progressioni carriera ata', 'scatti ata', 'passaggio profilo ata', 'area a', 'area b', 'collaboratore scolastico', 'assistente amministrativo', 'assistente tecnico', 'ciad progressione', 'procedura concorsuale atipica'],
+    title: 'Progressioni di carriera ATA — Orizzontali e verticali',
+    context: `Progressione ORIZZONTALE (art. 57 CCNL 2019-2021):
+- Scatti biennali di anzianità (stesso profilo, stessa area)
+- Contributo: 1 punto per ogni anno di servizio (area A), 1 punto ogni 2 anni (area B, B2)
+- Dopo 6 punti: mantenimento dello scatto ma non aumento retributivo
+
+Progressione VERTICALE (cambio profilo, es. CS → AA):
+- Procedura concorsuale atipica (art. 57 comma 6 CCNL 2019-2021)
+- Requisiti: diploma di scuola secondaria II grado (per passaggio area B → B2); laurea (per passaggio area A)
+- CIAD obbligatoria per nuove assunzioni in area A (OS) e area B2 (AA, AT) — DM 89/2024
+- Graduatoria di merito interna (per scuole >500 dipendenti) oppure mobilità a domanda
+
+Quota concorsuale atipica:
+- Scuole con >500 dipendenti ATA: 1 posto ogni 100 dipendenti (arrotondato per eccesso)
+- Scuole con 200-500 dipendenti: 1 posto
+- Scuole con <200 dipendenti: 1 posto ogni 5 anni
+- Riserva a dipendenti con >5 anni di servizio nello stesso profilo
+
+Fasce retributive: 5 fasce per ogni profilo (art. 57 CCNL 2019-2021)
+Profilo OS (nuovo): area A, qualifica triennale + CIAD
+
+Fonte: art. 57 CCNL 2019-2021; DM 89/2024; art. 44-60 CCNL 2006-2009.`
+  },
 ];
 
 // ================================================================
