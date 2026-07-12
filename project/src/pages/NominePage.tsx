@@ -26,6 +26,13 @@ const ORDINI_SCUOLA_LABELS: Record<string, string> = {
   'Secondaria I e II Grado': 'Secondaria I e II Grado',
 };
 
+const SORT_OPTIONS = [
+  { value: 'ultimaNomina', label: 'Ultima Nomina (più recente)' },
+  { value: 'competizione', label: 'Competizione (più alta)' },
+  { value: 'punteggioMinimo', label: 'Punteggio Minimo (crescente)' },
+  { value: 'posizioniAssegnate', label: 'Posizioni Assegnate (più posti)' },
+] as const;
+
 const COMPETIZIONE_COLORS: Record<string, string> = {
   molto_alta: 'bg-red-100 text-red-700 border-red-200',
   alta: 'bg-orange-100 text-orange-700 border-orange-200',
@@ -59,6 +66,24 @@ const FASCIA_COLORS: Record<string, string> = {
   E: 'bg-gray-100 text-gray-600',
 };
 
+function sortBollettini(entries: BollettinoEntry[], sortBy: string): BollettinoEntry[] {
+  const sorted = [...entries];
+  switch (sortBy) {
+    case 'ultimaNomina':
+      return sorted.sort((a, b) => new Date(b.ultimaNomina).getTime() - new Date(a.ultimaNomina).getTime());
+    case 'competizione': {
+      const ordine = { molto_alta: 0, alta: 1, media: 2, bassa: 3 };
+      return sorted.sort((a, b) => ordine[a.competizione] - ordine[b.competizione]);
+    }
+    case 'punteggioMinimo':
+      return sorted.sort((a, b) => b.punteggioMinimo - a.punteggioMinimo);
+    case 'posizioniAssegnate':
+      return sorted.sort((a, b) => b.posizioniAssegnate - a.posizioniAssegnate);
+    default:
+      return sorted;
+  }
+}
+
 // ═══ MAIN COMPONENT ═══
 
 export default function NominePage() {
@@ -71,6 +96,7 @@ export default function NominePage() {
   const [punteggioMio, setPunteggioMio] = useState('');
   const [tabAttiva, setTabAttiva] = useState<'ricerca' | 'classi'>('ricerca');
   const [expandedFascia, setExpandedFascia] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'ultimaNomina' | 'competizione' | 'punteggioMinimo' | 'posizioniAssegnate'>('ultimaNomina');
 
   const provinceFiltrate = regioneSelezionata
     ? USP_PROVINCE.filter(p => p.regioneCodice === regioneSelezionata)
@@ -99,8 +125,8 @@ export default function NominePage() {
       const codiciOrdine = CLASSI_CONCORSO.filter(c => c.ordineScuola === ordineScuola).map(c => c.codice);
       result = result.filter(b => codiciOrdine.includes(b.classeCodice));
     }
-    return ordinaPerCompetizione(result);
-  }, [classeSelezionata, provinciaSelezionata, tipoGraduatoria, ordineScuola]);
+    return sortBollettini(result, sortBy);
+  }, [classeSelezionata, provinciaSelezionata, tipoGraduatoria, ordineScuola, sortBy]);
 
   const statsGlobali = useMemo(() => {
     const scoped = classeSelezionata
@@ -143,6 +169,7 @@ export default function NominePage() {
     setOrdineScuola('');
     setSearchClasse('');
     setPunteggioMio('');
+    setSortBy('ultimaNomina');
   };
 
   return (
@@ -297,8 +324,8 @@ export default function NominePage() {
                 </div>
               </div>
 
-              {/* Ricerca classe */}
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Ricerca classe + Ordinamento */}
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1">Classe di Concorso</label>
                   <div className="relative">
@@ -340,6 +367,16 @@ export default function NominePage() {
                       Seleziona una classe di concorso per un'analisi dettagliata.
                     </p>
                   )}
+                </div>
+                {/* Ordinamento */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    <BarChart3 size={10} className="inline" /> Ordina per
+                  </label>
+                  <select value={sortBy} onChange={e => setSortBy(e.target.value as typeof sortBy)}
+                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-brand-blu/20 outline-none text-sm bg-white">
+                    {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
                 </div>
               </div>
 

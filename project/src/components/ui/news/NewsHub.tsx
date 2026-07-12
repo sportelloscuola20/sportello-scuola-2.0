@@ -115,7 +115,7 @@ export default function NewsHub({ isHomePage = true }: NewsHubProps) {
   const [loading, setLoading] = useState(true);
   const [latestNews, setLatestNews] = useState<NotiziaIntelligence[]>([]);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); const interval = setInterval(fetchData, 5 * 60 * 1000); return () => clearInterval(interval); }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -191,6 +191,11 @@ export default function NewsHub({ isHomePage = true }: NewsHubProps) {
           <div className="flex gap-6">
             {/* Main content — thematic boxes */}
             <div className="flex-1 space-y-5 min-w-0">
+              {/* Supabase connection indicator */}
+              <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                Dati da Supabase intelligence_news · Aggiornamento ogni 5 min
+              </div>
               {newsByCategory.length === 0 && (
                 <div className="text-center py-12">
                   <Newspaper size={48} className="mx-auto text-gray-300 mb-4" />

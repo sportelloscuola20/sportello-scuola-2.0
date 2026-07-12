@@ -285,15 +285,7 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
     return followUps.slice(0, 3);
   }, [messages]);
 
-  useEffect(() => {
-    const container = messagesEndRef.current?.closest('.overflow-y-auto');
-    if (container) {
-      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 200;
-      if (isNearBottom || messages.length <= 2) {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  }, [messages, streamingText]);
+  // NO autoscroll — user scrolls manually
   useEffect(() => { if (!isAdmin && chatCount >= FREE_MESSAGE_LIMIT) setShowPaywall(true); }, [chatCount, isAdmin]);
   useEffect(() => { if (user?.id) loadConversations(); }, [user?.id]);
   useEffect(() => {

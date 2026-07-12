@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
   Search, Filter, Mail, BellRing, Lock, Unlock, CreditCard, Loader2,
   CheckCircle, X, ExternalLink, MapPin, Calendar, Users, BookOpen,
-  ChevronDown, ChevronUp, AlertCircle, Building2, Clock,
+  ChevronDown, ChevronUp, AlertCircle, Building2, Clock, RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '../components/foundation/AuthContext';
 import LoginModal from '../components/foundation/LoginModal';
@@ -107,6 +107,9 @@ export default function InterpelliPage() {
       }
     };
     fetchData();
+    // Auto-refresh ogni 5 minuti
+    const interval = setInterval(fetchData, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const canSearch = isAuthenticated ? true : searchCount < 3;
@@ -210,6 +213,9 @@ export default function InterpelliPage() {
               </span>
               <span className="flex items-center gap-1.5">
                 <MapPin size={12} /> {stats.provice} province coperte
+              </span>
+              <span className="flex items-center gap-1.5 text-green-600">
+                <RefreshCw size={12} /> Auto-refresh ogni 5 min
               </span>
             </div>
           )}
