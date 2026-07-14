@@ -7,7 +7,7 @@ import { trackPageView } from './lib/analytics';
 import Header from './components/ui/layout/Header';
 import Footer from './components/ui/layout/Footer';
 import Breadcrumb from './components/ui/layout/Breadcrumb';
-import GlobalSearch from './components/ui/layout/GlobalSearch';
+const GlobalSearch = lazy(() => import('./components/ui/layout/GlobalSearch'));
 import AreaRiservataLayout from './components/AreaRiservata/AreaRiservataLayout';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -97,7 +97,9 @@ function App() {
           </div>
           <Footer />
         </div>
-        <GlobalSearch isOpen={showSearch} onClose={() => setShowSearch(false)} />
+        <Suspense fallback={null}>
+          <GlobalSearch isOpen={showSearch} onClose={() => setShowSearch(false)} />
+        </Suspense>
       </AuthProvider>
     </QueryClientProvider>
   );
