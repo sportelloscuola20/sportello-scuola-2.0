@@ -31,7 +31,7 @@ function NominePreview() {
 
   const recentBollettini = useMemo(() => {
     return [...getAllBollettini()]
-      .sort((a, b) => b.ultimaNomina.localeCompare(a.ultimaNomina))
+      .sort((a, b) => b.dataBollettino.localeCompare(a.dataBollettino))
       .slice(0, 6);
   }, []);
 
@@ -110,7 +110,7 @@ function NominePreview() {
                   </span>
                 </div>
                 <p className="text-[10px] text-gray-400 mt-2">
-                  Ultima nomina: {new Date(b.ultimaNomina).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  Ultima nomina: {new Date(b.dataBollettino).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </p>
               </div>
             );
