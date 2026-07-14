@@ -434,13 +434,13 @@ export default function NominePage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {bollettiniFiltrati.slice(0, 100).map(entry => (
-                <BollettinoCard key={entry.id} entry={entry} punteggioMio={punteggioVal} />
+            <div className="space-y-4">
+              {useMemo(() => groupBollettini(bollettiniFiltrati), [bollettiniFiltrati]).slice(0, 50).map(group => (
+                <BollettinoGroupBox key={group.key} group={group} punteggioMio={punteggioVal} />
               ))}
-              {bollettiniFiltrati.length > 100 && (
-                <p className="col-span-full text-center text-xs text-gray-400 py-4">
-                  Mostrati i primi 100 di {bollettiniFiltrati.length} risultati. Affina i filtri per vedere di più.
+              {groupBollettini(bollettiniFiltrati).length > 50 && (
+                <p className="text-center text-xs text-gray-400 py-4">
+                  Mostrati i primi 50 gruppi. Affina i filtri per vedere di più.
                 </p>
               )}
             </div>
@@ -660,21 +660,41 @@ function PunteggioAlert({ punteggio, entries, classeCodice }: {
   );
 }
 
-// ═══ BOLLINO CARD ═══
+// ═══ GROUPED BOLLETTINI — one box per classe+provincia ═══
 
-function BollettinoCard({ entry, punteggioMio }: { entry: BollettinoEntry; punteggioMio: number | null }) {
-  const classe = getClasseByCodice(entry.classeCodice);
-  const usp = getUSPBySigla(entry.provinciaSigla);
-  const TrendIcon = TREND_ICONS[entry.trend] || Minus;
-  const tassoCopertura = entry.candidatiInGraduatoria > 0
-    ? ((entry.posizioniAssegnate / entry.candidatiInGraduatoria) * 100).toFixed(1)
-    : '0';
+interface BollettinoGroup {
+  key: string;
+  classeCodice: string;
+  provinciaSigla: string;
+  entries: BollettinoEntry[];
+}
 
-  const haChance = punteggioMio !== null && punteggioMio >= entry.punteggioMinimo;
-  const eSopraMax = punteggioMio !== null && punteggioMio > entry.punteggioMassimo;
-  const rapporto = entry.candidatiInGraduatoria > 0 && entry.posizioniAssegnate > 0
-    ? (entry.candidatiInGraduatoria / entry.posizioniAssegnate).toFixed(1)
-    : '—';
+function groupBollettini(entries: BollettinoEntry[]): BollettinoGroup[] {
+  const map = new Map<string, BollettinoEntry[]>();
+  for (const e of entries) {
+    const key = `${e.classeCodice}|${e.provinciaSigla}`;
+    const arr = map.get(key);
+    if (arr) arr.push(e); else map.set(key, [e]);
+  }
+  return Array.from(map.values()).map(arr => ({
+    key: `${arr[0].classeCodice}|${arr[0].provinciaSigla}`,
+    classeCodice: arr[0].classeCodice,
+    provinciaSigla: arr[0].provinciaSigla,
+    entries: arr.sort((a, b) => b.turno - a.turno),
+  }));
+}
+
+function BollettinoGroupBox({ group, punteggioMio }: { group: BollettinoGroup; punteggioMio: number | null }) {
+  const classe = getClasseByCodice(group.classeCodice);
+  const usp = getUSPBySigla(group.provinciaSigla);
+  const latest = group.entries[0];
+  const minPunteggio = Math.min(...group.entries.map(e => e.punteggioMinimo));
+  const maxPunteggio = Math.max(...group.entries.map(e => e.punteggioMassimo));
+  const totPosizioni = group.entries.reduce((s, e) => s + e.posizioniAssegnate, 0);
+  const totCandidati = group.entries.reduce((s, e) => s + e.candidatiInGraduatoria, 0);
+  const rapporto = totCandidati > 0 && totPosizioni > 0 ? (totCandidati / totPosizioni).toFixed(1) : '—';
+  const haChance = punteggioMio !== null && punteggioMio >= minPunteggio;
+  const eSopraMax = punteggioMio !== null && punteggioMio > maxPunteggio;
 
   return (
     <div className={`rounded-3xl border p-5 transition-all ${
@@ -682,92 +702,86 @@ function BollettinoCard({ entry, punteggioMio }: { entry: BollettinoEntry; punte
         : punteggioMio !== null ? 'bg-red-50/30 border-red-100'
         : 'bg-white border-slate-200/60 hover:border-brand-blu/20 shadow-soft'
     }`}>
-      {/* Header: Province + Competizione + Turno */}
+      {/* Header */}
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className="px-2 py-0.5 bg-brand-blu/10 text-brand-blu text-xs font-bold rounded-full">
-            {entry.provinciaSigla}
-          </span>
-          <span className="text-xs text-gray-500">{usp?.nome || entry.provinciaSigla}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">
-            T{entry.turno}
-          </span>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${COMPETIZIONE_COLORS[entry.competizione]}`}>
-            {COMPETIZIONE_LABELS[entry.competizione]}
-          </span>
-        </div>
-      </div>
-
-      {/* Classe + Ordine + Materia */}
-      <div className="mb-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-bold text-[#0F172A]">
-            {classe?.codice || entry.classeCodice}
-          </p>
-          {classe && (
-            <>
-              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${FASCIA_COLORS[classe.fascia] || 'bg-gray-100'}`}>
-                Fascia {classe.fascia}
-              </span>
-              <span className="text-[10px] text-gray-400">
-                {ORDINI_SCUOLA_LABELS[classe.ordineScuola] || classe.ordineScuola}
-              </span>
-            </>
-          )}
+          <span className="px-2 py-0.5 bg-brand-blu/10 text-brand-blu text-xs font-bold rounded-full">{group.provinciaSigla}</span>
+          <span className="text-xs text-gray-500">{usp?.nome || group.provinciaSigla}</span>
+          <span className="text-[10px] font-bold text-brand-blu">{classe?.codice || group.classeCodice}</span>
+          {classe && <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${FASCIA_COLORS[classe.fascia] || 'bg-gray-100'}`}>Fascia {classe.fascia}</span>}
         </div>
-        {classe && (
-          <p className="text-[11px] text-gray-500 mt-0.5">{classe.materia}</p>
-        )}
-        <p className="text-[10px] text-gray-400 mt-0.5">{entry.tipoGraduatoria} · {entry.periodoChiamata} · A.S. {entry.annoScolastico}</p>
+        <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">{group.entries.length} turni</span>
       </div>
 
-      {/* Punteggi + Posizione Ultima Convocazione */}
+      {classe && <p className="text-[11px] text-gray-500 mb-1">{classe.materia} · {ORDINI_SCUOLA_LABELS[classe.ordineScuola] || classe.ordineScuola}</p>}
+
+      {/* Punteggi riepilogo */}
       <div className="grid grid-cols-3 gap-2 mb-3">
         <div className="bg-brand-blu/5 rounded-2xl p-2.5">
           <p className="text-[9px] text-gray-500 mb-0.5">Min. Chiamato</p>
-          <p className="text-lg font-extrabold text-brand-blu">{entry.punteggioMinimo}</p>
+          <p className="text-lg font-extrabold text-brand-blu">{minPunteggio}</p>
         </div>
         <div className="bg-brand-verde/5 rounded-2xl p-2.5">
           <p className="text-[9px] text-gray-500 mb-0.5">Max. Chiamato</p>
-          <p className="text-lg font-extrabold text-brand-verde">{entry.punteggioMassimo}</p>
+          <p className="text-lg font-extrabold text-brand-verde">{maxPunteggio}</p>
         </div>
         <div className="bg-amber-50 rounded-2xl p-2.5">
-          <p className="text-[9px] text-gray-500 mb-0.5">Pos. Ultima Chiamata</p>
-          <p className="text-lg font-extrabold text-amber-700">#{entry.posizioneUltimaConvocazione}</p>
+          <p className="text-[9px] text-gray-500 mb-0.5">Pos. Ultima</p>
+          <p className="text-lg font-extrabold text-amber-700">#{latest.posizioneUltimaConvocazione}</p>
         </div>
       </div>
 
-      {/* Mio punteggio indicator */}
+      {/* Punteggio mio */}
       {punteggioMio !== null && (
-        <div className={`mb-3 p-2.5 rounded-2xl border text-xs ${
+        <div className={`mb-3 p-2 rounded-xl border text-xs ${
           eSopraMax ? 'bg-green-100 border-green-300 text-green-800'
             : haChance ? 'bg-green-50 border-green-200 text-green-700'
             : 'bg-red-50 border-red-200 text-red-700'
         }`}>
-          {eSopraMax ? (
-            <p className="font-bold">✓ Punteggio {punteggioMio} — Sopra il massimo ({entry.punteggioMassimo}). Hai ottime possibilità!</p>
-          ) : haChance ? (
-            <p className="font-bold">✓ Punteggio {punteggioMio} — Nella fascia delle nominate ({entry.punteggioMinimo} — {entry.punteggioMassimo}).</p>
-          ) : (
-            <p className="font-bold">✗ Punteggio {punteggioMio} — Sotto il minimo ({entry.punteggioMinimo}). Serve migliorare i titoli.</p>
-          )}
+          {eSopraMax ? `✓ ${punteggioMio} pt — Sopra il massimo (${maxPunteggio}). Ottime possibilità!` :
+           haChance ? `✓ ${punteggioMio} pt — Nella fascia (${minPunteggio}—${maxPunteggio}).` :
+           `✗ ${punteggioMio} pt — Sotto il minimo (${minPunteggio}).`}
         </div>
       )}
 
       {/* Stats riga */}
-      <div className="flex items-center justify-between text-[10px] text-gray-500">
-        <span className="flex items-center gap-1"><Target size={10} /> {entry.posizioniAssegnate} posizioni</span>
-        <span className="flex items-center gap-1"><Users size={10} /> {entry.candidatiInGraduatoria} candidati</span>
+      <div className="flex items-center justify-between text-[10px] text-gray-500 mb-3">
+        <span><Target size={10} className="inline" /> {totPosizioni} pos. · <Users size={10} className="inline" /> {totCandidati} cand. · Rapporto {rapporto}:1</span>
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${COMPETIZIONE_COLORS[latest.competizione]}`}>{COMPETIZIONE_LABELS[latest.competizione]}</span>
       </div>
-      <div className="flex items-center justify-between text-[10px] text-gray-500 mt-1">
-        <span>Rapporto: <strong className="text-brand-blu">{rapporto}:1</strong> · Copertura: <strong className="text-brand-blu">{tassoCopertura}%</strong></span>
-        <span className={`flex items-center gap-1 ${TREND_COLORS[entry.trend]}`}>
-          <TrendIcon size={10} /> {entry.trend}
-        </span>
+
+      {/* Tabella turni compatta */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-[10px]">
+          <thead>
+            <tr className="text-gray-400 border-b border-slate-200">
+              <th className="text-left py-1 font-semibold">Turno</th>
+              <th className="text-left py-1 font-semibold">Graduatoria</th>
+              <th className="text-right py-1 font-semibold">Min</th>
+              <th className="text-right py-1 font-semibold">Max</th>
+              <th className="text-right py-1 font-semibold">Pos.</th>
+              <th className="text-right py-1 font-semibold">Posti</th>
+              <th className="text-right py-1 font-semibold">Data</th>
+            </tr>
+          </thead>
+          <tbody>
+            {group.entries.map((e, i) => {
+              const inRange = punteggioMio !== null && punteggioMio >= e.punteggioMinimo;
+              return (
+                <tr key={e.id} className={`border-b border-slate-100 last:border-0 ${i === 0 ? 'font-semibold' : ''} ${inRange ? 'bg-green-50/50' : ''}`}>
+                  <td className="py-1.5">T{e.turno}</td>
+                  <td className="py-1.5 text-gray-600">{e.tipoGraduatoria}</td>
+                  <td className="py-1.5 text-right text-brand-blu">{e.punteggioMinimo}</td>
+                  <td className="py-1.5 text-right text-brand-verde">{e.punteggioMassimo}</td>
+                  <td className="py-1.5 text-right text-amber-700">#{e.posizioneUltimaConvocazione}</td>
+                  <td className="py-1.5 text-right">{e.posizioniAssegnate}</td>
+                  <td className="py-1.5 text-right text-gray-400">{new Date(e.dataBollettino).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: '2-digit' })}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
-      <p className="text-[9px] text-gray-400 mt-2">Data bollettino: {new Date(entry.dataBollettino).toLocaleDateString('it-IT')} · Tipo contratto: {entry.tipoContratto}</p>
     </div>
   );
 }

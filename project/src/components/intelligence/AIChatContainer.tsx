@@ -5,7 +5,7 @@ import { trackChatMessage } from '../../lib/analytics';
 import { MessageSquare, Plus, Trash2, Clock, Send, Sparkles, BookOpen, ArrowRight, Copy, Check, User, GraduationCap, Briefcase, Building2, ChevronRight } from 'lucide-react';
 import type { ChatMessage } from '../../types/database';
 
-const FREE_MESSAGE_LIMIT = 10;
+const FREE_MESSAGE_LIMIT = 100;
 
 // ═══ PROFILES — adaptive prompts per user type ═══
 

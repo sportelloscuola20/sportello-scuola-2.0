@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Newspaper, CalendarClock, Activity, Search, ChevronDown, ChevronRight, ExternalLink, AlertTriangle, Clock, TrendingUp, Shield } from 'lucide-react';
+import { Newspaper, CalendarClock, Activity, Search, ChevronDown, ChevronRight, ExternalLink, AlertTriangle, Clock, TrendingUp, Shield, Globe } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
 import { CATEGORIE_UTENTE, CATEGORIE_SCADENZA, CATEGORIE_UTENTE_COLORS, CATEGORIE_SCADENZA_COLORS, CATEGORIE_ICONE, REGIONI_ITALIA } from '../../../types/intelligence';
 import { formatDataItaliana } from '../../../rag/intelligence-engine';
@@ -268,6 +268,13 @@ function NewsCard({ item }: { item: NotiziaIntelligence }) {
   const { criticita } = item.classifica;
   const critColors: Record<string, string> = { urgente: 'bg-red-100 text-red-700', alta: 'bg-amber-100 text-amber-700', strategica: 'bg-purple-100 text-purple-700', media: 'bg-blue-100 text-blue-700', bassa: 'bg-gray-100 text-gray-600' };
 
+  // Elaborated content from production layers
+  const elaborazione = item.contenuti && item.contenuti.length > 0
+    ? item.contenuti
+    : [];
+
+  const fonte = item.fonte;
+
   return (
     <div className="bg-white rounded-2xl border border-slate-200/60 p-4 hover:border-brand-blu/20 transition">
       <div className="flex items-start justify-between gap-3">
@@ -275,9 +282,32 @@ function NewsCard({ item }: { item: NotiziaIntelligence }) {
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${critColors[criticita] || critColors.media}`}>{criticita.toUpperCase()}</span>
             <span className="text-[10px] text-gray-400">{formatDataItaliana(item.dataPubblicazione)}</span>
+            {fonte && (
+              <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                <Shield size={9} /> {fonte.nome}
+              </span>
+            )}
           </div>
           <h4 className="text-sm font-bold text-[#0F172A] line-clamp-2">{item.titolo}</h4>
           <p className="text-xs text-gray-500 mt-1 line-clamp-2">{item.descrizione}</p>
+
+          {/* Elaborated content — homemade detail from sources */}
+          {elaborazione.length > 0 && (
+            <div className="mt-2.5 space-y-1.5">
+              {elaborazione.slice(0, 4).map((livello, i) => (
+                <div key={i} className="text-[11px] text-gray-600 leading-relaxed bg-gray-50/80 rounded-lg px-2.5 py-1.5 border border-slate-100">
+                  {typeof livello === 'string' ? livello : (livello as any)?.contenuto || ''}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Regionale badge */}
+          {item.regione && (
+            <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-medium text-brand-blu bg-brand-blu/5 px-2 py-0.5 rounded-full">
+              <Globe size={9} /> {item.regione}
+            </span>
+          )}
         </div>
         {item.link && <a href={item.link} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 p-1.5 text-gray-400 hover:text-brand-blu transition"><ExternalLink size={14} /></a>}
       </div>
