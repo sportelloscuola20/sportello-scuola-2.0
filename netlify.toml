@@ -8,7 +8,6 @@
   from = "https://sportelloscuola2-0.it/*"
   to = "https://www.sportelloscuola2-0.it/:splat"
   status = 301
-  force = true
 
 [[redirects]]
   from = "/*"
