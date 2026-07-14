@@ -9,6 +9,8 @@
 
 INSERT INTO intelligence_news (titolo, descrizione, data_pubblicazione, fonte_livello, fonte_nome, fonte_url, fonte_peso, criticita, impatto, platea, target, categoria, fonte_primaria, fonte_url_dettaglio, produzione_livelli, tag, link, is_pinned, is_archived) VALUES
 
+-- NOTE: impatto must be one of: locale, regionale, nazionale
+-- NOTE: priorita must be one of: urgente, alta, media, bassa
 -- MIM sources
 ('Concorso Straordinario 2026: 5.000 posti per docenti con 36 mesi di servizio',
  'Il MIM ha pubblicato le disposizioni per il concorso straordinario 2026 riservato al personale con almeno 36 mesi di servizio negli ultimi 5 anni. Le prove scritte sono previste a ottobre 2026, prove orali a novembre-dicembre 2026, graduatorie a febbraio 2027.',
@@ -20,7 +22,7 @@ INSERT INTO intelligence_news (titolo, descrizione, data_pubblicazione, fonte_li
 
 ('OM 88/2024: aggiornamento GPS biennio 2026/2028 in preparazione',
  'Il Ministero sta preparando la nuova ordinanza per il rinnovo delle Graduatorie Provinciali per le Supplenze per il biennio 2026/2028. Attese novità sui criteri di valutazione dei titoli e sulle fasce GPS.',
- '2026-07-08', 'A', 'MIM', 'https://www.mim.gov.it', 100, 'urgente', 'nazionale', 'intero_sistema',
+ '2026-07-08', 'A', 'MIM', 'https://www.mim.gov.it', 100, 'urgente', 'nazionale', 'ampia',
  ARRAY['docenti', 'aspiranti_docenti'], 'Graduatorie (GPS, GAE, d''Istituto)',
  'OM 88/2024 - GPS Biennio 2026/2028', 'https://www.mim.gov.it',
  '["Il Fatto","Perché è Importante","Cosa Cambia per Te","FAQ"]'::jsonb,
@@ -44,7 +46,7 @@ INSERT INTO intelligence_news (titolo, descrizione, data_pubblicazione, fonte_li
 
 ('Circolare MIM supplenze 2026/2027: algoritmo 150 preferenze e accettazione interpelli',
  'Il MIM ha pubblicato la nota annuale per l''attribuzione supplenze con le istruzioni per l''algoritmo delle 150 preferenze, accettazione interpelli e gestione supplenze brevi. Riserve L. 68/1999 (N01-N04) e priorità L. 104/1992 art. 21.',
- '2026-06-28', 'A', 'MIM', 'https://www.mim.gov.it', 100, 'urgente', 'nazionale', 'intero_sistema',
+ '2026-06-28', 'A', 'MIM', 'https://www.mim.gov.it', 100, 'urgente', 'nazionale', 'ampia',
  ARRAY['docenti', 'aspiranti_docenti'], 'Normative, Note e Circolari Ministeriali',
  'Nota annuale MIM supplenze 2026/2027', 'https://www.mim.gov.it',
  '["Il Fatto","Perché è Importante","Cosa Cambia per Te","Checklist Operativa"]'::jsonb,
@@ -61,7 +63,7 @@ INSERT INTO intelligence_news (titolo, descrizione, data_pubblicazione, fonte_li
 -- MIMUR / Orizzonte Scuola sources
 ('CCNL 2024-2026: avvio trattative per il rinnovo del comparto Istruzione',
  'L''ARAN ha convocato le organizzazioni sindacali per l''avvio delle trattative per il rinnovo del CCNL Comparto Istruzione e Ricerca, in scadenza il 31 dicembre 2026. Principali temi: retribuzione, flessibilità oraria, avanzamento carriera.',
- '2026-07-05', 'A', 'Gazzetta Ufficiale', 'https://www.gazzettaufficiale.it', 100, 'strategica', 'nazionale', 'intero_sistema',
+ '2026-07-05', 'A', 'Gazzetta Ufficiale', 'https://www.gazzettaufficiale.it', 100, 'strategica', 'nazionale', 'ampia',
  ARRAY['docenti', 'ata', 'dirigenti'], 'Contratti, Salari e Personale ATA',
  'Gazzetta Ufficiale - Avvio trattative CCNL', 'https://www.gazzettaufficiale.it',
  '["Il Fatto","Perché è Importante","Cosa Cambia per Te"]'::jsonb,
@@ -102,7 +104,7 @@ INSERT INTO intelligence_news (titolo, descrizione, data_pubblicazione, fonte_li
 
 ('Indennità di vacanza contrattuale CCNL 2019-2021: ultime erogazioni',
  'L''ARAN ha confermato le erogazioni dell''indennità di vacanza contrattuale per il personale del comparto Istruzione. L''indennità è stata introdotta dal CCNL 2019-2021 per compensare il periodo senza contratto collettivo.',
- '2026-06-15', 'A', 'Gazzetta Ufficiale', 'https://www.gazzettaufficiale.it', 100, 'media', 'nazionale', 'intero_sistema',
+ '2026-06-15', 'A', 'Gazzetta Ufficiale', 'https://www.gazzettaufficiale.it', 100, 'media', 'nazionale', 'ampia',
  ARRAY['docenti', 'ata', 'dirigenti'], 'Contratti, Salari e Personale ATA',
  'Gazzetta Ufficiale - Indennità vacanza contrattuale', 'https://www.gazzettaufficiale.it',
  '["Il Fatto","Perché è Importante"]'::jsonb,
@@ -110,7 +112,7 @@ INSERT INTO intelligence_news (titolo, descrizione, data_pubblicazione, fonte_li
 
 ('Lavoro agile personale scolastico: linee guida aggiornate 2026',
  'Il MIM ha aggiornato le linee guida sul lavoro agile per il personale scolastico. ATA: fino a 12 giornate/mese, volontario, rotazione obbligatoria. Docenti: limitato a attività funzionali (no lezioni in presenza). Obbligo corso sicurezza informatica.',
- '2026-06-10', 'A', 'MIM', 'https://www.mim.gov.it', 100, 'media', 'nazionale', 'intero_sistema',
+ '2026-06-10', 'A', 'MIM', 'https://www.mim.gov.it', 100, 'media', 'nazionale', 'ampia',
  ARRAY['docenti', 'ata'], 'Contratti, Salari e Personale ATA',
  'MIM - Linee guida lavoro agile 2026', 'https://www.mim.gov.it',
  '["Il Fatto","Perché è Importante","Cosa Cambia per Te"]'::jsonb,
@@ -135,7 +137,7 @@ INSERT INTO intelligence_news (titolo, descrizione, data_pubblicazione, fonte_li
 
 ('Riforma autonomie scolastiche: referendum abrogativo settembre 2026',
  'Il MIM ha pubblicato le istruzioni operative per la gestione del referendum abrogativo sulle autonomie differenziate. La scuola è chiamata a garantire la pubblicazione degli atti e la sensibilizzazione della comunità scolastica.',
- '2026-06-12', 'A', 'MIM', 'https://www.mim.gov.it', 100, 'strategica', 'intero_sistema', 'ampia',
+ '2026-06-12', 'A', 'MIM', 'https://www.mim.gov.it', 100, 'strategica', 'nazionale', 'ampia',
  ARRAY['docenti', 'ata', 'dirigenti'], 'Normative, Note e Circolari Ministeriali',
  'MIM - Istruzioni referendum autonomie', 'https://www.mim.gov.it',
  '["Il Fatto","Perché è Importante"]'::jsonb,
