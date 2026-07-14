@@ -4,6 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './components/foundation/AuthContext';
 import { queryClient } from './lib/queryClient';
 import { trackPageView } from './lib/analytics';
+import { initBollettiniData } from './data/bollettini-nomine';
 import Header from './components/ui/layout/Header';
 import Footer from './components/ui/layout/Footer';
 import Breadcrumb from './components/ui/layout/Breadcrumb';
@@ -43,6 +44,7 @@ function App() {
   const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
+    initBollettiniData(); // Load real bollettini data from public/
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
