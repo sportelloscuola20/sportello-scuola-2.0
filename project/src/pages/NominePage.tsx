@@ -6,8 +6,8 @@ import {
 } from 'lucide-react';
 import { USP_PROVINCE, REGIONI_WITH_USP, getUSPBySigla } from '../data/usp-italiane';
 import {
-  CLASSI_CONCORSO, BOLLETTINI_NOMINE,
-  getBollettiniByClasse, getSintesiByClasse, getClasseByCodice,
+  CLASSI_CONCORSO, getBollettiniByClasse, getBollettiniByClasseAndProvincia,
+  getSintesiByClasse, getClasseByCodice, getAllBollettini,
   ordinaPerCompetizione,
   type BollettinoEntry, type ClasseConcorso,
 } from '../data/bollettini-nomine';
@@ -16,18 +16,17 @@ import {
 
 const TIPI_GRADUATORIA = ['GPS I Fascia', 'GPS II Fascia', 'GAE', 'Graduatoria di Istituto'] as const;
 
-const ORDINI_SCUOLA = ['Infanzia', 'Primaria', 'Secondaria I Grado', 'Secondaria II Grado', 'Secondaria I e II Grado'] as const;
+const ORDINI_SCUOLA = ['Infanzia', 'Primaria', 'Secondaria I Grado', 'Secondaria II Grado'] as const;
 
 const ORDINI_SCUOLA_LABELS: Record<string, string> = {
   Infanzia: 'Scuola dell\'Infanzia',
   Primaria: 'Scuola Primaria',
   'Secondaria I Grado': 'Scuola Secondaria di I Grado',
   'Secondaria II Grado': 'Scuola Secondaria di II Grado',
-  'Secondaria I e II Grado': 'Secondaria I e II Grado',
 };
 
 const SORT_OPTIONS = [
-  { value: 'ultimaNomina', label: 'Ultima Nomina (più recente)' },
+  { value: 'turno', label: 'Turno (più recente)' },
   { value: 'competizione', label: 'Competizione (più alta)' },
   { value: 'punteggioMinimo', label: 'Punteggio Minimo (crescente)' },
   { value: 'posizioniAssegnate', label: 'Posizioni Assegnate (più posti)' },
@@ -63,14 +62,13 @@ const FASCIA_COLORS: Record<string, string> = {
   A: 'bg-blue-100 text-blue-700',
   B: 'bg-purple-100 text-purple-700',
   S: 'bg-amber-100 text-amber-700',
-  E: 'bg-gray-100 text-gray-600',
 };
 
 function sortBollettini(entries: BollettinoEntry[], sortBy: string): BollettinoEntry[] {
   const sorted = [...entries];
   switch (sortBy) {
-    case 'ultimaNomina':
-      return sorted.sort((a, b) => new Date(b.ultimaNomina).getTime() - new Date(a.ultimaNomina).getTime());
+    case 'turno':
+      return sorted.sort((a, b) => new Date(b.dataBollettino).getTime() - new Date(a.dataBollettino).getTime());
     case 'competizione': {
       const ordine = { molto_alta: 0, alta: 1, media: 2, bassa: 3 };
       return sorted.sort((a, b) => ordine[a.competizione] - ordine[b.competizione]);
@@ -96,7 +94,7 @@ export default function NominePage() {
   const [punteggioMio, setPunteggioMio] = useState('');
   const [tabAttiva, setTabAttiva] = useState<'ricerca' | 'classi'>('ricerca');
   const [expandedFascia, setExpandedFascia] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<'ultimaNomina' | 'competizione' | 'punteggioMinimo' | 'posizioniAssegnate'>('ultimaNomina');
+  const [sortBy, setSortBy] = useState<'turno' | 'competizione' | 'punteggioMinimo' | 'posizioniAssegnate'>('turno');
 
   const provinceFiltrate = regioneSelezionata
     ? USP_PROVINCE.filter(p => p.regioneCodice === regioneSelezionata)
@@ -117,9 +115,15 @@ export default function NominePage() {
   }, [searchClasse, ordineScuola]);
 
   const bollettiniFiltrati = useMemo(() => {
-    let result = BOLLETTINI_NOMINE;
-    if (classeSelezionata) result = result.filter(b => b.classeCodice === classeSelezionata);
-    if (provinciaSelezionata) result = result.filter(b => b.provinciaSigla === provinciaSelezionata);
+    let result: BollettinoEntry[];
+    if (classeSelezionata && provinciaSelezionata) {
+      result = getBollettiniByClasseAndProvincia(classeSelezionata, provinciaSelezionata);
+    } else if (classeSelezionata) {
+      result = getBollettiniByClasse(classeSelezionata);
+    } else {
+      result = getAllBollettini();
+    }
+    if (provinciaSelezionata && !classeSelezionata) result = result.filter(b => b.provinciaSigla === provinciaSelezionata);
     if (tipoGraduatoria) result = result.filter(b => b.tipoGraduatoria === tipoGraduatoria);
     if (ordineScuola && !classeSelezionata) {
       const codiciOrdine = CLASSI_CONCORSO.filter(c => c.ordineScuola === ordineScuola).map(c => c.codice);
@@ -132,11 +136,11 @@ export default function NominePage() {
     const scoped = classeSelezionata
       ? getBollettiniByClasse(classeSelezionata)
       : ordineScuola
-        ? BOLLETTINI_NOMINE.filter(b => {
+        ? getAllBollettini().filter(b => {
             const codici = CLASSI_CONCORSO.filter(c => c.ordineScuola === ordineScuola).map(c => c.codice);
             return codici.includes(b.classeCodice);
           })
-        : BOLLETTINI_NOMINE;
+        : getAllBollettini();
 
     const totPosizioni = scoped.reduce((s, e) => s + e.posizioniAssegnate, 0);
     const totCandidati = scoped.reduce((s, e) => s + e.candidatiInGraduatoria, 0);
@@ -169,7 +173,7 @@ export default function NominePage() {
     setOrdineScuola('');
     setSearchClasse('');
     setPunteggioMio('');
-    setSortBy('ultimaNomina');
+    setSortBy('turno');
   };
 
   return (
@@ -182,8 +186,8 @@ export default function NominePage() {
             Osservatorio Nazionale Nomine
           </h1>
           <p className="text-gray-600 max-w-3xl mx-auto text-sm">
-            Bollettini ufficiali delle nomine per concorsi GPS, GAE e graduatorie di istituto.
-            Verifica i punteggli reali della tua classe di concorso e provincia, e scopri le tue
+            Bollettini ufficiali delle nomine GPS per concorsi — Classi di concorso DM 259/17.
+            Verifica i punteggi reali della tua classe di concorso e provincia, e scopri le tue
             possibilità di chiamata.
           </p>
         </div>
@@ -226,7 +230,7 @@ export default function NominePage() {
             small
           />
           <StatCard
-            value={statsGlobali.totaleBollettini.toString()}
+            value={statsGlobali.totaleBollettini.toLocaleString()}
             label="Bollettini Totali"
             icon={<BarChart3 size={10} />}
             color="text-blue-600"
@@ -240,7 +244,7 @@ export default function NominePage() {
             small
           />
           <StatCard
-            value={statsGlobali.muitoAltaCount.toString()}
+            value={statsGlobali.muitoAltaCount.toLocaleString()}
             label="Con Competizione Molto Alta"
             icon={<AlertTriangle size={10} />}
             color="text-red-600"
@@ -331,7 +335,7 @@ export default function NominePage() {
                   <div className="relative">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input type="text" value={searchClasse} onChange={e => { setSearchClasse(e.target.value); setClasseSelezionata(''); }}
-                      placeholder="es. A-12, AB22, ADEE, Matematica..."
+                      placeholder="es. A-12, AB22, 00EE, Matematica..."
                       className="w-full pl-9 pr-4 py-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-blu/20 outline-none text-sm" />
                     {searchClasse && (
                       <div className="absolute z-20 top-full mt-1 w-full bg-white border border-slate-200 rounded-2xl shadow-lg max-h-60 overflow-auto">
@@ -380,22 +384,21 @@ export default function NominePage() {
                 </div>
               </div>
 
-              {/* Esempio ADEE Pordenone */}
+              {/* Esempio AD0J Pordenone */}
               {!classeSelezionata && !provinciaSelezionata && (
                 <div className="mt-4 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-2xl border border-blue-200/60 p-4">
                   <div className="flex items-start gap-3">
                     <Star size={16} className="text-blue-500 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold text-blue-800">Esempio: ADEE — Punto Sostegno Primaria a Pordenone</p>
+                      <p className="text-sm font-semibold text-blue-800">Esempio: AD0J — Sostegno Primaria a Pordenone</p>
                       <p className="text-xs text-blue-600 mt-1">
-                        In provincia di PN, la classe ADEE ha 12 posizioni assegnate su 140 candidati (GPS I Fascia),
-                        con punteggio minimo 76.0 e massimo 100. Competizione media.
-                        L'ultima nomina risale all'8 gennaio 2025. La GPS II Fascia ha 18 posizioni su 200 candidati,
-                        con punteggio 52–76.
+                        In provincia di PN, la classe AD0J ha 28 posizioni assegnate su 160 candidati (GPS I Fascia),
+                        con punteggio minimo 58.0 e massimo 98.0. Competizione media.
+                        L'ultimo turno risale al 17 ottobre 2024. Scorri tutti i turni per vedere l'andamento.
                       </p>
-                      <button onClick={() => { setClasseSelezionata('ADEE'); setSearchClasse('ADEE — Punto sostegno scuola primaria'); setProvinciaSelezionata('PN'); }}
+                      <button onClick={() => { setClasseSelezionata('AD0J'); setSearchClasse('AD0J — Sostegno - Scuola Primaria'); setProvinciaSelezionata('PN'); }}
                         className="mt-2 text-xs font-semibold text-blue-700 hover:text-blue-900 transition flex items-center gap-1">
-                        Visualizza bollettino <ChevronRight size={12} />
+                        Visualizza timeline <ChevronRight size={12} />
                       </button>
                     </div>
                   </div>
@@ -432,9 +435,14 @@ export default function NominePage() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {bollettiniFiltrati.map(entry => (
+              {bollettiniFiltrati.slice(0, 100).map(entry => (
                 <BollettinoCard key={entry.id} entry={entry} punteggioMio={punteggioVal} />
               ))}
+              {bollettiniFiltrati.length > 100 && (
+                <p className="col-span-full text-center text-xs text-gray-400 py-4">
+                  Mostrati i primi 100 di {bollettiniFiltrati.length} risultati. Affina i filtri per vedere di più.
+                </p>
+              )}
             </div>
           </>
         )}
@@ -467,7 +475,7 @@ export default function NominePage() {
               if (classi.length === 0) return null;
 
               const isExpanded = expandedFascia === ordine;
-              const fascie = ['A', 'B', 'S', 'E'] as const;
+              const fascie = ['A', 'B', 'S'] as const;
 
               return (
                 <div key={ordine} className="bg-white/70 backdrop-blur-md rounded-3xl shadow-soft border border-slate-200/60 overflow-hidden">
@@ -493,7 +501,7 @@ export default function NominePage() {
                           <div key={fascia}>
                             <div className="px-4 py-2 bg-slate-50/50">
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${FASCIA_COLORS[fascia]}`}>
-                                Fascia {fascia === 'A' ? 'A — Abilitati' : fascia === 'B' ? 'B — Laboratori/Professionalizzanti' : fascia === 'S' ? 'S — Sostegno' : 'E — Esaurimento'}
+                                {fascia === 'A' ? 'A — Abilitati' : fascia === 'B' ? 'B — Laboratori/Professionalizzanti' : 'S — Sostegno'}
                               </span>
                               <span className="text-[10px] text-gray-400 ml-2">{classiDiFascia.length} classi</span>
                             </div>
@@ -560,8 +568,9 @@ export default function NominePage() {
             </div>
           </div>
           <p className="text-xs text-gray-500 mt-4">
-            Dati riferiti all'anno scolastico 2024/25. I punteggi variano annualmente in base a quanti posti vengono banditi e quanti candidati partecipano.
-            Fonte: OM 88/2024, bollettini USP. Per aggiornamenti in tempo reale, consulta il Centro Nazionale Interpelli.
+            Dati riferiti all'anno scolastico 2024/25 — Classi di concorso DM 259/17.
+            I punteggi variano annualmente in base a quanti posti vengono banditi e quanti candidati partecipano.
+            Fonte: bollettini USP. Per aggiornamenti in tempo reale, consulta il Centro Nazionale Interpelli.
           </p>
         </div>
       </div>
@@ -595,7 +604,6 @@ function PunteggioAnalisi({ punteggio, entries }: { punteggio: number; entries: 
   const maxGlob = Math.max(...entries.map(e => e.punteggioMassimo));
   const inRange = punteggio >= minGlob && punteggio <= maxGlob;
   const aboveMax = punteggio > maxGlob;
-  const belowMin = punteggio < minGlob;
 
   return (
     <p className="text-[10px] mt-1 font-semibold">
@@ -674,7 +682,7 @@ function BollettinoCard({ entry, punteggioMio }: { entry: BollettinoEntry; punte
         : punteggioMio !== null ? 'bg-red-50/30 border-red-100'
         : 'bg-white border-slate-200/60 hover:border-brand-blu/20 shadow-soft'
     }`}>
-      {/* Header: Province + Competizione */}
+      {/* Header: Province + Competizione + Turno */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="px-2 py-0.5 bg-brand-blu/10 text-brand-blu text-xs font-bold rounded-full">
@@ -682,9 +690,14 @@ function BollettinoCard({ entry, punteggioMio }: { entry: BollettinoEntry; punte
           </span>
           <span className="text-xs text-gray-500">{usp?.nome || entry.provinciaSigla}</span>
         </div>
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${COMPETIZIONE_COLORS[entry.competizione]}`}>
-          {COMPETIZIONE_LABELS[entry.competizione]}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">
+            T{entry.turno}
+          </span>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${COMPETIZIONE_COLORS[entry.competizione]}`}>
+            {COMPETIZIONE_LABELS[entry.competizione]}
+          </span>
+        </div>
       </div>
 
       {/* Classe + Ordine + Materia */}
@@ -707,18 +720,22 @@ function BollettinoCard({ entry, punteggioMio }: { entry: BollettinoEntry; punte
         {classe && (
           <p className="text-[11px] text-gray-500 mt-0.5">{classe.materia}</p>
         )}
-        <p className="text-[10px] text-gray-400 mt-0.5">{entry.tipoGraduatoria} · A.S. {entry.annoScolastico}</p>
+        <p className="text-[10px] text-gray-400 mt-0.5">{entry.tipoGraduatoria} · {entry.periodoChiamata} · A.S. {entry.annoScolastico}</p>
       </div>
 
-      {/* Punteggi */}
-      <div className="grid grid-cols-2 gap-3 mb-3">
-        <div className="bg-brand-blu/5 rounded-2xl p-3">
-          <p className="text-[10px] text-gray-500 mb-1">Punteggio Min. Chiamato</p>
-          <p className="text-xl font-extrabold text-brand-blu">{entry.punteggioMinimo}</p>
+      {/* Punteggi + Posizione Ultima Convocazione */}
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        <div className="bg-brand-blu/5 rounded-2xl p-2.5">
+          <p className="text-[9px] text-gray-500 mb-0.5">Min. Chiamato</p>
+          <p className="text-lg font-extrabold text-brand-blu">{entry.punteggioMinimo}</p>
         </div>
-        <div className="bg-brand-verde/5 rounded-2xl p-3">
-          <p className="text-[10px] text-gray-500 mb-1">Punteggio Massimo</p>
-          <p className="text-xl font-extrabold text-brand-verde">{entry.punteggioMassimo}</p>
+        <div className="bg-brand-verde/5 rounded-2xl p-2.5">
+          <p className="text-[9px] text-gray-500 mb-0.5">Max. Chiamato</p>
+          <p className="text-lg font-extrabold text-brand-verde">{entry.punteggioMassimo}</p>
+        </div>
+        <div className="bg-amber-50 rounded-2xl p-2.5">
+          <p className="text-[9px] text-gray-500 mb-0.5">Pos. Ultima Chiamata</p>
+          <p className="text-lg font-extrabold text-amber-700">#{entry.posizioneUltimaConvocazione}</p>
         </div>
       </div>
 
@@ -741,7 +758,7 @@ function BollettinoCard({ entry, punteggioMio }: { entry: BollettinoEntry; punte
 
       {/* Stats riga */}
       <div className="flex items-center justify-between text-[10px] text-gray-500">
-        <span className="flex items-center gap-1"><Target size={10} /> {entry.posizioniAssegnate} posizioni assegnate</span>
+        <span className="flex items-center gap-1"><Target size={10} /> {entry.posizioniAssegnate} posizioni</span>
         <span className="flex items-center gap-1"><Users size={10} /> {entry.candidatiInGraduatoria} candidati</span>
       </div>
       <div className="flex items-center justify-between text-[10px] text-gray-500 mt-1">
@@ -750,7 +767,7 @@ function BollettinoCard({ entry, punteggioMio }: { entry: BollettinoEntry; punte
           <TrendIcon size={10} /> {entry.trend}
         </span>
       </div>
-      <p className="text-[9px] text-gray-400 mt-2">Ultima nomina: {new Date(entry.ultimaNomina).toLocaleDateString('it-IT')}</p>
+      <p className="text-[9px] text-gray-400 mt-2">Data bollettino: {new Date(entry.dataBollettino).toLocaleDateString('it-IT')} · Tipo contratto: {entry.tipoContratto}</p>
     </div>
   );
 }
