@@ -22,77 +22,6 @@ interface BoxScadenza {
 
 const MAX_ITEMS_PER_BOX = 3;
 
-// ============================================================
-// FALLBACK DATA — shown when Supabase tables are empty
-// Ensures the platform always has relevant content
-// ============================================================
-
-const FALL_NEWS: NotiziaIntelligence[] = [
-  {
-    id: 'fn-1', titolo: '**Concorso Straordinario 2026**: 5.000 posti per docenti con 36 mesi di servizio',
-    descrizione: 'Il MIM ha pubblicato le disposizioni per il concorso straordinario 2026 riservato al personale con almeno 36 mesi di servizio negli ultimi 5 anni. Le prove scritte sono previste a ottobre 2026.',
-    dataPubblicazione: '2026-07-10', fonte: { livello: 'A', nome: 'MIM', url: 'https://www.mim.gov.it', peso: 100 },
-    classifica: { criticita: 'alta', impatto: 'nazionale', platea: 'ampia', target: ['docenti', 'aspiranti_docenti'], categoria: 'Bandi, Concorsi e Selezioni', livelloFonte: 'A', fontePrimaria: 'MIM - Disposizioni concorso straordinario 2026', fonteUrl: '', dataAcquisizione: '2026-07-10' },
-    contenuti: [], tag: ['concorso', 'straordinario', '2026'], link: '', isPinned: true,
-  },
-  {
-    id: 'fn-2', titolo: '**OM 88/2024**: aggiornamento GPS biennio 2026/2028 in preparazione',
-    descrizione: 'Il Ministero sta preparando la nuova ordinanza per il rinnovo delle Graduatorie Provinciali per le Supplenze. Attese novità sui criteri di valutazione dei titoli.',
-    dataPubblicazione: '2026-07-08', fonte: { livello: 'A', nome: 'MIM', url: 'https://www.mim.gov.it', peso: 100 },
-    classifica: { criticita: 'urgente', impatto: 'nazionale', platea: 'intero_sistema', target: ['docenti', 'aspiranti_docenti'], categoria: 'Graduatorie (GPS, GAE, d\'Istituto)', livelloFonte: 'A', fontePrimaria: 'OM 88/2024 - GPS Biennio', fonteUrl: '', dataAcquisizione: '2026-07-08' },
-    contenuti: [], tag: ['GPS', 'graduatorie', 'supplenze'], link: '', isPinned: true,
-  },
-  {
-    id: 'fn-3', titolo: '**CCNL 2024-2026**: avvio trattative per il rinnovo del comparto Istruzione',
-    descrizione: 'L\'ARAN ha convocato le organizzazioni sindacali per l\'avvio delle trattative per il rinnovo del CCNL Comparto Istruzione e Ricerca. In scadenza il 31 dicembre 2026.',
-    dataPubblicazione: '2026-07-05', fonte: { livello: 'A', nome: 'Gazzetta Ufficiale', url: 'https://www.gazzettaufficiale.it', peso: 100 },
-    classifica: { criticita: 'strategica', impatto: 'nazionale', platea: 'intero_sistema', target: ['docenti', 'ata', 'dirigenti'], categoria: 'Contratti, Salari e Personale ATA', livelloFonte: 'A', fontePrimaria: 'Gazzetta Ufficiale - Avvio trattative CCNL', fonteUrl: '', dataAcquisizione: '2026-07-05' },
-    contenuti: [], tag: ['CCNL', 'rinnovo', 'trattative'], link: '', isPinned: false,
-  },
-  {
-    id: 'fn-4', titolo: '**TFA Sostegno VIII ciclo**: 12.000 posti, bando previsto a settembre',
-    descrizione: 'Il Decreto Direttoriale 1025/2026 ha definito le linee guida per l\'VIII ciclo del TFA Sostegno con 12.000 posti. Il bando è atteso a settembre con prove preselettive a novembre.',
-    dataPubblicazione: '2026-07-03', fonte: { livello: 'A', nome: 'MIM', url: 'https://www.mim.gov.it', peso: 100 },
-    classifica: { criticita: 'alta', impatto: 'nazionale', platea: 'ampia', target: ['docenti', 'aspiranti_docenti', 'sostegno'], categoria: 'Didattica, Formazione e Innovazione', livelloFonte: 'A', fontePrimaria: 'DD 1025/2026 - TFA Sostegno', fonteUrl: '', dataAcquisizione: '2026-07-03' },
-    contenuti: [], tag: ['TFA', 'sostegno', 'formazione'], link: '', isPinned: false,
-  },
-  {
-    id: 'fn-5', titolo: '**DM 89/2024**: aggiornamento graduatorie ATA terza fascia triennio 2027/2030',
-    descrizione: 'Prossimo aggiornamento delle graduatorie di terza fascia del personale ATA. Nuova scadenza per inserimento e aggiornamento con il D.M. previsto per il primo trimestre 2027.',
-    dataPubblicazione: '2026-07-01', fonte: { livello: 'A', nome: 'MIM', url: 'https://www.mim.gov.it', peso: 100 },
-    classifica: { criticita: 'media', impatto: 'nazionale', platea: 'ampia', target: ['ata'], categoria: 'Graduatorie (GPS, GAE, d\'Istituto)', livelloFonte: 'A', fontePrimaria: 'DM 89/2024 - Graduatorie ATA', fonteUrl: '', dataAcquisizione: '2026-07-01' },
-    contenuti: [], tag: ['ATA', 'graduatorie', 'terza fascia'], link: '', isPinned: false,
-  },
-  {
-    id: 'fn-6', titolo: '**Mobilità 2027/2029**: apertura domande prevista a febbraio',
-    descrizione: 'Il CCNI Mobilità per il triennio 2027/2029 sarà firmato entro dicembre 2026. Le domande di trasferimento dovranno essere presentate entro febbraio 2027 via POLIS.',
-    dataPubblicazione: '2026-06-28', fonte: { livello: 'A', nome: 'Orizzonte Scuola', url: 'https://www.orizizontesuola.it', peso: 95 },
-    classifica: { criticita: 'media', impatto: 'nazionale', platea: 'ampia', target: ['docenti', 'ata'], categoria: 'Mobilità, Assegnazioni e Utilizzazioni', livelloFonte: 'A', fontePrimaria: 'Orizzonte Scuola - CCNI Mobilità', fonteUrl: '', dataAcquisizione: '2026-06-28' },
-    contenuti: [], tag: ['mobilità', 'trasferimento', 'CCNI'], link: '', isPinned: false,
-  },
-  {
-    id: 'fn-7', titolo: '**Esami di Stato 2026**: scrutinio finale e valutazioni INVALSI',
-    descrizione: 'Risultati dello scrutinio finale degli Esami di Stato 2026. Commissioni miste docenti-esterni. Punteggi e procedure di appello per i candidati.',
-    dataPubblicazione: '2026-06-25', fonte: { livello: 'B', nome: 'INVALSI', url: 'https://www.invalsi.it', peso: 95 },
-    classifica: { criticita: 'bassa', impatto: 'nazionale', platea: 'ampia', target: ['docenti', 'dirigenti', 'studenti', 'famiglie'], categoria: 'Esami di Stato e Valutazioni (INVALSI)', livelloFonte: 'B', fontePrimaria: 'INVALSI - Esami di Stato 2026', fonteUrl: '', dataAcquisizione: '2026-06-25' },
-    contenuti: [], tag: ['esami', 'valutazione', 'INVALSI'], link: '', isPinned: false,
-  },
-  {
-    id: 'fn-8', titolo: '**Interpelli luglio 2026**: 340 avvisi attivi in tutta Italia',
-    descrizione: 'Il Centro Nazionale Interpelli conta 340 avvisi attivi per supplenze annuali e temporanee. Maggior disponibilità in Lombardia, Lazio e Campania.',
-    dataPubblicazione: '2026-06-20', fonte: { livello: 'A', nome: 'MIM', url: 'https://www.mim.gov.it', peso: 100 },
-    classifica: { criticita: 'alta', impatto: 'nazionale', platea: 'ampia', target: ['docenti', 'aspiranti_docenti'], categoria: 'Bandi, Concorsi e Selezioni', livelloFonte: 'A', fontePrimaria: 'Centro Nazionale Interpelli', fonteUrl: '', dataAcquisizione: '2026-06-20' },
-    contenuti: [], tag: ['interpelli', 'supplenze', 'concorsi'], link: '', isPinned: false,
-  },
-];
-
-const FALL_SCADENZE: ScadenzaIntelligence[] = [
-  { id: 'fs-1', titolo: 'Accettazione interpelli entro 24 ore dalla convocazione', descrizione: 'Termine perentorio per accettare la supplenza dopo convocazione telefonica o PEC dall\'USP.', normativa: 'OM 88/2024 art. 13', soggettiCoinvolti: ['docenti'], dataScadenza: '2026-07-15', priorita: 'urgente', impatto: 'nazionale', conseguenzeNonAzione: 'Decadenza dalla supplenza ed esclusione graduatoria per l\'anno in corso', link: '', tipo: 'Immissioni in Ruolo e Supplenze', guidaOperativa: '' },
-  { id: 'fs-2', titolo: 'Aggiornamento GPS biennio 2026/2028 - presentazione domande', descrizione: 'Termini per la presentazione delle domande di aggiornamento delle Graduatorie Provinciali per le Supplenze.', normativa: 'OM 88/2024', soggettiCoinvolti: ['docenti', 'aspiranti_docenti'], dataScadenza: '2026-08-31', priorita: 'alta', impatto: 'nazionale', conseguenzeNonAzione: 'Esclusione dalla graduatoria per il biennio successivo', link: '', tipo: 'Aggiornamento e Inserimento Graduatorie', guidaOperativa: '' },
-  { id: 'fs-3', titolo: 'Domande mobilità volontaria triennio 2027/2029', descrizione: 'Scadenza per la presentazione delle domande di trasferimento volontario tramite POLIS.', normativa: 'CCNI Mobilità 2027/2029', soggettiCoinvolti: ['docenti', 'ata'], dataScadenza: '2027-02-28', priorita: 'media', impatto: 'nazionale', conseguenzeNonAzione: 'Non partecipazione al movimento di mobilità per il triennio', link: '', tipo: 'Mobilità del Personale Scolastico', guidaOperativa: '' },
-  { id: 'fs-4', titolo: 'Iscrizione concorso ordinario docenti 2026', descrizione: 'Apertura delle iscrizioni per il concorso ordinario con 20.000 posti su tutta la Italia.', normativa: 'D.Lgs. 36/2022', soggettiCoinvolti: ['docenti', 'aspiranti_docenti'], dataScadenza: '2026-09-15', priorita: 'alta', impatto: 'nazionale', conseguenzeNonAzione: 'Perdita dell\'opportunità di partecipare al concorso', link: '', tipo: 'Iscrizioni, Bandi e Concorsi pubblici', guidaOperativa: '' },
-];
-
 function groupNewsByCategory(items: NotiziaIntelligence[]): BoxNews[] {
   return CATEGORIE_UTENTE.map(cat => ({
     categoria: cat,
@@ -123,7 +52,7 @@ export default function NewsHub({ isHomePage = true }: NewsHubProps) {
       const AUTHORITATIVE_SOURCES = ['MIM', 'MIMUR', 'Orizzonte Scuola', 'Gazzetta Ufficiale'];
       const [newsResult, scadenzeResult] = await Promise.all([
         supabase.from('intelligence_news').select('*').eq('is_archived', false).in('fonte_nome', AUTHORITATIVE_SOURCES).order('data_pubblicazione', { ascending: false }).limit(60),
-        supabase.from('intelligence_scadenze').select('*').order('data_scadenza', { ascending: true }).limit(40),
+        supabase.from('intelligence_scadenze').select('*').eq('is_conclusa', false).order('data_scadenza', { ascending: true }).limit(40),
       ]);
 
       let allNews: NotiziaIntelligence[] = [];
@@ -137,8 +66,6 @@ export default function NewsHub({ isHomePage = true }: NewsHubProps) {
         }));
       }
 
-      // Use fallback if DB empty
-      if (allNews.length === 0) allNews = FALL_NEWS;
       setNewsByCategory(groupNewsByCategory(allNews));
       setLatestNews(allNews.slice(0, 5));
 
@@ -151,12 +78,9 @@ export default function NewsHub({ isHomePage = true }: NewsHubProps) {
           conseguenzeNonAzione: s.conseguenze_non_azione || '', link: s.link || '', tipo: s.tipo || '', guidaOperativa: s.guida_operativa || '', regione: s.regione || '',
         }));
       }
-      if (allScadenze.length === 0) allScadenze = FALL_SCADENZE;
       setScadenzeByCategory(groupScadenzeByCategory(allScadenze));
-    } catch {
-      setNewsByCategory(groupNewsByCategory(FALL_NEWS));
-      setLatestNews(FALL_NEWS.slice(0, 5));
-      setScadenzeByCategory(groupScadenzeByCategory(FALL_SCADENZE));
+    } catch (err) {
+      console.error('[NewsHub] Fetch error:', err);
     } finally {
       setLoading(false);
     }
@@ -265,23 +189,24 @@ export default function NewsHub({ isHomePage = true }: NewsHubProps) {
                   </div>
                 </div>
 
-                {/* Fonti certificate */}
+                {/* Fonti certificate — Solo 4 fonti autoritative */}
                 <div className="bg-white rounded-3xl border border-slate-200/60 p-5">
                   <h3 className="flex items-center gap-2 text-sm font-bold text-[#0F172A] mb-3">
-                    <Shield size={16} className="text-brand-verde" /> Fonti Certificate
+                    <Shield size={16} className="text-brand-verde" /> Fonti Autoritative
                   </h3>
                   <div className="space-y-2">
                     {[
-                      { nome: 'Gazzetta Ufficiale', livello: 'A' },
-                      { nome: 'MIM', livello: 'A' },
-                      { nome: 'Normattiva', livello: 'A' },
-                      { nome: 'ARAN', livello: 'A' },
-                      { nome: 'INPS', livello: 'A' },
-                      { nome: 'INVALSI', livello: 'B' },
+                      { nome: 'MIM', livello: 'A', desc: 'Ministero Istruzione e Merito' },
+                      { nome: 'MIMUR', livello: 'A', desc: 'Archivio normative MIM' },
+                      { nome: 'Orizzonte Scuola', livello: 'A', desc: 'Giornale scuola' },
+                      { nome: 'Gazzetta Ufficiale', livello: 'A', desc: 'Fonte legislativa' },
                     ].map(f => (
                       <div key={f.nome} className="flex items-center justify-between text-xs">
-                        <span className="text-gray-600">{f.nome}</span>
-                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${f.livello === 'A' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                        <div>
+                          <span className="text-gray-600 font-medium">{f.nome}</span>
+                          <p className="text-[9px] text-gray-400">{f.desc}</p>
+                        </div>
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-700">
                           Lvl {f.livello}
                         </span>
                       </div>

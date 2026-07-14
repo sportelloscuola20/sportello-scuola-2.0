@@ -138,12 +138,12 @@ export async function generateChatResponse(
   history: Array<{ role: string; content: string }>,
   additionalContext?: string
 ): Promise<ChatResponse> {
-  const MAX_RETRIES = 3;
+  const MAX_RETRIES = 2;
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      const timeoutId = setTimeout(() => controller.abort(), 45000);
 
       const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-sindacalista`, {
         method: 'POST',
@@ -177,7 +177,6 @@ export async function generateChatResponse(
         }
       }
 
-      // Parse error details from response
       let errorBody = '';
       try { errorBody = await res.text(); } catch { errorBody = res.statusText; }
 
@@ -185,28 +184,27 @@ export async function generateChatResponse(
       console.error(`[chat-service] Edge function HTTP ${res.status} (attempt ${attempt + 1}):`, errorBody.slice(0, 300));
 
       if (isRateLimit && attempt < MAX_RETRIES - 1) {
-        const waitMs = (attempt + 1) * 3000;
-        await new Promise(r => setTimeout(r, waitMs));
+        const waitMs = Math.pow(2, attempt + 1) * 1000 + Math.floor(Math.random() * 1000);
+        await new Promise(r => setTimeout(r, Math.min(waitMs, 8000)));
         continue;
       }
 
       if (isRateLimit) {
         return {
-          text: `⚠️ **Servizio temporaneamente non disponibile**\n\nTroppe richieste simultanee. Riprova tra qualche istante.\n\nSe il problema persiste, contatta il supporto: sportelloscuola2.0@gmail.com`,
+          text: `⚠️ **Servizio temporaneamente non disponibile**\n\nTroppe richieste simultanee al sistema AI. Il limite è di 15 richieste al minuto.\n\n**Cosa fare:**\n- Attendi 1-2 minuti e riprova\n- Se il problema persiste, prova con una domanda più breve\n- Per urgenze: sportelloscuola2.0@gmail.com`,
           lineage: createLineage('rate_limited', 'chat-service', {
             metadata: { query: userMessage.slice(0, 100) },
           }),
         };
       }
 
-      // Non-rate-limit error — retry once
       if (attempt < MAX_RETRIES - 1) {
         await new Promise(r => setTimeout(r, 1500));
         continue;
       }
 
       return {
-        text: `Mi scuso, il servizio è temporaneamente non disponibile. Riprova tra qualche istante.`,
+        text: `Mi scuso, il servizio non è al momento disponibile (HTTP ${res.status}). Riprova tra qualche istante.`,
         lineage: createLineage('error', 'chat-service', {
           metadata: { query: userMessage.slice(0, 100), status: res.status },
         }),
@@ -217,7 +215,7 @@ export async function generateChatResponse(
 
       if (isAbort) {
         return {
-          text: `⚠️ **Timeout della richiesta**\n\nLa risposta sta prendendo più del previsto. Riprova con una domanda più breve.`,
+          text: `⚠️ **Timeout della richiesta**\n\nLa risposta sta prendendo più del previsto (45s). Riprova con una domanda più breve.`,
           lineage: createLineage('timeout', 'chat-service', {
             metadata: { query: userMessage.slice(0, 100) },
           }),
@@ -225,14 +223,21 @@ export async function generateChatResponse(
       }
 
       if (attempt < MAX_RETRIES - 1) {
-        await new Promise(r => setTimeout(r, 1500));
+        await new Promise(r => setTimeout(r, 2000));
         continue;
       }
+
+      return {
+        text: `⚠️ **Errore di connessione**\n\nImpossibile contattare il servizio AI. Verifica la connessione internet e riprova.\n\nSe il problema persiste: sportelloscuola2.0@gmail.com`,
+        lineage: createLineage('network_error', 'chat-service', {
+          metadata: { query: userMessage.slice(0, 100), error: e?.message },
+        }),
+      };
     }
   }
 
   return {
-    text: `Mi scuso, il servizio è temporaneamente in sovraccarico. Riprova tra qualche istante.`,
+    text: `Mi scuso, il servizio non è al momento disponibile. Riprova tra qualche istante.`,
     lineage: createLineage('error_fallback', 'chat-service', {
       metadata: { query: userMessage.slice(0, 100), fallback: true },
     }),

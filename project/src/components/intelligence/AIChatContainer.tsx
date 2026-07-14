@@ -387,9 +387,17 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
         trackChatMessage({ latency_ms: latencyMs, has_citations: (response.citations?.length ?? 0) > 0 });
       }
     } catch (e: any) {
-      const errText = e?.message?.includes('quota') || e?.message?.includes('429')
-        ? '⚠️ **Quota API esaurita** — Il servizio Gemini ha raggiunto il limite giornaliero. Riprova domani o contatta il supporto.'
-        : 'Mi scuso, il servizio è temporaneamente in sovraccarico. Riprova tra qualche istante.';
+      let errText: string;
+      const msg = e?.message || '';
+      if (msg.includes('quota') || msg.includes('429')) {
+        errText = '⚠️ **Quota API esaurita** — Il servizio Gemini ha raggiunto il limite giornaliero. Riprova domani.';
+      } else if (msg.includes('Timeout') || msg.includes('abort')) {
+        errText = '⚠️ **Timeout** — La risposta sta prendendo troppo tempo. Riprova con una domanda più breve.';
+      } else if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('TypeError')) {
+        errText = '⚠️ **Errore di connessione** — Verifica la connessione internet e riprova.';
+      } else {
+        errText = `⚠️ **Errore imprevisto** — ${msg.slice(0, 200) || 'Servizio non disponibile'}. Riprova tra qualche istante.`;
+      }
       const assistantMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: errText, timestamp: new Date().toISOString() };
       setMessages(prev => [...prev, assistantMsg]);
     } finally { setIsLoading(false); }

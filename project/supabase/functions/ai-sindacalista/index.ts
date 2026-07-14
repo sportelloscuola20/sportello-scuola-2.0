@@ -4,6 +4,7 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Max-Age': '86400',
 };
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
@@ -586,7 +587,7 @@ async function callGemini(
   systemInstruction: string,
   temperature = 0.2,
   maxTokens = 4096,
-  retries = 3,
+  retries = 2,
 ): Promise<string> {
   const url = `${GEMINI_BASE}/${MODEL}:generateContent?key=${GEMINI_KEY}`;
   const body = {
@@ -608,7 +609,10 @@ async function callGemini(
     });
 
     if (res.status === 429) {
-      const waitMs = (attempt + 1) * 2000;
+      const retryAfter = res.headers.get('Retry-After');
+      const baseWait = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, attempt + 1) * 1000;
+      const jitter = Math.floor(Math.random() * 1000);
+      const waitMs = Math.min(baseWait + jitter, 15000);
       console.warn(`Gemini 429 — retry ${attempt + 1}/${retries} in ${waitMs}ms`);
       await new Promise(r => setTimeout(r, waitMs));
       lastError = await res.text();
@@ -644,7 +648,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { message, history } = await req.json();
+    const { message, history, context } = await req.json();
 
     if (!message || typeof message !== 'string') {
       return new Response(JSON.stringify({ error: 'message is required' }), {
@@ -660,13 +664,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 1. Trova knowledge entry pertinente
     const match = findRelevantKnowledge(message);
     const knowledgeContext = match
       ? `NORMATIVA RILEVANTE (titolo: ${match.entry.title}):\n${match.entry.context}`
       : '';
 
-    // 2. Costruisci il prompt con storia conversazionale
     const historyText = (history || [])
       .map((m: { role: string; content: string }) => {
         const r = m.role === 'assistant' ? 'Assistente Normativo' : 'Utente';
@@ -674,9 +676,11 @@ Deno.serve(async (req) => {
       })
       .join('\n\n');
 
+    const contextBlock = context ? `\n\nContesto aggiuntivo dall'utente: ${context}` : '';
+
     const prompt = historyText
-      ? `Storia conversazione recente:\n${historyText}\n\n---\n\nDomanda attuale dell'utente: ${message}${knowledgeContext ? '\n\nContesto normativo pertinente dalla knowledge base interna:\n' + knowledgeContext : ''}`
-      : `Domanda dell'utente: ${message}${knowledgeContext ? '\n\nContesto normativo pertinente dalla knowledge base interna:\n' + knowledgeContext : ''}`;
+      ? `Storia conversazione recente:\n${historyText}\n\n---\n\nDomanda attuale dell'utente: ${message}${contextBlock}${knowledgeContext ? '\n\nContesto normativo pertinente dalla knowledge base interna:\n' + knowledgeContext : ''}`
+      : `Domanda dell'utente: ${message}${contextBlock}${knowledgeContext ? '\n\nContesto normativo pertinente dalla knowledge base interna:\n' + knowledgeContext : ''}`;
 
     // 3. Chiama Gemini
     const responseText = await callGemini(prompt, SISTEMA_PROMPT, 0.2, 4096);
