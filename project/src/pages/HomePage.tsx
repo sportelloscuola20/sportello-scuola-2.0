@@ -13,13 +13,14 @@ import NewsHub from '../components/ui/news/NewsHub';
 import FAQ from '../components/knowledge/FAQ';
 import Contact from '../components/ui/services/Contact';
 import LoginModal from '../components/foundation/LoginModal';
-import { BOLLETTINI_NOMINE, CLASSI_CONCORSO } from '../data/bollettini-nomine';
+import { getAllBollettini, CLASSI_CONCORSO } from '../data/bollettini-nomine';
 
 function NominePreview() {
   const stats = useMemo(() => {
-    const totalPositions = BOLLETTINI_NOMINE.reduce((s, b) => s + b.posizioniAssegnate, 0);
-    const totalCandidates = BOLLETTINI_NOMINE.reduce((s, b) => s + b.candidatiInGraduatoria, 0);
-    const provinceSet = new Set(BOLLETTINI_NOMINE.map(b => b.provinciaSigla));
+    const bollettini = getAllBollettini();
+    const totalPositions = bollettini.reduce((s, b) => s + b.posizioniAssegnate, 0);
+    const totalCandidates = bollettini.reduce((s, b) => s + b.candidatiInGraduatoria, 0);
+    const provinceSet = new Set(bollettini.map(b => b.provinciaSigla));
     return {
       totalPositions,
       totalCandidates,
@@ -29,7 +30,7 @@ function NominePreview() {
   }, []);
 
   const recentBollettini = useMemo(() => {
-    return [...BOLLETTINI_NOMINE]
+    return [...getAllBollettini()]
       .sort((a, b) => b.ultimaNomina.localeCompare(a.ultimaNomina))
       .slice(0, 6);
   }, []);
