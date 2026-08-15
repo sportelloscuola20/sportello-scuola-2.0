@@ -16,6 +16,9 @@
 --
 -- SECURITY FIX: page_analytics SELECT becomes ADMIN-ONLY (was: any authenticated
 -- user could read analytics).
+--
+-- NOTE: `CREATE POLICY IF NOT EXISTS` requires PostgreSQL 18; Supabase runs PG15/17,
+-- so policy creation is wrapped in a helper that checks pg_policies first.
 
 -- ============================================================================
 -- Helper: admin check (SECURITY DEFINER so it bypasses profiles RLS)
@@ -33,83 +36,92 @@ AS $$
 $$;
 
 -- ============================================================================
+-- Helper: create a policy only if it does not already exist (PG15/17 compatible)
+-- ============================================================================
+CREATE OR REPLACE FUNCTION public._mig_017_create_policy(
+  p_policy TEXT,
+  p_table TEXT,
+  p_command TEXT,
+  p_using TEXT,
+  p_check TEXT DEFAULT NULL
+)
+RETURNS VOID
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_using TEXT;
+  v_check TEXT;
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = p_table AND policyname = p_policy
+  ) THEN
+    IF p_command = 'FOR INSERT' THEN
+      -- INSERT policies only accept WITH CHECK (no USING clause)
+      v_using := '';
+      v_check := format('WITH CHECK (%s)', COALESCE(p_check, p_using));
+    ELSE
+      v_using := format('USING (%s)', p_using);
+      v_check := CASE WHEN p_check IS NULL THEN '' ELSE format('WITH CHECK (%s)', p_check) END;
+    END IF;
+
+    EXECUTE format(
+      'CREATE POLICY %I ON %I %s %s %s',
+      p_policy, p_table, p_command, v_using, v_check
+    );
+  END IF;
+END;
+$$;
+
+-- ============================================================================
 -- RLS: monitored_sources (table created in 005)
 -- ============================================================================
 ALTER TABLE monitored_sources ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Anyone can read monitored sources" ON monitored_sources
-  FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "Service role writes monitored sources" ON monitored_sources
-  FOR INSERT WITH CHECK (auth.role() = 'service_role');
-CREATE POLICY IF NOT EXISTS "Service role updates monitored sources" ON monitored_sources
-  FOR UPDATE USING (auth.role() = 'service_role');
-CREATE POLICY IF NOT EXISTS "Service role deletes monitored sources" ON monitored_sources
-  FOR DELETE USING (auth.role() = 'service_role');
+SELECT public._mig_017_create_policy('Anyone can read monitored sources', 'monitored_sources', 'FOR SELECT', 'true');
+SELECT public._mig_017_create_policy('Service role writes monitored sources', 'monitored_sources', 'FOR INSERT', 'auth.role() = ''service_role''');
+SELECT public._mig_017_create_policy('Service role updates monitored sources', 'monitored_sources', 'FOR UPDATE', 'auth.role() = ''service_role''');
+SELECT public._mig_017_create_policy('Service role deletes monitored sources', 'monitored_sources', 'FOR DELETE', 'auth.role() = ''service_role''');
 
 -- ============================================================================
 -- RLS: source_documents (table created in 005)
 -- ============================================================================
 ALTER TABLE source_documents ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Authenticated read source documents" ON source_documents
-  FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY IF NOT EXISTS "Service role writes source documents" ON source_documents
-  FOR INSERT WITH CHECK (auth.role() = 'service_role');
-CREATE POLICY IF NOT EXISTS "Service role updates source documents" ON source_documents
-  FOR UPDATE USING (auth.role() = 'service_role');
-CREATE POLICY IF NOT EXISTS "Service role deletes source documents" ON source_documents
-  FOR DELETE USING (auth.role() = 'service_role');
+SELECT public._mig_017_create_policy('Authenticated read source documents', 'source_documents', 'FOR SELECT', 'auth.role() = ''authenticated''');
+SELECT public._mig_017_create_policy('Service role writes source documents', 'source_documents', 'FOR INSERT', 'auth.role() = ''service_role''');
+SELECT public._mig_017_create_policy('Service role updates source documents', 'source_documents', 'FOR UPDATE', 'auth.role() = ''service_role''');
+SELECT public._mig_017_create_policy('Service role deletes source documents', 'source_documents', 'FOR DELETE', 'auth.role() = ''service_role''');
 
 -- ============================================================================
 -- RLS: intelligence_news (table created in 008)
 -- ============================================================================
 ALTER TABLE intelligence_news ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Anyone can read news" ON intelligence_news
-  FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "Service role writes news" ON intelligence_news
-  FOR INSERT WITH CHECK (auth.role() = 'service_role');
-CREATE POLICY IF NOT EXISTS "Service role updates news" ON intelligence_news
-  FOR UPDATE USING (auth.role() = 'service_role');
-CREATE POLICY IF NOT EXISTS "Service role deletes news" ON intelligence_news
-  FOR DELETE USING (auth.role() = 'service_role');
+SELECT public._mig_017_create_policy('Anyone can read news', 'intelligence_news', 'FOR SELECT', 'true');
+SELECT public._mig_017_create_policy('Service role writes news', 'intelligence_news', 'FOR INSERT', 'auth.role() = ''service_role''');
+SELECT public._mig_017_create_policy('Service role updates news', 'intelligence_news', 'FOR UPDATE', 'auth.role() = ''service_role''');
+SELECT public._mig_017_create_policy('Service role deletes news', 'intelligence_news', 'FOR DELETE', 'auth.role() = ''service_role''');
 
 -- ============================================================================
 -- RLS: intelligence_scadenze (table created in 008)
 -- ============================================================================
 ALTER TABLE intelligence_scadenze ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Anyone can read deadlines" ON intelligence_scadenze
-  FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "Service role writes deadlines" ON intelligence_scadenze
-  FOR INSERT WITH CHECK (auth.role() = 'service_role');
-CREATE POLICY IF NOT EXISTS "Service role updates deadlines" ON intelligence_scadenze
-  FOR UPDATE USING (auth.role() = 'service_role');
-CREATE POLICY IF NOT EXISTS "Service role deletes deadlines" ON intelligence_scadenze
-  FOR DELETE USING (auth.role() = 'service_role');
+SELECT public._mig_017_create_policy('Anyone can read deadlines', 'intelligence_scadenze', 'FOR SELECT', 'true');
+SELECT public._mig_017_create_policy('Service role writes deadlines', 'intelligence_scadenze', 'FOR INSERT', 'auth.role() = ''service_role''');
+SELECT public._mig_017_create_policy('Service role updates deadlines', 'intelligence_scadenze', 'FOR UPDATE', 'auth.role() = ''service_role''');
+SELECT public._mig_017_create_policy('Service role deletes deadlines', 'intelligence_scadenze', 'FOR DELETE', 'auth.role() = ''service_role''');
 
 -- ============================================================================
 -- RLS: knowledge_links (table created in 013; read policy added there)
 -- ============================================================================
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public' AND tablename = 'knowledge_links'
-      AND policyname = 'Anyone can read knowledge links'
-  ) THEN
-    ALTER TABLE knowledge_links ENABLE ROW LEVEL SECURITY;
-    CREATE POLICY IF NOT EXISTS "Anyone can read knowledge links" ON knowledge_links
-      FOR SELECT USING (true);
-  END IF;
-END $$;
+ALTER TABLE knowledge_links ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Service role writes knowledge links" ON knowledge_links
-  FOR INSERT WITH CHECK (auth.role() = 'service_role');
-CREATE POLICY IF NOT EXISTS "Service role updates knowledge links" ON knowledge_links
-  FOR UPDATE USING (auth.role() = 'service_role');
-CREATE POLICY IF NOT EXISTS "Service role deletes knowledge links" ON knowledge_links
-  FOR DELETE USING (auth.role() = 'service_role');
+SELECT public._mig_017_create_policy('Anyone can read knowledge links', 'knowledge_links', 'FOR SELECT', 'true');
+SELECT public._mig_017_create_policy('Service role writes knowledge links', 'knowledge_links', 'FOR INSERT', 'auth.role() = ''service_role''');
+SELECT public._mig_017_create_policy('Service role updates knowledge links', 'knowledge_links', 'FOR UPDATE', 'auth.role() = ''service_role''');
+SELECT public._mig_017_create_policy('Service role deletes knowledge links', 'knowledge_links', 'FOR DELETE', 'auth.role() = ''service_role''');
 
 -- ============================================================================
 -- user_notifications — in-app notifications (user-scoped)
@@ -130,14 +142,10 @@ CREATE INDEX IF NOT EXISTS idx_user_notifications_created ON user_notifications(
 
 ALTER TABLE user_notifications ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Users read own notifications" ON user_notifications
-  FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY IF NOT EXISTS "Users create own notifications" ON user_notifications
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY IF NOT EXISTS "Users update own notifications" ON user_notifications
-  FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY IF NOT EXISTS "Users delete own notifications" ON user_notifications
-  FOR DELETE USING (auth.uid() = user_id);
+SELECT public._mig_017_create_policy('Users read own notifications', 'user_notifications', 'FOR SELECT', 'auth.uid() = user_id');
+SELECT public._mig_017_create_policy('Users create own notifications', 'user_notifications', 'FOR INSERT', 'auth.uid() = user_id', 'auth.uid() = user_id');
+SELECT public._mig_017_create_policy('Users update own notifications', 'user_notifications', 'FOR UPDATE', 'auth.uid() = user_id');
+SELECT public._mig_017_create_policy('Users delete own notifications', 'user_notifications', 'FOR DELETE', 'auth.uid() = user_id');
 
 -- ============================================================================
 -- saved_items — user bookmarks (user-scoped)
@@ -155,18 +163,17 @@ CREATE INDEX IF NOT EXISTS idx_saved_items_user ON saved_items(user_id, item_typ
 
 ALTER TABLE saved_items ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Users read own saved items" ON saved_items
-  FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY IF NOT EXISTS "Users create own saved items" ON saved_items
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY IF NOT EXISTS "Users update own saved items" ON saved_items
-  FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY IF NOT EXISTS "Users delete own saved items" ON saved_items
-  FOR DELETE USING (auth.uid() = user_id);
+SELECT public._mig_017_create_policy('Users read own saved items', 'saved_items', 'FOR SELECT', 'auth.uid() = user_id');
+SELECT public._mig_017_create_policy('Users create own saved items', 'saved_items', 'FOR INSERT', 'auth.uid() = user_id', 'auth.uid() = user_id');
+SELECT public._mig_017_create_policy('Users update own saved items', 'saved_items', 'FOR UPDATE', 'auth.uid() = user_id');
+SELECT public._mig_017_create_policy('Users delete own saved items', 'saved_items', 'FOR DELETE', 'auth.uid() = user_id');
 
 -- ============================================================================
 -- gemini_calls_log — rate/cost tracking. Written by the anon client (logged-in
 -- users, own rows) and by the edge functions (service role).
+-- The live DB already has a legacy version of this table (id bigint, only
+-- giorno/called_at/modello/esito/durata_ms); ADD COLUMN IF NOT EXISTS upgrades
+-- it in place so a fresh DB and the existing one converge to the same superset.
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS gemini_calls_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -189,20 +196,43 @@ CREATE TABLE IF NOT EXISTS gemini_calls_log (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Upgrade an existing (legacy) table in place.
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS prompt_preview TEXT;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS model TEXT;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS modello TEXT;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS tokens_in INT;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS tokens_out INT;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS input_tokens INT;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS output_tokens INT;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS latency_ms INT;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS durata_ms INT;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS esito TEXT;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS success BOOLEAN;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS endpoint TEXT;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS giorno DATE;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS called_at TIMESTAMPTZ;
+ALTER TABLE gemini_calls_log ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- Relax legacy NOT NULL constraints: the app client inserts without modello/esito
+-- (it uses model/status), while the edge functions use modello/esito/durata_ms.
+ALTER TABLE gemini_calls_log ALTER COLUMN giorno DROP NOT NULL;
+ALTER TABLE gemini_calls_log ALTER COLUMN called_at DROP NOT NULL;
+ALTER TABLE gemini_calls_log ALTER COLUMN modello DROP NOT NULL;
+ALTER TABLE gemini_calls_log ALTER COLUMN esito DROP NOT NULL;
+ALTER TABLE gemini_calls_log ALTER COLUMN durata_ms DROP NOT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_gemini_calls_user ON gemini_calls_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_gemini_calls_created ON gemini_calls_log(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_gemini_calls_giorno ON gemini_calls_log(giorno);
 
 ALTER TABLE gemini_calls_log ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Users read gemini logs" ON gemini_calls_log
-  FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY IF NOT EXISTS "Users log own gemini calls" ON gemini_calls_log
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY IF NOT EXISTS "Service role writes gemini logs" ON gemini_calls_log
-  FOR INSERT WITH CHECK (auth.role() = 'service_role');
-CREATE POLICY IF NOT EXISTS "Service role updates gemini logs" ON gemini_calls_log
-  FOR UPDATE USING (auth.role() = 'service_role');
+SELECT public._mig_017_create_policy('Users read gemini logs', 'gemini_calls_log', 'FOR SELECT', 'auth.role() = ''authenticated''');
+SELECT public._mig_017_create_policy('Users log own gemini calls', 'gemini_calls_log', 'FOR INSERT', 'auth.uid() = user_id', 'auth.uid() = user_id');
+SELECT public._mig_017_create_policy('Service role writes gemini logs', 'gemini_calls_log', 'FOR INSERT', 'auth.role() = ''service_role''', 'auth.role() = ''service_role''');
+SELECT public._mig_017_create_policy('Service role updates gemini logs', 'gemini_calls_log', 'FOR UPDATE', 'auth.role() = ''service_role''');
 
 -- ============================================================================
 -- news_cache — legacy fallback news feed (public content, seeded elsewhere)
@@ -222,12 +252,9 @@ CREATE INDEX IF NOT EXISTS idx_news_cache_created ON news_cache(created_at DESC)
 
 ALTER TABLE news_cache ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Anyone can read news cache" ON news_cache
-  FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "Service role writes news cache" ON news_cache
-  FOR INSERT WITH CHECK (auth.role() = 'service_role');
-CREATE POLICY IF NOT EXISTS "Service role updates news cache" ON news_cache
-  FOR UPDATE USING (auth.role() = 'service_role');
+SELECT public._mig_017_create_policy('Anyone can read news cache', 'news_cache', 'FOR SELECT', 'true');
+SELECT public._mig_017_create_policy('Service role writes news cache', 'news_cache', 'FOR INSERT', 'auth.role() = ''service_role''', 'auth.role() = ''service_role''');
+SELECT public._mig_017_create_policy('Service role updates news cache', 'news_cache', 'FOR UPDATE', 'auth.role() = ''service_role''');
 
 -- ============================================================================
 -- intelligence_dashboard_stats — single-row live stats snapshot. The live DB may
@@ -288,8 +315,7 @@ END $$;
 -- ============================================================================
 DROP POLICY IF EXISTS "Admins can read analytics" ON page_analytics;
 
-CREATE POLICY IF NOT EXISTS "Admins can read analytics" ON page_analytics
-  FOR SELECT USING (public.is_admin());
+SELECT public._mig_017_create_policy('Admins can read analytics', 'page_analytics', 'FOR SELECT', 'public.is_admin()');
 
 -- ============================================================================
 -- newsletter_subscriptions — public opt-in; INSERT/email dedupe handled in code.
@@ -306,11 +332,8 @@ CREATE INDEX IF NOT EXISTS idx_newsletter_subscriptions_active
 
 ALTER TABLE newsletter_subscriptions ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Anyone can subscribe" ON newsletter_subscriptions
-  FOR INSERT WITH CHECK (true);
-
-CREATE POLICY IF NOT EXISTS "Service role manages subscriptions" ON newsletter_subscriptions
-  FOR ALL USING (auth.role() = 'service_role');
+SELECT public._mig_017_create_policy('Anyone can subscribe', 'newsletter_subscriptions', 'FOR INSERT', 'true', 'true');
+SELECT public._mig_017_create_policy('Service role manages subscriptions', 'newsletter_subscriptions', 'FOR ALL', 'auth.role() = ''service_role''');
 
 -- ============================================================================
 -- appointments — user-scoped consultation bookings.
@@ -333,17 +356,10 @@ CREATE INDEX IF NOT EXISTS idx_appointments_data_ora ON appointments(data_ora);
 
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Users read own appointments" ON appointments
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY IF NOT EXISTS "Users create own appointments" ON appointments
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY IF NOT EXISTS "Users update own appointments" ON appointments
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY IF NOT EXISTS "Users delete own appointments" ON appointments
-  FOR DELETE USING (auth.uid() = user_id);
+SELECT public._mig_017_create_policy('Users read own appointments', 'appointments', 'FOR SELECT', 'auth.uid() = user_id');
+SELECT public._mig_017_create_policy('Users create own appointments', 'appointments', 'FOR INSERT', 'auth.uid() = user_id', 'auth.uid() = user_id');
+SELECT public._mig_017_create_policy('Users update own appointments', 'appointments', 'FOR UPDATE', 'auth.uid() = user_id');
+SELECT public._mig_017_create_policy('Users delete own appointments', 'appointments', 'FOR DELETE', 'auth.uid() = user_id');
 
 -- ============================================================================
 -- user_preferences — extended professional profile, one row per user.
@@ -367,14 +383,12 @@ CREATE TABLE IF NOT EXISTS user_preferences (
 
 ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Users read own preferences" ON user_preferences
-  FOR SELECT USING (auth.uid() = user_id);
+SELECT public._mig_017_create_policy('Users read own preferences', 'user_preferences', 'FOR SELECT', 'auth.uid() = user_id');
+SELECT public._mig_017_create_policy('Users upsert own preferences', 'user_preferences', 'FOR INSERT', 'auth.uid() = user_id', 'auth.uid() = user_id');
+SELECT public._mig_017_create_policy('Users update own preferences', 'user_preferences', 'FOR UPDATE', 'auth.uid() = user_id');
+SELECT public._mig_017_create_policy('Users delete own preferences', 'user_preferences', 'FOR DELETE', 'auth.uid() = user_id');
 
-CREATE POLICY IF NOT EXISTS "Users upsert own preferences" ON user_preferences
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY IF NOT EXISTS "Users update own preferences" ON user_preferences
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY IF NOT EXISTS "Users delete own preferences" ON user_preferences
-  FOR DELETE USING (auth.uid() = user_id);
+-- ============================================================================
+-- Drop the transient migration helper (no longer needed in the schema)
+-- ============================================================================
+DROP FUNCTION IF EXISTS public._mig_017_create_policy(TEXT, TEXT, TEXT, TEXT, TEXT);

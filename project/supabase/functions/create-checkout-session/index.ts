@@ -105,13 +105,13 @@ serve(async (req) => {
       body: new URLSearchParams({
         mode: 'subscription',
         customer: customerId,
-        line_items[0][price]: STRIPE_PRICE_ID,
-        line_items[0][quantity]: '1',
+        'line_items[0][price]': STRIPE_PRICE_ID,
+        'line_items[0][quantity]': '1',
         success_url: `${APP_URL}/area-riservata?checkout=success`,
         cancel_url: `${APP_URL}/area-riservata?checkout=cancelled`,
-        metadata: {
+        metadata: JSON.stringify({
           supabase_user_id: userId,
-        },
+        }),
       }),
     });
 
