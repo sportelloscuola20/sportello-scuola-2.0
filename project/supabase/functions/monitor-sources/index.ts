@@ -304,9 +304,9 @@ Deno.serve(async (req) => {
               .from('source_documents')
               .select('id')
               .eq('hash_contenuto', hash)
-              .maybeSingle();
+              .limit(1);
 
-            if (!existing) {
+            if (!existing || existing.length === 0) {
               await supabase.from('source_documents').insert({
                 source_id: source.id,
                 url: item.link,
@@ -382,12 +382,13 @@ Deno.serve(async (req) => {
                 .from('source_documents')
                 .select('id')
                 .eq('hash_contenuto', hash)
-                .maybeSingle();
+                .limit(1);
 
-              if (!existing) {
+              if (!existing || existing.length === 0) {
                 await supabase.from('source_documents').insert({
                   source_id: source.id,
                   url: link.link,
+                  titolo: link.title,
                   titolo: link.title,
                   contenuto_raw: link.description || `Link da ${source.nome}: ${pageTitle}`,
                   hash_contenuto: hash,
@@ -408,10 +409,10 @@ Deno.serve(async (req) => {
                 const { data: existing } = await supabase
                   .from('source_documents')
                   .select('id')
-                  .eq('hash_contenuto', hash)
-                  .maybeSingle();
+                .eq('hash_contenuto', hash)
+                .limit(1);
 
-                if (!existing) {
+              if (!existing || existing.length === 0) {
                   await supabase.from('source_documents').insert({
                     source_id: source.id,
                     url: source.url,
@@ -435,9 +436,9 @@ Deno.serve(async (req) => {
                 .from('source_documents')
                 .select('id')
                 .eq('hash_contenuto', hash)
-                .maybeSingle();
+                .limit(1);
 
-              if (!existing) {
+              if (!existing || existing.length === 0) {
                 await supabase.from('source_documents').insert({
                   source_id: source.id,
                   url: source.url,

@@ -704,9 +704,13 @@ Deno.serve(async (req) => {
           .insert({
             titolo: item.titolo,
             descrizione: item.descrizione || '',
-            data_pubblicazione: item.data_pubblicazione
-              ? new Date(item.data_pubblicazione).toISOString()
-              : new Date().toISOString(),
+            data_pubblicazione: (() => {
+              const pub = item.data_pubblicazione
+                ? new Date(item.data_pubblicazione).getTime()
+                : NaN;
+              const now = Date.now();
+              return new Date(Number.isFinite(pub) && pub <= now ? pub : now).toISOString();
+            })(),
             fonte_livello: item.fonte_livello || 'F',
             fonte_nome: item.fonte_nome || sourceMap.get(doc.source_id)?.nome || 'Fonte Automatica',
             fonte_url: item.fonte_url || doc.url,
