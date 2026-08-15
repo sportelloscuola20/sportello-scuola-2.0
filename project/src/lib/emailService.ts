@@ -35,7 +35,7 @@ export function getMailConfig(): MailConfig {
         openaiKey: parsed.openaiKey || '',
       };
     }
-  } catch (error) {
+  } catch {
     // Silently handle
   }
 
@@ -50,7 +50,7 @@ export function getMailConfig(): MailConfig {
 export function saveMailConfig(config: MailConfig): void {
   try {
     localStorage.setItem(L_KEY, JSON.stringify(config));
-  } catch (error) {
+  } catch {
     // Silently handle
   }
 }
@@ -124,7 +124,7 @@ export async function sendEmailBackground(params: SendEmailParams): Promise<Send
         message: (data && data.message) || 'Si è verificato un errore durante l\'invio del modulo. Verifica la tua chiave Web3Forms nelle impostazioni.'
       };
     }
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: 'Impossibile connettersi al server per l\'invio del messaggio. Controlla la tua connessione internet e riprova.'
@@ -134,16 +134,18 @@ export async function sendEmailBackground(params: SendEmailParams): Promise<Send
 
 export async function sendOnboardingEmail(params: { fullName: string; email: string; ruolo: string }): Promise<void> {
   await sendEmailBackground({
-    to: D_EMAIL,
+    name: params.fullName,
+    email: params.email,
     subject: `Nuovo utente registrato: ${params.fullName} (${params.ruolo})`,
-    body: `Nuovo utente registrato su Sportello Scuola 2.0.\n\nEmail: ${params.email}\nNome: ${params.fullName}\nRuolo: ${params.ruolo}`,
+    message: `Nuovo utente registrato su Sportello Scuola 2.0.\n\nEmail: ${params.email}\nNome: ${params.fullName}\nRuolo: ${params.ruolo}`,
   });
 }
 
 export async function sendAdminNotification(params: { uuid: string; fullName: string; email: string; ruolo: string }): Promise<void> {
   await sendEmailBackground({
-    to: D_EMAIL,
+    name: params.fullName,
+    email: params.email,
     subject: `Notifica admin: ${params.fullName} (${params.ruolo})`,
-    body: `Nuovo utente registrato.\n\nUUID: ${params.uuid}\nNome: ${params.fullName}\nEmail: ${params.email}\nRuolo: ${params.ruolo}`,
+    message: `Nuovo utente registrato.\n\nUUID: ${params.uuid}\nNome: ${params.fullName}\nEmail: ${params.email}\nRuolo: ${params.ruolo}`,
   });
 }

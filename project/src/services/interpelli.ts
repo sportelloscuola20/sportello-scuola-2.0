@@ -7,23 +7,10 @@
 
 import { supabaseAdapter } from '../foundation/adapters';
 import { eventBus } from '../foundation/events';
-import { createLineage } from '../foundation/types';
 import type { DataLineageObject } from '../foundation/types';
+import type { InterpelloNazionale } from '../types/database';
 
-export interface InterpelloNazionale {
-  id: string;
-  titolo: string;
-  descrizione: string;
-  tipo: string;
-  link: string;
-  provincia: string;
-  ufficio_scolastico_provinciale: string;
-  classe_di_concorso: string;
-  tipo_posto: string;
-  data_pubblicazione: string;
-  data_scadenza: string;
-  stato: string;
-}
+export type { InterpelloNazionale } from '../types/database';
 
 export interface InterpelliResponse {
   data: InterpelloNazionale[];

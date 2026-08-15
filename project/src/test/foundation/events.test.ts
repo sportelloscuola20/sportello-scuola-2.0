@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { InMemoryEventBus } from '../../foundation/events';
-import type { DomainEvent, EventType } from '../../foundation/events';
+import type { DomainEvent } from '../../foundation/events';
 
 describe('EventBus', () => {
   let bus: InMemoryEventBus;
@@ -11,7 +11,7 @@ describe('EventBus', () => {
 
   it('should emit and receive events', () => {
     const received: DomainEvent[] = [];
-    bus.on('news.published', (e) => received.push(e));
+    bus.on('news.published', (e) => { received.push(e); });
 
     bus.emit('news.published', 'test', { title: 'Test News' });
 
@@ -23,7 +23,7 @@ describe('EventBus', () => {
 
   it('should support wildcard handlers', () => {
     const received: DomainEvent[] = [];
-    bus.on('*', (e) => received.push(e));
+    bus.on('*', (e) => { received.push(e); });
 
     bus.emit('news.published', 'test', {});
     bus.emit('scadenza.created', 'test', {});
@@ -33,7 +33,7 @@ describe('EventBus', () => {
 
   it('should support once handlers', () => {
     let count = 0;
-    bus.once('news.published', () => count++);
+    bus.once('news.published', () => { count++; });
 
     bus.emit('news.published', 'test', {});
     bus.emit('news.published', 'test', {});
@@ -43,7 +43,7 @@ describe('EventBus', () => {
 
   it('should support off to unsubscribe', () => {
     let count = 0;
-    const handler = () => count++;
+    const handler = () => { count++; };
     bus.on('news.published', handler);
 
     bus.emit('news.published', 'test', {});

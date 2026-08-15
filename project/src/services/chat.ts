@@ -170,7 +170,7 @@ export async function generateChatResponse(
           return {
             text: data.response,
             citations: data.citations || [],
-            lineage: createLineage('gemini_response', 'chat-service', {
+            lineage: createLineage('ai_generation', 'chat-service', {
               metadata: { query: userMessage.slice(0, 100), model: 'gemini-3.1-flash-lite' },
             }),
           };
@@ -192,8 +192,8 @@ export async function generateChatResponse(
       if (isRateLimit) {
         return {
           text: `⚠️ **Servizio temporaneamente non disponibile**\n\nTroppe richieste simultanee al sistema AI. Il limite è di 15 richieste al minuto.\n\n**Cosa fare:**\n- Attendi 1-2 minuti e riprova\n- Se il problema persiste, prova con una domanda più breve\n- Per urgenze: sportelloscuola2.0@gmail.com`,
-          lineage: createLineage('rate_limited', 'chat-service', {
-            metadata: { query: userMessage.slice(0, 100) },
+          lineage: createLineage('edge_function', 'chat-service', {
+            metadata: { query: userMessage.slice(0, 100), reason: 'rate_limited' },
           }),
         };
       }
@@ -205,19 +205,20 @@ export async function generateChatResponse(
 
       return {
         text: `Mi scuso, il servizio non è al momento disponibile (HTTP ${res.status}). Riprova tra qualche istante.`,
-        lineage: createLineage('error', 'chat-service', {
+        lineage: createLineage('edge_function', 'chat-service', {
           metadata: { query: userMessage.slice(0, 100), status: res.status },
         }),
       };
-    } catch (e: any) {
-      const isAbort = e?.name === 'AbortError';
-      console.error(`[chat-service] ${isAbort ? 'Timeout' : 'Exception'} (attempt ${attempt + 1}):`, e?.message || e);
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(String(e));
+      const isAbort = err.name === 'AbortError';
+      console.error(`[chat-service] ${isAbort ? 'Timeout' : 'Exception'} (attempt ${attempt + 1}):`, err.message || err);
 
       if (isAbort) {
         return {
           text: `⚠️ **Timeout della richiesta**\n\nLa risposta sta prendendo più del previsto (45s). Riprova con una domanda più breve.`,
-          lineage: createLineage('timeout', 'chat-service', {
-            metadata: { query: userMessage.slice(0, 100) },
+          lineage: createLineage('edge_function', 'chat-service', {
+            metadata: { query: userMessage.slice(0, 100), reason: 'timeout' },
           }),
         };
       }
@@ -229,8 +230,8 @@ export async function generateChatResponse(
 
       return {
         text: `⚠️ **Errore di connessione**\n\nImpossibile contattare il servizio AI. Verifica la connessione internet e riprova.\n\nSe il problema persiste: sportelloscuola2.0@gmail.com`,
-        lineage: createLineage('network_error', 'chat-service', {
-          metadata: { query: userMessage.slice(0, 100), error: e?.message },
+        lineage: createLineage('edge_function', 'chat-service', {
+          metadata: { query: userMessage.slice(0, 100), error: err.message },
         }),
       };
     }
@@ -238,7 +239,7 @@ export async function generateChatResponse(
 
   return {
     text: `Mi scuso, il servizio non è al momento disponibile. Riprova tra qualche istante.`,
-    lineage: createLineage('error_fallback', 'chat-service', {
+    lineage: createLineage('edge_function', 'chat-service', {
       metadata: { query: userMessage.slice(0, 100), fallback: true },
     }),
   };

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { TrendingUp, Plus, Trash2, RotateCcw, Loader2, BarChart3 } from 'lucide-react';
+import { TrendingUp, Plus, Trash2, RotateCcw, BarChart3 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../foundation/AuthContext';

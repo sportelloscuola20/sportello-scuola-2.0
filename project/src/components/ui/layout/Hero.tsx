@@ -1,4 +1,4 @@
-import { Calculator, Sparkles, ArrowRight, BellRing } from 'lucide-react';
+import { Calculator, Sparkles, BellRing } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Hero() {

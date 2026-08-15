@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bell, Calendar, AlertTriangle, AlarmClock, ExternalLink, Eye, EyeOff } from 'lucide-react';
+import { Bell, Calendar, ExternalLink, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../foundation/AuthContext';
 
@@ -68,7 +68,7 @@ export default function BandiWatch() {
     },
   });
 
-  const followedSet = new Set(followedIds);
+  const followedSet = useMemo(() => new Set(followedIds), [followedIds]);
   const followedBandi = useMemo(
     () => bandi.filter(b => followedSet.has(b.id)),
     [bandi, followedSet]

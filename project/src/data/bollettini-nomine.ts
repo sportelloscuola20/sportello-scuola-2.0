@@ -97,12 +97,6 @@ export const CLASSI_CONCORSO: ClasseConcorso[] = [
 let _rawData: BollettinoEntry[] | null = null;
 let _loadPromise: Promise<BollettinoEntry[]> | null = null;
 
-function loadRealDataSync(): BollettinoEntry[] {
-  if (_rawData) return _rawData;
-  // Fallback: return empty, will be populated by async load
-  return [];
-}
-
 async function ensureRealDataLoaded(): Promise<BollettinoEntry[]> {
   if (_rawData) return _rawData;
   if (_loadPromise) return _loadPromise;

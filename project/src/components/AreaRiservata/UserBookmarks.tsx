@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bookmark, Star, Calendar, FileText, Trash2, ExternalLink, Filter, Search } from 'lucide-react';
+import { Bookmark, Star, Calendar, FileText, Trash2, ExternalLink, Search } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../foundation/AuthContext';
 import { useProfileStore } from '../../store/useProfileStore';
@@ -31,7 +31,7 @@ export default function UserBookmarks() {
     queryKey: ['news_feed', user?.id],
     queryFn: async () => {
       const interessi = (preferences?.interessi as string[]) || [];
-      let query = supabase
+      const query = supabase
         .from('news_cache')
         .select('*')
         .order('created_at', { ascending: false })
@@ -182,15 +182,15 @@ export default function UserBookmarks() {
                   <p className="text-xs text-white/40 mt-0.5">{(f.item_data as Record<string, unknown>)?.category as string || f.item_type}</p>
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {(f.item_data as Record<string, unknown>)?.link && (f.item_data as Record<string, unknown>).link !== '#' && (
+                  {(() => { const link = (f.item_data as Record<string, unknown>)?.link; return link !== undefined && link !== null && String(link) !== '#' ? (
                     <a
-                      href={(f.item_data as Record<string, unknown>).link as string}
+                      href={String(link)}
                       target="_blank" rel="noopener noreferrer"
                       className="p-1.5 text-white/40 hover:text-brand-blu transition"
                     >
                       <ExternalLink size={14} />
                     </a>
-                  )}
+                  ) : null; })()}
                   <button
                     onClick={() => {
                       if (f.id.startsWith('optimistic-')) return;

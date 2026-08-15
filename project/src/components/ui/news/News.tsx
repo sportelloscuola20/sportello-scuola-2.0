@@ -7,7 +7,7 @@ import { supabase } from '../../../lib/supabaseClient';
 import { generaDatiDataJournalism, fetchKnowledgeGraph } from '../../../rag/intelligence-engine';
 import { formatDataItaliana } from '../../../rag/intelligence-engine';
 import type { NotiziaIntelligence, LivelloProduzione, SezioneIntelligence, KnowledgeLink, CategoriaUtente } from '../../../types/intelligence';
-import { CRITICALITA_COLORS, IMPATTO_COLORS, LIVELLO_PRODUZIONE_LABELS, TARGET_LABELS, RELAZIONE_LABELS, CATEGORIE_UTENTE, CATEGORIE_UTENTE_COLORS } from '../../../types/intelligence';
+import { IMPATTO_COLORS, LIVELLO_PRODUZIONE_LABELS, TARGET_LABELS, RELAZIONE_LABELS, CATEGORIE_UTENTE, CATEGORIE_UTENTE_COLORS } from '../../../types/intelligence';
 import type { NewsCache } from '../../../types/database';
 
 const MAX_VISIBLE = 4;
@@ -71,7 +71,7 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [expandedLivelli, setExpandedLivelli] = useState<Record<string, Set<number>>>({});
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [showAll, setShowAll] = useState(false);
+  const [showAll] = useState(false);
   const [filterCriticalita, setFilterCriticalita] = useState(filters?.filterCriticalita ?? '');
   const [filterRegione, setFilterRegione] = useState(filters?.filterRegione ?? '');
   const [activeCategory, setActiveCategory] = useState<CategoriaUtente | 'Tutte'>(filters?.activeCategory ?? 'Tutte');
@@ -83,12 +83,10 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    if (filters) {
-      setActiveCategory(filters.activeCategory);
-      setSearchQuery(filters.searchQuery);
-      setFilterCriticalita(filters.filterCriticalita);
-      setFilterRegione(filters.filterRegione);
-    }
+    if (filters?.activeCategory !== undefined) setActiveCategory(filters.activeCategory);
+    if (filters?.searchQuery !== undefined) setSearchQuery(filters.searchQuery);
+    if (filters?.filterCriticalita !== undefined) setFilterCriticalita(filters.filterCriticalita);
+    if (filters?.filterRegione !== undefined) setFilterRegione(filters.filterRegione);
   }, [filters?.activeCategory, filters?.searchQuery, filters?.filterCriticalita, filters?.filterRegione]);
 
   const fetchNewsFromDB = async (): Promise<NotiziaIntelligence[] | null> => {
@@ -102,27 +100,27 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
         .limit(20);
 
       if (!error && data && data.length > 0) {
-        return (data as any[]).map(n => ({
-          id: n.id,
-          titolo: n.titolo,
-          descrizione: n.descrizione || '',
-          dataPubblicazione: n.data_pubblicazione || n.created_at,
-          fonte: { livello: n.fonte_livello || 'A', nome: n.fonte_nome || 'MIM', url: n.fonte_url || 'https://www.mim.gov.it', peso: n.fonte_peso || 100 },
+        return (data as Array<Record<string, unknown>>).map(n => ({
+          id: String(n.id),
+          titolo: String(n.titolo),
+          descrizione: String(n.descrizione || ''),
+          dataPubblicazione: String(n.data_pubblicazione || n.created_at),
+          fonte: { livello: String(n.fonte_livello || 'A'), nome: String(n.fonte_nome || 'MIM'), url: String(n.fonte_url || 'https://www.mim.gov.it'), peso: Number(n.fonte_peso || 100) },
           classifica: {
-            criticita: n.criticita || 'media', impatto: n.impatto || 'nazionale',
-            platea: n.platea || 'ampia', target: n.target || ['docenti'],
-            categoria: n.categoria || 'Normative, Note e Circolari Ministeriali', livelloFonte: n.fonte_livello || 'A',
-            fontePrimaria: n.fonte_primaria || '', fonteUrl: n.fonte_url_dettaglio || '',
-            dataAcquisizione: n.data_acquisizione || n.created_at,
+            criticita: String(n.criticita || 'media'), impatto: String(n.impatto || 'nazionale'),
+            platea: String(n.platea || 'ampia'), target: Array.isArray(n.target) ? n.target as string[] : ['docenti'],
+            categoria: String(n.categoria || 'Normative, Note e Circolari Ministeriali'), livelloFonte: String(n.fonte_livello || 'A'),
+            fontePrimaria: String(n.fonte_primaria || ''), fonteUrl: String(n.fonte_url_dettaglio || ''),
+            dataAcquisizione: String(n.data_acquisizione || n.created_at),
           },
-          contenuti: n.produzione_livelli || [{ livello: 1, titolo: 'Notizia', contenuto: n.descrizione || '' }],
-          tag: n.tag || [],
-          link: n.link || '',
-          isPinned: n.is_pinned || false,
-          regione: n.regione || null,
-        }));
+          contenuti: Array.isArray(n.produzione_livelli) ? n.produzione_livelli : [{ livello: 1, titolo: 'Notizia', contenuto: String(n.descrizione || '') }],
+          tag: Array.isArray(n.tag) ? n.tag : [],
+          link: String(n.link || ''),
+          isPinned: Boolean(n.is_pinned),
+          regione: n.regione ? String(n.regione) : null,
+        })) as NotiziaIntelligence[];
       }
-    } catch {}
+    } catch { /* fetch fallback */ }
     return null;
   };
 
@@ -153,7 +151,7 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
           isPinned: n.is_pinned,
         }));
       }
-    } catch {}
+    } catch { /* fetch fallback */ }
     return null;
   };
 
@@ -174,6 +172,7 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
     fetchData();
     const interval = setInterval(fetchData, REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filtered = newsItems.filter(item => {
@@ -210,6 +209,7 @@ export default function News({ compact = false, filters }: { compact?: boolean; 
         }
       }).catch(() => {});
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expandedId]);
 
   const grid = (

@@ -7,8 +7,8 @@
  */
 
 import { useState } from 'react';
-import type { DataLineageObject } from '../../foundation/types';
-import { formatDataItaliana } from '../../rag/helpers';
+import type { DataLineageObject } from '../../../foundation/types';
+import { formatDataItaliana } from '../../../rag/helpers';
 
 interface DataLineageProps {
   lineage: DataLineageObject;

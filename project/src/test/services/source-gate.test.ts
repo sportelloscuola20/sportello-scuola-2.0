@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { validateSourceGate, validateContentAcceptance } from '../../services/source-gate';
-import { SOURCE_MATRIX } from '../../rag/engine/sources';
+import { SOURCE_MATRIX, AuthorityLevel } from '../../rag/engine/sources';
 
 describe('SourceGateService', () => {
   describe('validateSourceGate', () => {
     it('should approve valid source (not in matrix)', () => {
       const source = {
-        level: 1 as any,
+        level: AuthorityLevel.L1_DOGMATIC_TRUTH,
         name: 'Nuova Fonte Unica',
         baseUrl: 'https://www.nuovofonte.it',
         pollingIntervalMs: 60000,
@@ -30,7 +30,7 @@ describe('SourceGateService', () => {
 
     it('should reject source with low peso', () => {
       const lowPesoSource = {
-        level: 6 as any,
+        level: AuthorityLevel.L6_UNION_SENSORS,
         name: 'Test Source',
         baseUrl: 'https://example.com',
         pollingIntervalMs: 60000,

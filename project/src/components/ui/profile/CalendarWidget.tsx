@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Video, MapPin, ExternalLink } from 'lucide-react';
+import { Calendar, Clock, Video, MapPin } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
 import { useAuth } from '../../foundation/AuthContext';
 

@@ -178,6 +178,20 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+function formatBold(text: string, baseKey = 0) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+    part.startsWith('**') && part.endsWith('**') ? (
+      <strong key={baseKey + i} className="text-brand-blu font-semibold">{part.slice(2, -2)}</strong>
+    ) : (
+      part
+    )
+  );
+}
+
+function renderFormattedLine(line: string, key: number, className = '') {
+  return <p key={key} className={className}>{formatBold(line, key * 100)}</p>;
+}
+
 function MessageRenderer({ content, isUser }: { content: string; isUser: boolean }) {
   if (isUser) return <p>{content}</p>;
   const lines = content.split('\n');
@@ -189,17 +203,21 @@ function MessageRenderer({ content, isUser }: { content: string; isUser: boolean
         if (trimmed.startsWith('### ')) return <h4 key={i} className="text-sm font-bold text-brand-blu mt-3 mb-1">{trimmed.slice(4)}</h4>;
         if (trimmed.startsWith('## ')) return <h3 key={i} className="text-base font-bold text-brand-blu mt-4 mb-1">{trimmed.slice(3)}</h3>;
         if (trimmed.startsWith('# ')) return <h2 key={i} className="text-lg font-bold text-brand-blu mt-4 mb-2">{trimmed.slice(2)}</h2>;
-        if (trimmed.startsWith('**') && trimmed.endsWith('**')) return <p key={i} className="font-bold text-brand-blu">{trimmed.slice(2, -2)}</p>;
+        if (trimmed.startsWith('**') && trimmed.endsWith('**')) return renderFormattedLine(trimmed, i, 'font-bold text-brand-blu');
         if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
-          return <p key={i} className="ml-3 text-gray-700 before:content-['•'] before:mr-2 before:text-brand-verde">{trimmed.slice(2).replace(/\*\*/g, '')}</p>;
+          return renderFormattedLine(trimmed.slice(2), i, 'ml-3 text-gray-700 before:content-[\'•\'] before:mr-2 before:text-brand-verde');
         }
         if (/^\d+\.\s/.test(trimmed)) {
           const num = trimmed.match(/^(\d+)\.\s(.*)/);
-          if (num) return <p key={i} className="ml-3 text-gray-700"><span className="font-bold text-brand-blu mr-1">{num[1]}.</span>{num[2].replace(/\*\*/g, '')}</p>;
+          if (num) return (
+            <p key={i} className="ml-3 text-gray-700">
+              <span className="font-bold text-brand-blu mr-1">{num[1]}.</span>
+              {formatBold(num[2], i * 100)}
+            </p>
+          );
         }
-        if (trimmed.startsWith('> ')) return <blockquote key={i} className="border-l-3 border-brand-verde pl-3 italic text-gray-600 my-2">{trimmed.slice(2).replace(/\*\*/g, '')}</blockquote>;
-        const formatted = trimmed.replace(/\*\*(.*?)\*\*/g, '<strong class="text-brand-blu font-semibold">$1</strong>');
-        return <p key={i} className="text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: formatted }} />;
+        if (trimmed.startsWith('> ')) return renderFormattedLine(trimmed.slice(2), i, 'border-l-3 border-brand-verde pl-3 italic text-gray-600 my-2');
+        return renderFormattedLine(trimmed, i, 'text-gray-700 leading-relaxed');
       })}
     </div>
   );
@@ -287,7 +305,6 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
 
   // NO autoscroll — user scrolls manually
   useEffect(() => { if (!isAdmin && chatCount >= FREE_MESSAGE_LIMIT) setShowPaywall(true); }, [chatCount, isAdmin]);
-  useEffect(() => { if (user?.id) loadConversations(); }, [user?.id]);
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -295,21 +312,23 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
     }
   }, [input]);
 
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     if (!user?.id) return;
     const { data } = await ChatService.loadConversations(user.id);
     if (data) setConversations(data);
-  };
+  }, [user?.id]);
 
-  const loadConversationMessages = async (convId: string) => {
+  useEffect(() => { if (user?.id) loadConversations(); }, [user?.id, loadConversations]);
+
+  const loadConversationMessages = useCallback(async (convId: string) => {
     const { data } = await ChatService.loadConversationMessages(convId);
     if (data) {
       setMessages(data.map(m => ({ id: m.id, role: m.role as 'user' | 'assistant', content: m.content, timestamp: m.created_at, citations: m.citations || [] })));
       setActiveConversationId(convId);
     }
-  };
+  }, []);
 
-  const createNewConversation = async (firstMessage?: string): Promise<string | null> => {
+  const createNewConversation = useCallback(async (firstMessage?: string): Promise<string | null> => {
     if (!user?.id) return null;
     const { data } = await ChatService.createConversation(user.id);
     if (data) {
@@ -318,13 +337,13 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
       return data.id;
     }
     return null;
-  };
+  }, [user?.id]);
 
-  const deleteConversation = async (convId: string) => {
+  const deleteConversation = useCallback(async (convId: string) => {
     await ChatService.deleteConversation(convId);
     setConversations(prev => prev.filter(c => c.id !== convId));
     if (activeConversationId === convId) { setActiveConversationId(null); setMessages([]); }
-  };
+  }, [activeConversationId]);
 
   const typewriterEffect = useCallback((text: string, onComplete: () => void) => {
     setIsTyping(true);
@@ -386,9 +405,9 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
         if (user?.id) await ChatService.logGeminiCall(user.id, content.trim(), response.text, latencyMs, Math.ceil(content.length / 4));
         trackChatMessage({ latency_ms: latencyMs, has_citations: (response.citations?.length ?? 0) > 0 });
       }
-    } catch (e: any) {
+    } catch (e) {
       let errText: string;
-      const msg = e?.message || '';
+      const msg = e instanceof Error ? e.message : typeof e === 'string' ? e : (e && typeof e === 'object' && 'message' in e ? String((e as { message: unknown }).message) : '');
       if (msg.includes('quota') || msg.includes('429')) {
         errText = '⚠️ **Quota API esaurita** — Il servizio Gemini ha raggiunto il limite giornaliero. Riprova domani.';
       } else if (msg.includes('Timeout') || msg.includes('abort')) {
@@ -401,7 +420,7 @@ export default function AIChatContainer({ assistantType }: AIChatContainerProps)
       const assistantMsg: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: errText, timestamp: new Date().toISOString() };
       setMessages(prev => [...prev, assistantMsg]);
     } finally { setIsLoading(false); }
-  }, [isLoading, isTyping, messages, isAdmin, user?.id, activeConversationId, typewriterEffect, currentProfile]);
+  }, [isLoading, isTyping, messages, isAdmin, user?.id, activeConversationId, typewriterEffect, currentProfile, createNewConversation]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); } }, [input, sendMessage]);
   const handleFollowUp = useCallback((prompt: string) => { sendMessage(prompt); }, [sendMessage]);

@@ -1,4 +1,4 @@
-import { Bot, MessageCircle, Sparkles, ArrowRight } from 'lucide-react';
+import { Bot, Sparkles, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const promptCards = [

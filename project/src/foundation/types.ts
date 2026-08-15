@@ -17,7 +17,8 @@ export type DataSourceType =
   | 'ai_generation'
   | 'edge_function'
   | 'static_data'
-  | 'user_input';
+  | 'user_input'
+  | 'product_transition';
 
 export interface DataLineageObject {
   sourceType: DataSourceType;

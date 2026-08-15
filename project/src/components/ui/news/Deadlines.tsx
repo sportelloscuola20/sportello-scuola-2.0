@@ -5,7 +5,7 @@ import { useAuth } from '../../foundation/AuthContext';
 import LoginModal from '../../foundation/LoginModal';
 import { supabase } from '../../../lib/supabaseClient';
 import { calcolaGiorniRimasti, formatDataItaliana } from '../../../rag/intelligence-engine';
-import type { ScadenzaIntelligence, CategoriaUtente, CategoriaScadenza } from '../../../types/intelligence';
+import type { ScadenzaIntelligence, CategoriaUtente, CategoriaScadenza, Criticalita, Impatto, TargetUtente } from '../../../types/intelligence';
 import { CRITICALITA_COLORS, IMPATTO_COLORS, TARGET_LABELS, CATEGORIE_UTENTE_COLORS, CATEGORIE_SCADENZA, CATEGORIE_SCADENZA_COLORS, REGIONI_ITALIA } from '../../../types/intelligence';
 
 const MAX_VISIBLE = 4;
@@ -60,7 +60,7 @@ export default function Deadlines({ compact = false, filters }: { compact?: bool
   const [followed, setFollowed] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState(filters?.searchQuery ?? '');
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [showAll, setShowAll] = useState(false);
+  const [showAll] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>(filters?.activeCategory ?? 'Tutte');
   const [filterPriorita, setFilterPriorita] = useState<string>('');
   const [filterRegione, setFilterRegione] = useState<string>(filters?.filterRegione ?? '');
@@ -70,14 +70,12 @@ export default function Deadlines({ compact = false, filters }: { compact?: bool
 
   // Sincronizza stato esterno quando fornito (NewsHub gestisce filtri)
   useEffect(() => {
-    if (filters) {
-      setActiveCategory(filters.activeCategory);
-      setSearchQuery(filters.searchQuery);
-      setFilterRegione(filters.filterRegione);
-    }
+    if (filters?.activeCategory !== undefined) setActiveCategory(filters.activeCategory);
+    if (filters?.searchQuery !== undefined) setSearchQuery(filters.searchQuery);
+    if (filters?.filterRegione !== undefined) setFilterRegione(filters.filterRegione);
   }, [filters?.activeCategory, filters?.searchQuery, filters?.filterRegione]);
 
-  const fetchDeadlinesFromDB = async (forceRefresh = false) => {
+  const fetchDeadlinesFromDB = async () => {
     setIsRefreshing(true);
     try {
       const today = new Date().toISOString();
@@ -93,22 +91,22 @@ export default function Deadlines({ compact = false, filters }: { compact?: bool
       }
 
       if (!error && data && data.length > 0) {
-        const mapped: ScadenzaIntelligence[] = (data as any[]).map(d => ({
-          id: d.id,
-          titolo: d.titolo,
-          descrizione: d.descrizione || '',
-          normativa: d.normativa || '',
-          soggettiCoinvolti: d.soggetti_coinvolti || ['docenti'],
-          dataScadenza: d.data_scadenza,
-          priorita: d.priorita || 'media',
-          impatto: d.impatto || 'nazionale',
-          conseguenzeNonAzione: d.conseguenze_non_azione || '',
-          link: d.link || '',
-          tipo: d.tipo || 'generale',
-          guidaOperativa: d.guida_operativa || '',
-          autoGenerata: d.auto_generata,
-          periodicita: d.periodicita,
-          regione: d.regione || '',
+        const mapped: ScadenzaIntelligence[] = (data as Array<Record<string, string | string[] | null>>).map(d => ({
+          id: String(d.id),
+          titolo: String(d.titolo),
+          descrizione: String(d.descrizione || ''),
+          normativa: String(d.normativa || ''),
+          soggettiCoinvolti: (Array.isArray(d.soggetti_coinvolti) ? d.soggetti_coinvolti : ['docenti']) as TargetUtente[],
+          dataScadenza: String(d.data_scadenza),
+          priorita: String(d.priorita || 'media') as Criticalita,
+          impatto: String(d.impatto || 'nazionale') as Impatto,
+          conseguenzeNonAzione: String(d.conseguenze_non_azione || ''),
+          link: String(d.link || ''),
+          tipo: String(d.tipo || 'generale'),
+          guidaOperativa: String(d.guida_operativa || ''),
+          autoGenerata: d.auto_generata !== null && d.auto_generata !== undefined ? Boolean(d.auto_generata) : undefined,
+          periodicita: (d.periodicita ? String(d.periodicita) : undefined) as ScadenzaIntelligence['periodicita'],
+          regione: String(d.regione || ''),
         }));
         setDeadlineItems(mapped);
       } else if (!error) {
@@ -119,13 +117,15 @@ export default function Deadlines({ compact = false, filters }: { compact?: bool
           .order('data_scadenza', { ascending: true })
           .limit(20);
         if (allData && allData.length > 0) {
-          const mapped = (allData as any[]).map(d => ({
-            id: d.id, titolo: d.titolo, descrizione: d.descrizione || '',
-            normativa: d.normativa || '', soggettiCoinvolti: d.soggetti_coinvolti || ['docenti'],
-            dataScadenza: d.data_scadenza, priorita: d.priorita || 'media',
-            impatto: d.impatto || 'nazionale', conseguenzeNonAzione: d.conseguenze_non_azione || '',
-            link: d.link || '', tipo: d.tipo || 'generale', guidaOperativa: d.guida_operativa || '',
-            autoGenerata: d.auto_generata, periodicita: d.periodicita, regione: d.regione || '',
+          const mapped = (allData as Array<Record<string, string | string[] | null>>).map(d => ({
+            id: String(d.id), titolo: String(d.titolo), descrizione: String(d.descrizione || ''),
+            normativa: String(d.normativa || ''), soggettiCoinvolti: (Array.isArray(d.soggetti_coinvolti) ? d.soggetti_coinvolti : ['docenti']) as TargetUtente[],
+            dataScadenza: String(d.data_scadenza), priorita: String(d.priorita || 'media') as Criticalita,
+            impatto: String(d.impatto || 'nazionale') as Impatto, conseguenzeNonAzione: String(d.conseguenze_non_azione || ''),
+            link: String(d.link || ''), tipo: String(d.tipo || 'generale'), guidaOperativa: String(d.guida_operativa || ''),
+            autoGenerata: d.auto_generata !== null && d.auto_generata !== undefined ? Boolean(d.auto_generata) : undefined,
+            periodicita: (d.periodicita ? String(d.periodicita) : undefined) as ScadenzaIntelligence['periodicita'],
+            regione: String(d.regione || ''),
           }));
           setDeadlineItems(mapped);
         }

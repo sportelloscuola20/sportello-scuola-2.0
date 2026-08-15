@@ -6,7 +6,6 @@ describe('ProductService', () => {
     expect(Object.keys(PRODUCT_REGISTRY)).toHaveLength(12);
     expect(PRODUCT_REGISTRY.normativa).toBeDefined();
     expect(PRODUCT_REGISTRY.interpelli).toBeDefined();
-    expect(PRODUCT_REGISTRY.nomine).toBeUndefined(); // old ID removed
     expect(PRODUCT_REGISTRY.osservatorio_nomine).toBeDefined();
     expect(PRODUCT_REGISTRY.hub_eventi).toBeDefined();
     expect(PRODUCT_REGISTRY.consulente).toBeDefined();

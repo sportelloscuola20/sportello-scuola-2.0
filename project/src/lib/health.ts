@@ -7,7 +7,6 @@
 
 import { supabase } from './supabaseClient';
 import { queryCache } from './cache';
-import { apiRateLimiter } from './rate-limiter';
 
 export type HealthStatus = 'healthy' | 'degraded' | 'unhealthy';
 
@@ -37,8 +36,9 @@ async function checkSupabase(): Promise<HealthCheck> {
       return { name: 'supabase', status: 'unhealthy', latencyMs, message: error.message };
     }
     return { name: 'supabase', status: latencyMs > 2000 ? 'degraded' : 'healthy', latencyMs };
-  } catch (e: any) {
-    return { name: 'supabase', status: 'unhealthy', latencyMs: Date.now() - start, message: e.message };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return { name: 'supabase', status: 'unhealthy', latencyMs: Date.now() - start, message };
   }
 }
 

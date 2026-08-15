@@ -5,8 +5,7 @@
  * ============================================================================
  */
 
-import type { DomainEvent, EventType } from '../foundation/events';
-import { eventBus } from '../foundation/events';
+import type { EventType } from '../foundation/events';
 import { supabase } from '../lib/supabaseClient';
 
 export interface Notification {

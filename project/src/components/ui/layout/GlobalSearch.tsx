@@ -92,14 +92,23 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
       const searchResponse = await SearchService.searchAll(query, 5);
 
+      const TYPE_MAP: Record<string, SearchResult['type']> = {
+        normativa: 'documento',
+        interpello: 'interpello',
+        nomina: 'documento',
+        news: 'notizia',
+        scadenza: 'scadenza',
+        bando: 'documento',
+      };
+
       searchResponse.results.forEach(r => {
         allResults.push({
           id: r.id,
           title: r.title,
           description: r.description,
-          type: r.type,
+          type: TYPE_MAP[r.type] ?? 'documento',
           url: r.url,
-          category: r.category,
+          category: typeof r.metadata?.category === 'string' ? r.metadata.category : undefined,
         });
       });
 
@@ -173,9 +182,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
   if (!isOpen) return null;
 
-  const displayItems = query.trim() ? results : [];
   const showNav = !query.trim();
-  const totalItems = showNav ? NAVIGATION_LINKS.length : results.length;
 
   return (
     <div

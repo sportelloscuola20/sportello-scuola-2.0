@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, GraduationCap, Briefcase, User } from 'lucide-react';
+import { GraduationCap, Briefcase, User } from 'lucide-react';
 import { useAuth } from '../foundation/AuthContext';
 import { useProfileStore } from '../../store/useProfileStore';
 import { supabase } from '../../lib/supabaseClient';

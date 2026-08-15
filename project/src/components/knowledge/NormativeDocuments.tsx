@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { FileText, BookOpen, Building, ShieldCheck, List, Download, ExternalLink, X, Search, GraduationCap, AlertCircle, RefreshCw } from 'lucide-react';
-import { jsPDF } from 'jspdf';
 import { supabase } from '../../lib/supabaseClient';
 import type { DocumentoNormativo } from '../../types/database';
 
@@ -24,7 +23,8 @@ const CATEGORIA_ICONA: Record<string, typeof FileText> = {
   'Modulistica': List,
 };
 
-function downloadPDF(doc: DocumentoNormativo) {
+async function downloadPDF(doc: DocumentoNormativo) {
+  const { jsPDF } = await import('jspdf');
   const filename = `${doc.tipo}_${doc.numero || doc.id}.pdf`.replace(/\s+/g, '_');
   const content = `TITOLO: ${doc.titolo}\n\n${doc.abstract || doc.descrizione}\n\nEnte: ${doc.ente || 'n/d'}\nAnno: ${doc.anno || 'n/d'}\nPubblicazione: ${new Date(doc.data_pubblicazione).toLocaleDateString('it-IT')}\nRegione: ${doc.regione || 'nazionale'}\nTag: ${(doc.tags || []).join(', ')}`;
 
@@ -90,7 +90,7 @@ export default function NormativeDocuments() {
       if (!error && data) {
         setDocumenti(data as DocumentoNormativo[]);
       }
-    } catch {}
+    } catch { /* fetch fallback */ }
     setLoading(false);
   };
 

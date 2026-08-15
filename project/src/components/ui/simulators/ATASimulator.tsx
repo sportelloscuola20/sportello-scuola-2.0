@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { jsPDF } from 'jspdf';
 import { supabase } from '../../../lib/supabaseClient';
 import type { ATACalculationResult, ServizioATA } from '../../../types/database';
 
@@ -113,6 +112,7 @@ export default function ATASimulator() {
   const [servizi, setServizi] = useState<ServizioATA[]>([]);
   const [risultato, setRisultato] = useState<ATACalculationResult | null>(null);
   const [salvataggioOK, setSalvataggioOK] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [dettaglioVoci, setDettaglioVoci] = useState<string[]>([]);
 
   const profiloData = PROFILI[profilo];
@@ -191,7 +191,11 @@ export default function ATASimulator() {
   const salvaSuSupabase = useCallback(async () => {
     if (!risultato) return;
     const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id || crypto.randomUUID();
+    const userId = session?.user?.id;
+    if (!userId) {
+      setSaveMessage('Accedi per salvare il tuo punteggio nel profilo.');
+      return;
+    }
     const { error } = await supabase.from('user_scores').insert({
       user_id: userId, tipo_graduatoria: 'ata', fascia: 'III',
       classe_concorso: profiloData.label, punteggio_totale: risultato.punteggioTotale, dettagli_calcolo: risultato,
@@ -199,8 +203,9 @@ export default function ATASimulator() {
     if (!error) setSalvataggioOK(true);
   }, [risultato, profiloData]);
 
-  const scaricaPDF = useCallback(() => {
+  const scaricaPDF = useCallback(async () => {
     if (!risultato) return;
+    const { jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 20;
@@ -263,7 +268,7 @@ export default function ATASimulator() {
       doc.setFontSize(7);
       doc.text(label, margin + 2, y);
       doc.text(valore, margin + 42, y);
-      const ptMatch = voce.match(/[\+\-]?\d+(\.\d+)?\s*pt/);
+      const ptMatch = voce.match(/[+-]?\d+(\.\d+)?\s*pt/);
       if (ptMatch) doc.text(ptMatch[0], margin + 142, y);
       y += 6;
       rowNum++;
@@ -599,6 +604,10 @@ export default function ATASimulator() {
                   Nuovo Calcolo
                 </button>
               </div>
+
+              {saveMessage && (
+                <p className="mt-4 text-sm text-brand-ambra font-medium text-center">{saveMessage}</p>
+              )}
             </div>
           )}
 

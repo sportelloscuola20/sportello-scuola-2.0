@@ -47,8 +47,8 @@ export default function AreaRiservataPage() {
   const [preferitiCount, setPreferitiCount] = useState<number | null>(null);
   const [simulazioniCount, setSimulazioniCount] = useState<number | null>(null);
   const [bandiCount, setBandiCount] = useState<number | null>(null);
-  const [personalNews, setPersonalNews] = useState<any[]>([]);
-  const [personalDeadlines, setPersonalDeadlines] = useState<any[]>([]);
+  const [personalNews, setPersonalNews] = useState<Array<Record<string, unknown>>>([]);
+  const [personalDeadlines, setPersonalDeadlines] = useState<Array<Record<string, unknown>>>([]);
 
   const ruolo = profile?.ruolo || user?.ruolo || 'aspirante';
 
@@ -67,13 +67,6 @@ export default function AreaRiservataPage() {
 
   useEffect(() => {
     const fetchPersonalContent = async () => {
-      const targetMap: Record<string, string[]> = {
-        docente: ['docenti', 'aspiranti_docenti', 'sostegno'],
-        ata: ['ata', 'amministrativi', 'collaboratori', 'dsga'],
-        aspirante: ['aspiranti_docenti', 'docenti'],
-      };
-      const targets = targetMap[ruolo] || ['docenti'];
-
       const { data: news } = await supabase
         .from('intelligence_news')
         .select('id, titolo, descrizione, categoria, data_pubblicazione, link, is_pinned')
@@ -178,16 +171,16 @@ export default function AreaRiservataPage() {
             </Link>
           </div>
           <div className="space-y-3">
-            {personalNews.slice(0, 4).map((n: any) => (
-              <Link key={n.id} to={n.link || '/notizie-scadenze'}
+            {personalNews.slice(0, 4).map((n: Record<string, unknown>) => (
+              <Link key={String(n.id)} to={n.link ? String(n.link) : '/notizie-scadenze'}
                 className="block p-3 bg-white/5 rounded-xl hover:bg-white/10 transition group">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate group-hover:text-brand-verde transition">{n.titolo}</p>
-                    <p className="text-xs text-white/40 mt-1 line-clamp-1">{n.descrizione}</p>
+                    <p className="text-sm font-medium text-white truncate group-hover:text-brand-verde transition">{String(n.titolo)}</p>
+                    <p className="text-xs text-white/40 mt-1 line-clamp-1">{String(n.descrizione || '')}</p>
                   </div>
                   <span className="text-[10px] text-white/30 whitespace-nowrap flex items-center gap-1">
-                    <Clock size={10} /> {formatDataItaliana(n.data_pubblicazione)}
+                    <Clock size={10} /> {formatDataItaliana(String(n.data_pubblicazione))}
                   </span>
                 </div>
               </Link>
@@ -208,22 +201,22 @@ export default function AreaRiservataPage() {
             </Link>
           </div>
           <div className="space-y-3">
-            {personalDeadlines.slice(0, 4).map((d: any) => (
-              <Link key={d.id} to="/notizie-scadenze?tab=scadenze"
+            {personalDeadlines.slice(0, 4).map((d: Record<string, unknown>) => (
+              <Link key={String(d.id)} to="/notizie-scadenze?tab=scadenze"
                 className="block p-3 bg-white/5 rounded-xl hover:bg-white/10 transition group">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate group-hover:text-brand-verde transition">{d.titolo}</p>
-                    <p className="text-xs text-white/40 mt-1">{d.tipo}</p>
+                    <p className="text-sm font-medium text-white truncate group-hover:text-brand-verde transition">{String(d.titolo)}</p>
+                    <p className="text-xs text-white/40 mt-1">{String(d.tipo || '')}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
                       d.priorita === 'urgente' ? 'bg-red-500/20 text-red-300' :
                       d.priorita === 'alta' ? 'bg-amber-500/20 text-amber-300' :
                       'bg-blue-500/20 text-blue-300'
-                    }`}>{d.priorita}</span>
+                    }`}>{String(d.priorita || '')}</span>
                     <span className="text-[10px] text-white/30 whitespace-nowrap flex items-center gap-1">
-                      <Calendar size={10} /> {formatDataItaliana(d.data_scadenza)}
+                      <Calendar size={10} /> {formatDataItaliana(String(d.data_scadenza || ''))}
                     </span>
                   </div>
                 </div>

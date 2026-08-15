@@ -5,7 +5,6 @@ import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../foundation/AuthContext';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png'];
 
 interface DocFile {

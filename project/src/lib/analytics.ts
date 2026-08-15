@@ -5,8 +5,7 @@
  * ============================================================================
  */
 
-import { supabase } from '../lib/supabaseClient';
-import { createLineage } from '../foundation/types';
+import { supabase } from './supabaseClient';
 
 export type AnalyticsEventType =
   | 'page_view'

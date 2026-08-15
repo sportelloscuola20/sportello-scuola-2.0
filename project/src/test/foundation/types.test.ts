@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { createLineage, withLineage } from '../../foundation/types';
-import type { DataLineageObject } from '../../foundation/types';
 
 describe('DataLineageObject', () => {
   it('should create lineage with defaults', () => {

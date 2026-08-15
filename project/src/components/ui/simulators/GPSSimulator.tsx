@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { jsPDF } from 'jspdf';
 import { supabase } from '../../../lib/supabaseClient';
 import type { GPSCalculationResult, ServizioScolastico } from '../../../types/database';
 
@@ -136,6 +135,7 @@ export default function GPSSimulator() {
 
   const [risultato, setRisultato] = useState<GPSCalculationResult | null>(null);
   const [salvataggioOK, setSalvataggioOK] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [dettaglioVoci, setDettaglioVoci] = useState<string[]>([]);
 
   const tabellaData = TABELLE[tabella];
@@ -154,7 +154,7 @@ export default function GPSSimulator() {
     if (isSostegno && isFasciaI) return calcolaVotoSostegnoI(votoCentesimi);
     if (isFasciaI || isSecondaFasciaSostegno) return calcolaVotoCentesimi(votoCentesimi);
     return calcolaVoto110(voto110, voto110Lode);
-  }, [tabella, votoCentesimi, voto110, voto110Lode, mediaSFP, mancaVoto, isFasciaI, isSostegno, isSFP, isSecondaFasciaSostegno]);
+  }, [votoCentesimi, voto110, voto110Lode, mediaSFP, mancaVoto, isFasciaI, isSostegno, isSFP, isSecondaFasciaSostegno]);
 
   const calcolaPuntiAggiuntivi = useCallback((): number => {
     if (!isFasciaI) return 0;
@@ -169,7 +169,7 @@ export default function GPSSimulator() {
   }, [isFasciaI, abilConcorso, abilSSIS, abilCFU, abilSFP, abilPAS, specSostegno]);
 
   const calcolaTitoliCulturali = useCallback((): number => {
-    let dettagli: string[] = [];
+    const dettagli: string[] = [];
     let tot = 0;
     const b1pt = b1 * 3;
     if (b1pt > 0) { tot += b1pt; dettagli.push(`B.1 Superamento concorso ×${b1}: +${b1pt} pt`); }
@@ -274,7 +274,11 @@ export default function GPSSimulator() {
   const salvaSuSupabase = useCallback(async () => {
     if (!risultato) return;
     const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id || crypto.randomUUID();
+    const userId = session?.user?.id;
+    if (!userId) {
+      setSaveMessage('Accedi per salvare il tuo punteggio nel profilo.');
+      return;
+    }
     const { error } = await supabase.from('user_scores').insert({
       user_id: userId, tipo_graduatoria: 'gps', fascia: tabellaData.fascia,
       classe_concorso: tabellaData.label, punteggio_totale: risultato.punteggioTotale, dettagli_calcolo: risultato,
@@ -282,8 +286,9 @@ export default function GPSSimulator() {
     if (!error) setSalvataggioOK(true);
   }, [risultato, tabellaData]);
 
-  const scaricaPDF = useCallback(() => {
+  const scaricaPDF = useCallback(async () => {
     if (!risultato) return;
+    const { jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 20;
@@ -346,7 +351,7 @@ export default function GPSSimulator() {
       doc.setFontSize(7);
       doc.text(label, margin + 2, y);
       doc.text(valore, margin + 42, y);
-      const ptMatch = voce.match(/[\+\-]?\d+(\.\d+)?\s*pt/);
+      const ptMatch = voce.match(/[+-]?\d+(\.\d+)?\s*pt/);
       if (ptMatch) doc.text(ptMatch[0], margin + 142, y);
       y += 6;
       rowNum++;
@@ -763,6 +768,10 @@ export default function GPSSimulator() {
                   Nuovo Calcolo
                 </button>
               </div>
+
+              {saveMessage && (
+                <p className="mt-4 text-sm text-brand-ambra font-medium text-center">{saveMessage}</p>
+              )}
             </div>
           )}
 

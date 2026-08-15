@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://sportelloscuola2.it/sitemap.xml
+Sitemap: https://sportelloscuola2-0.it/sitemap.xml

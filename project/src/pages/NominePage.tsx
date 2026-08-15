@@ -1,15 +1,14 @@
 import { useState, useMemo } from 'react';
 import {
-  Search, Filter, ChevronDown, ChevronRight, ExternalLink, MapPin,
-  Target, Users, TrendingUp, TrendingDown, Minus, AlertTriangle,
+  Search, Filter, ChevronDown, ChevronRight, MapPin,
+  Target, Users, AlertTriangle,
   CheckCircle, BarChart3, Zap, Info, Star, BookOpen,
 } from 'lucide-react';
 import { USP_PROVINCE, REGIONI_WITH_USP, getUSPBySigla } from '../data/usp-italiane';
 import {
   CLASSI_CONCORSO, getBollettiniByClasse, getBollettiniByClasseAndProvincia,
   getSintesiByClasse, getClasseByCodice, getAllBollettini,
-  ordinaPerCompetizione,
-  type BollettinoEntry, type ClasseConcorso,
+  type BollettinoEntry,
 } from '../data/bollettini-nomine';
 
 // ═══ CONSTANTS ═══
@@ -44,18 +43,6 @@ const COMPETIZIONE_LABELS: Record<string, string> = {
   alta: 'Competizione Alta',
   media: 'Competizione Media',
   bassa: 'Competizione Bassa',
-};
-
-const TREND_ICONS: Record<string, typeof TrendingUp> = {
-  crescente: TrendingUp,
-  decrescente: TrendingDown,
-  stabile: Minus,
-};
-
-const TREND_COLORS: Record<string, string> = {
-  crescente: 'text-red-500',
-  decrescente: 'text-green-600',
-  stabile: 'text-gray-400',
 };
 
 const FASCIA_COLORS: Record<string, string> = {
@@ -435,7 +422,7 @@ export default function NominePage() {
             )}
 
             <div className="space-y-4">
-              {useMemo(() => groupBollettini(bollettiniFiltrati), [bollettiniFiltrati]).slice(0, 50).map(group => (
+              {groupBollettini(bollettiniFiltrati).slice(0, 50).map(group => (
                 <BollettinoGroupBox key={group.key} group={group} punteggioMio={punteggioVal} />
               ))}
               {groupBollettini(bollettiniFiltrati).length > 50 && (

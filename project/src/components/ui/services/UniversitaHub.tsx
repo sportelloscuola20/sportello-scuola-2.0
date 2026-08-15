@@ -32,7 +32,7 @@ export default function UniversitaHub() {
       if (!error && data) {
         setUniversita(data as HubUniversita[]);
       }
-    } catch {}
+    } catch { /* fetch fallback */ }
     setLoading(false);
   };
 

@@ -23,7 +23,8 @@ export type EventType =
   | 'source.checked'
   | 'source.error'
   | 'user.registered'
-  | 'user.subscription_changed';
+  | 'user.subscription_changed'
+  | 'product.phase_changed';
 
 export interface DomainEvent<T = unknown> {
   type: EventType;
@@ -35,11 +36,27 @@ export interface DomainEvent<T = unknown> {
 
 export type EventHandler<T = unknown> = (event: DomainEvent<T>) => void | Promise<void>;
 
+interface SupabaseLike {
+  from(table: string): {
+    insert(values: Record<string, unknown>): {
+      then(cb: (result: { error: Error | null }) => void): Promise<unknown>;
+      catch(cb: () => void): Promise<unknown>;
+    };
+    select(columns: string): {
+      gte(column: string, value: string): {
+        order(column: string, opts: { ascending: boolean }): {
+          limit(n: number): Promise<{ data: Array<Record<string, unknown>> | null; error: Error | null }>;
+        };
+      };
+    };
+  };
+}
+
 export interface EventBus {
   emit<T>(type: EventType, source: string, payload: T, metadata?: Record<string, unknown>): void;
-  on<T>(type: EventType, handler: EventHandler<T>): () => void;
-  once<T>(type: EventType, handler: EventHandler<T>): () => void;
-  off(type: EventType, handler: EventHandler): void;
+  on<T>(type: EventType | '*', handler: EventHandler<T>): () => void;
+  once<T>(type: EventType | '*', handler: EventHandler<T>): () => void;
+  off(type: EventType | '*', handler: EventHandler): void;
 }
 
 type InternalHandler = { handler: EventHandler; once: boolean };
@@ -98,7 +115,7 @@ export class InMemoryEventBus implements EventBus {
     }
   }
 
-  on<T>(type: EventType, handler: EventHandler<T>): () => void {
+  on<T>(type: EventType | '*', handler: EventHandler<T>): () => void {
     const key = type;
     if (!this.listeners.has(key)) {
       this.listeners.set(key, []);
@@ -107,7 +124,7 @@ export class InMemoryEventBus implements EventBus {
     return () => this.off(type, handler as EventHandler);
   }
 
-  once<T>(type: EventType, handler: EventHandler<T>): () => void {
+  once<T>(type: EventType | '*', handler: EventHandler<T>): () => void {
     const key = type;
     if (!this.listeners.has(key)) {
       this.listeners.set(key, []);
@@ -116,7 +133,7 @@ export class InMemoryEventBus implements EventBus {
     return () => this.off(type, handler as EventHandler);
   }
 
-  off(type: EventType, handler: EventHandler): void {
+  off(type: EventType | '*', handler: EventHandler): void {
     const handlers = this.listeners.get(type);
     if (handlers) {
       this.listeners.set(
@@ -149,9 +166,9 @@ export const eventBus: EventBus = new InMemoryEventBus();
  */
 export class PersistentEventBus implements EventBus {
   private inner: InMemoryEventBus;
-  private supabaseClient: any;
+  private supabaseClient: SupabaseLike | null;
 
-  constructor(inner: InMemoryEventBus, supabaseClient: any) {
+  constructor(inner: InMemoryEventBus, supabaseClient: SupabaseLike | null) {
     this.inner = inner;
     this.supabaseClient = supabaseClient;
   }
@@ -170,7 +187,7 @@ export class PersistentEventBus implements EventBus {
           payload: payload ?? {},
           metadata: metadata ?? {},
         })
-        .then(({ error }: any) => {
+        .then(({ error }: { error: Error | null }) => {
           if (error) console.warn('[PersistentEventBus] Failed to persist event:', error.message);
         })
         .catch(() => {});
@@ -205,12 +222,12 @@ export class PersistentEventBus implements EventBus {
         .order('created_at', { ascending: false })
         .limit(500);
       if (error || !data) return [];
-      return data.map((row: any) => ({
+      return data.map((row: Record<string, unknown>) => ({
         type: row.type as EventType,
-        timestamp: row.created_at,
-        source: row.source,
-        payload: row.payload,
-        metadata: row.metadata,
+        timestamp: String(row.created_at),
+        source: String(row.source),
+        payload: row.payload as unknown,
+        metadata: row.metadata as Record<string, unknown> | undefined,
       }));
     } catch {
       return [];

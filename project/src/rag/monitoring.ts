@@ -9,7 +9,7 @@ export async function fetchMonitoredSources(): Promise<MonitoredSource[]> {
       .order('livello', { ascending: true })
       .order('nome', { ascending: true });
     if (!error && data && data.length > 0) return data as MonitoredSource[];
-  } catch {}
+  } catch { /* fallback to empty */ }
   return [];
 }
 
@@ -20,7 +20,7 @@ export async function fetchDashboardStats(): Promise<IntelligenceDashboardStats 
       .select('*')
       .maybeSingle();
     if (!error && data) return data as IntelligenceDashboardStats;
-  } catch {}
+  } catch { /* fallback to default stats */ }
   return null;
 }
 
@@ -46,8 +46,9 @@ export async function triggerMonitorSources(): Promise<{ success: boolean; messa
     });
     if (error) throw error;
     return { success: true, message: data?.message || 'Monitoraggio avviato' };
-  } catch (e: any) {
-    return { success: false, message: e.message || 'Errore attivazione monitoraggio' };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return { success: false, message: message || 'Errore attivazione monitoraggio' };
   }
 }
 
@@ -58,7 +59,8 @@ export async function triggerIngestNews(): Promise<{ success: boolean; message: 
     });
     if (error) throw error;
     return { success: true, message: data?.message || 'Elaborazione avviata' };
-  } catch (e: any) {
-    return { success: false, message: e.message || 'Errore attivazione elaborazione' };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return { success: false, message: message || 'Errore attivazione elaborazione' };
   }
 }

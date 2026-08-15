@@ -197,6 +197,7 @@ export interface Profile {
   full_name: string | null;
   ruolo: RuoloUtente;
   is_premium: boolean;
+  is_admin: boolean;
   onboarded: boolean;
   preferences: Record<string, unknown>;
   notification_targets: Record<string, unknown>;
@@ -252,6 +253,9 @@ export interface DocumentoNormativo {
   abstract: string;
   tags: string[];
   validated: boolean;
+  validated_at?: string;
+  validated_by?: string;
+  is_archived: boolean;
   created_at: string;
 }
 

@@ -237,6 +237,22 @@ Deno.serve(async (req) => {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
+  // Authorization: a valid Supabase user JWT (admin dashboard) OR the shared
+  // cron secret (cron-job.org). Without either, refuse to run the service-role worker.
+  const cronSecret = Deno.env.get('CRON_SECRET') || '';
+  const providedSecret = req.headers.get('x-cron-secret') || '';
+  const authHeader = req.headers.get('Authorization') || '';
+
+  const hasValidCronSecret = cronSecret.length > 0 && providedSecret === cronSecret;
+  const hasUserJwt = authHeader.startsWith('Bearer ') && authHeader.length > 20;
+
+  if (!hasValidCronSecret && !hasUserJwt) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';

@@ -9,15 +9,15 @@ export async function fetchKnowledgeGraph(newsId: string): Promise<KnowledgeLink
       p_limit: 20,
     });
     if (!error && data) {
-      return data.map((r: any) => ({
-        id: `${newsId}-${r.news_id}`,
+      return data.map((r: Record<string, unknown>) => ({
+        id: `${newsId}-${String(r.news_id)}`,
         news_id_a: newsId,
-        news_id_b: r.news_id,
-        tipo_relazione: r.relazione,
-        peso: r.peso_val,
+        news_id_b: String(r.news_id),
+        tipo_relazione: String(r.relazione),
+        peso: Number(r.peso_val),
         created_at: new Date().toISOString(),
       })) as KnowledgeLink[];
     }
-  } catch {}
+  } catch { /* fallback to empty graph */ }
   return [];
 }

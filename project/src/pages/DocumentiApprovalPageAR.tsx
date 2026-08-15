@@ -1,7 +1,13 @@
-import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, FileText, Search, RefreshCw, AlertCircle, ExternalLink, Shield, Calendar } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { CheckCircle, XCircle, Search, RefreshCw, AlertCircle, ExternalLink, Shield, Calendar } from 'lucide-react';
 import { DocumentiService } from '../services';
 import type { DocumentoNormativo } from '../types/database';
+
+type ApprovableDocumento = DocumentoNormativo & {
+  is_archived: boolean;
+  validated_at?: string;
+  validated_by?: string;
+};
 
 const CATEGORIA_STILI: Record<string, string> = {
   'Decreti e Ordinanze Ministeriali': 'bg-blue-100 text-blue-700',
@@ -13,31 +19,31 @@ const CATEGORIA_STILI: Record<string, string> = {
 };
 
 export default function DocumentiApprovalPageAR() {
-  const [documenti, setDocumenti] = useState<DocumentoNormativo[]>([]);
+  const [documenti, setDocumenti] = useState<ApprovableDocumento[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterValidated, setFilterValidated] = useState<string>('all');
   const [approving, setApproving] = useState<string | null>(null);
 
-  const fetchDocumenti = async () => {
+  const fetchDocumenti = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await DocumentiService.loadDocumenti(filterValidated as 'all' | 'validated' | 'pending' | 'archived');
-      setDocumenti(data as DocumentoNormativo[]);
-    } catch {}
+      setDocumenti(data as ApprovableDocumento[]);
+    } catch { /* fetch fallback */ }
     setLoading(false);
-  };
+  }, [filterValidated]);
 
-  useEffect(() => { fetchDocumenti(); }, [filterValidated]);
+  useEffect(() => { fetchDocumenti(); }, [fetchDocumenti]);
 
-  const handleApprove = async (doc: DocumentoNormativo) => {
+  const handleApprove = async (doc: ApprovableDocumento) => {
     setApproving(doc.id);
     await DocumentiService.approveDocumento(doc.id);
     setDocumenti(prev => prev.map(d => d.id === doc.id ? { ...d, validated: true, validated_at: new Date().toISOString() } : d));
     setApproving(null);
   };
 
-  const handleReject = async (doc: DocumentoNormativo) => {
+  const handleReject = async (doc: ApprovableDocumento) => {
     setApproving(doc.id);
     await DocumentiService.archiveDocumento(doc.id);
     setDocumenti(prev => prev.filter(d => d.id !== doc.id));

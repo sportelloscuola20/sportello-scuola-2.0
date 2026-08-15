@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../../../lib/supabaseClient';
 import type { SavedAlert } from '../../../types/database';
 
 function getSavedAlerts(): SavedAlert[] {

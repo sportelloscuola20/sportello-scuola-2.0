@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/foundation/AuthContext';
-import { BarChart3, Activity, Database, Clock, Users, Search, MessageSquare, AlertTriangle } from 'lucide-react';
+import { BarChart3, Activity, Database, Clock, Users, MessageSquare, AlertTriangle } from 'lucide-react';
 
 interface Stats {
   geminiCalls: { total: number; today: number; avgLatency: number; errors: number };
@@ -14,7 +14,7 @@ export default function ObservabilityPage() {
   const { user } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [recentCalls, setRecentCalls] = useState<any[]>([]);
+  const [recentCalls, setRecentCalls] = useState<Array<Record<string, unknown>>>([]);
 
   useEffect(() => {
     if (!user?.is_admin) return;
@@ -31,7 +31,7 @@ export default function ObservabilityPage() {
         supabase.from('gemini_calls_log').select('latency_ms').gte('created_at', today),
         supabase.from('gemini_calls_log').select('*', { count: 'exact', head: true }).eq('status', 'error'),
         supabase.from('page_analytics').select('event_type, user_id').gte('created_at', today),
-        supabase.from('monitored_sources').select('status'),
+        supabase.from('monitored_sources').select('stato'),
         supabase.from('intelligence_news').select('*', { count: 'exact', head: true }),
         supabase.from('intelligence_scadenze').select('*', { count: 'exact', head: true }),
         supabase.from('documenti_normativi').select('*', { count: 'exact', head: true }),
@@ -39,16 +39,16 @@ export default function ObservabilityPage() {
         supabase.from('gemini_calls_log').select('*').order('created_at', { ascending: false }).limit(10),
       ]);
 
-      const latencies = geminiToday.data?.map((c: any) => c.latency_ms).filter(Boolean) || [];
+      const latencies = (geminiToday.data || []).map((c) => Number(c.latency_ms)).filter(Boolean);
       const avgLatency = latencies.length > 0 ? Math.round(latencies.reduce((a: number, b: number) => a + b, 0) / latencies.length) : 0;
 
-      const pageViews = analyticsRes.data?.filter((e: any) => e.event_type === 'page_view').length || 0;
-      const searches = analyticsRes.data?.filter((e: any) => e.event_type === 'search').length || 0;
-      const chatMessages = analyticsRes.data?.filter((e: any) => e.event_type === 'chat_message').length || 0;
-      const uniqueUsers = new Set(analyticsRes.data?.map((e: any) => e.user_id).filter(Boolean)).size;
+      const pageViews = (analyticsRes.data || []).filter((e) => e.event_type === 'page_view').length;
+      const searches = (analyticsRes.data || []).filter((e) => e.event_type === 'search').length;
+      const chatMessages = (analyticsRes.data || []).filter((e) => e.event_type === 'chat_message').length;
+      const uniqueUsers = new Set((analyticsRes.data || []).map((e) => e.user_id).filter(Boolean)).size;
 
-      const activeSources = sourcesRes.data?.filter((s: any) => s.status === 'active').length || 0;
-      const errorSources = sourcesRes.data?.filter((s: any) => s.status === 'error' || s.status === 'blocked').length || 0;
+      const activeSources = (sourcesRes.data || []).filter((s) => s.stato === 'attivo').length;
+      const errorSources = (sourcesRes.data || []).filter((s) => s.stato === 'errore' || s.stato === 'disabilitato').length;
 
       setStats({
         geminiCalls: { total: geminiTotal.count || 0, today: geminiToday.data?.length || 0, avgLatency, errors: geminiErrors.count || 0 },
@@ -158,18 +158,18 @@ export default function ObservabilityPage() {
               </tr>
             </thead>
             <tbody>
-              {recentCalls.map((call: any) => (
-                <tr key={call.id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                  <td className="py-2.5 pr-4 font-mono text-xs text-gray-600">{call.model}</td>
-                  <td className="py-2.5 pr-4 text-xs text-gray-700 max-w-[200px] truncate">{call.prompt_preview}</td>
-                  <td className="py-2.5 pr-4 text-xs font-medium">{call.latency_ms}ms</td>
-                  <td className="py-2.5 pr-4 text-xs text-gray-600">{call.tokens_in}</td>
+              {recentCalls.map((call: Record<string, unknown>) => (
+                <tr key={String(call.id)} className="border-b border-gray-50 hover:bg-gray-50/50">
+                  <td className="py-2.5 pr-4 font-mono text-xs text-gray-600">{String(call.model || '')}</td>
+                  <td className="py-2.5 pr-4 text-xs text-gray-700 max-w-[200px] truncate">{String(call.prompt_preview || '')}</td>
+                  <td className="py-2.5 pr-4 text-xs font-medium">{String(call.latency_ms || '')}ms</td>
+                  <td className="py-2.5 pr-4 text-xs text-gray-600">{String(call.tokens_in ?? '')}</td>
                   <td className="py-2.5 pr-4">
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${call.status === 'ok' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {call.status}
+                      {String(call.status || '')}
                     </span>
                   </td>
-                  <td className="py-2.5 text-xs text-gray-500">{new Date(call.created_at).toLocaleString('it-IT')}</td>
+                  <td className="py-2.5 text-xs text-gray-500">{new Date(String(call.created_at || '')).toLocaleString('it-IT')}</td>
                 </tr>
               ))}
               {recentCalls.length === 0 && (

@@ -652,18 +652,22 @@ export function transitionProductPhase(
   const oldPhase = product.phase;
   product.phase = newPhase;
 
-  eventBus.emit({
-    type: 'product.phase_changed',
-    productId,
-    oldPhase,
-    newPhase,
-    reason,
-    timestamp: new Date().toISOString(),
-    lineage: createLineage('product_transition', `product:${productId}`, {
+  eventBus.emit(
+    'product.phase_changed',
+    `product:${productId}`,
+    {
+      productId,
       oldPhase,
       newPhase,
-    }),
-  } as any);
+      reason,
+      timestamp: new Date().toISOString(),
+    },
+    createLineage('product_transition', `product:${productId}`, {
+      sourceId: productId,
+      sourceTable: 'products',
+      metadata: { oldPhase, newPhase },
+    }).metadata
+  );
 
   return product;
 }

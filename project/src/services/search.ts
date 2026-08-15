@@ -1,6 +1,6 @@
-/**
+﻿/**
  * ============================================================================
- *  EMA §9 — UNIVERSAL SEARCH ENGINE
+ *  EMA Â§9 â€” UNIVERSAL SEARCH ENGINE
  *  Semantic search across all products (Normativa, Interpelli, Nomine, News).
  * ============================================================================
  */
@@ -75,7 +75,7 @@ export async function universalSearch(
           }),
         })));
       }
-    } catch {}
+    } catch { /* query fallback */ }
   }
 
   // Search interpelli
@@ -100,7 +100,7 @@ export async function universalSearch(
           }),
         })));
       }
-    } catch {}
+    } catch { /* query fallback */ }
   }
 
   // Search intelligence news
@@ -125,7 +125,7 @@ export async function universalSearch(
           }),
         })));
       }
-    } catch {}
+    } catch { /* query fallback */ }
   }
 
   // Search intelligence scadenze
@@ -150,7 +150,7 @@ export async function universalSearch(
           }),
         })));
       }
-    } catch {}
+    } catch { /* query fallback */ }
   }
 
   // Sort by relevance
@@ -179,7 +179,7 @@ export async function semanticSearch(
   return universalSearch(query, undefined, { limit: options?.limit || 10 });
 }
 
-/** Alias: searchAll → universalSearch (used by GlobalSearch component) */
+/** Alias: searchAll â†’ universalSearch (used by GlobalSearch component) */
 export async function searchAll(
   query: string,
   limit: number = 20

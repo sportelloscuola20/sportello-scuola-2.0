@@ -7,6 +7,20 @@ const corsHeaders = {
 };
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
+
+  // Health check: require a valid Supabase JWT or the shared cron secret.
+  const cronSecret = Deno.env.get('CRON_SECRET') || '';
+  const providedSecret = req.headers.get('x-cron-secret') || '';
+  const authHeader = req.headers.get('Authorization') || '';
+  const hasValidCronSecret = cronSecret.length > 0 && providedSecret === cronSecret;
+  const hasUserJwt = authHeader.startsWith('Bearer ') && authHeader.length > 20;
+  if (!hasValidCronSecret && !hasUserJwt) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY') || '';
     const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=';

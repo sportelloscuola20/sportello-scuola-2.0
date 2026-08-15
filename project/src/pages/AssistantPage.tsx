@@ -10,7 +10,7 @@ export default function AssistantPage() {
     dirigente: 'Dirigente',
   };
 
-  const assistantType = assistantTypeMap[type] || type;
+  const assistantType = (type && assistantTypeMap[type]) || type || 'Docente';
 
   return (
     <div className="bg-gray-50" style={{ height: 'calc(100vh - 64px)', marginTop: '64px' }}>

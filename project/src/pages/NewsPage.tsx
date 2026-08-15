@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Newspaper, CalendarClock, Shield, AlertTriangle, RefreshCw, Monitor, Link2 } from 'lucide-react';
-import type { IntelligenceDashboardStats, CategoriaUtente } from '../types/intelligence';
+import type { IntelligenceDashboardStats } from '../types/intelligence';
 import { CATEGORIE_UTENTE, CATEGORIE_UTENTE_COLORS } from '../types/intelligence';
 import { fetchDashboardStats, getDashboardFallbackStats } from '../rag/intelligence-engine';
 import NewsHub from '../components/ui/news/NewsHub';

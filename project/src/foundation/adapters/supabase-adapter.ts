@@ -19,7 +19,7 @@ const DEFAULT_CB_CONFIG: CircuitBreakerConfig = {
 const circuitBreaker = createCircuitBreaker(DEFAULT_CB_CONFIG);
 
 export const supabaseAdapter: DatabaseAdapter = {
-  async query<T>(table, opts) {
+  async query<T>(table: string, opts: NonNullable<Parameters<DatabaseAdapter['query']>[1]>) {
     if (!circuitBreaker.canExecute()) {
       return {
         data: null,
@@ -85,7 +85,7 @@ export const supabaseAdapter: DatabaseAdapter = {
     }
   },
 
-  async querySingle<T>(table, opts) {
+  async querySingle<T>(table: string, opts: NonNullable<Parameters<DatabaseAdapter['querySingle']>[1]>) {
     const result = await this.query<T>(table, { ...opts, limit: 1 });
     return {
       data: result.data?.[0] ?? null,
@@ -94,7 +94,7 @@ export const supabaseAdapter: DatabaseAdapter = {
     };
   },
 
-  async insert<T>(table, row) {
+  async insert<T>(table: string, row: Partial<T>) {
     if (!circuitBreaker.canExecute()) {
       return {
         data: null,
@@ -135,7 +135,7 @@ export const supabaseAdapter: DatabaseAdapter = {
     }
   },
 
-  async update<T>(table, filters, updates) {
+  async update<T>(table: string, filters: Record<string, unknown>, updates: Partial<T>) {
     if (!circuitBreaker.canExecute()) {
       return {
         data: null,
@@ -178,7 +178,7 @@ export const supabaseAdapter: DatabaseAdapter = {
     }
   },
 
-  async remove(table, filters) {
+  async remove(table: string, filters: Record<string, unknown>) {
     if (!circuitBreaker.canExecute()) {
       return {
         error: new Error('Circuit breaker OPEN'),
@@ -217,7 +217,7 @@ export const supabaseAdapter: DatabaseAdapter = {
     }
   },
 
-  async rpc<T>(fn, params) {
+  async rpc<T>(fn: string, params?: Record<string, unknown>) {
     if (!circuitBreaker.canExecute()) {
       return {
         data: null,
@@ -254,7 +254,7 @@ export const supabaseAdapter: DatabaseAdapter = {
     }
   },
 
-  async invoke<T>(fn, body) {
+  async invoke<T>(fn: string, body?: unknown) {
     if (!circuitBreaker.canExecute()) {
       return {
         data: null,
@@ -264,7 +264,7 @@ export const supabaseAdapter: DatabaseAdapter = {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke(fn, { body });
+      const { data, error } = await supabase.functions.invoke(fn, { body: body as Record<string, unknown> });
 
       if (error) {
         circuitBreaker.recordFailure();

@@ -1,6 +1,12 @@
--- knowledge_links: Add cross-table support and graph traversal indexes
--- Table already has: id, news_id_a, news_id_b, tipo_relazione, peso, created_at
--- All links reference intelligence_news IDs
+-- knowledge_links: knowledge graph edges + graph traversal
+CREATE TABLE IF NOT EXISTS knowledge_links (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  news_id_a UUID REFERENCES intelligence_news(id) ON DELETE CASCADE,
+  news_id_b UUID REFERENCES intelligence_news(id) ON DELETE CASCADE,
+  tipo_relazione TEXT NOT NULL,
+  peso FLOAT DEFAULT 1.0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 
 -- Add indexes for efficient graph traversal
 CREATE INDEX IF NOT EXISTS idx_knowledge_links_news_a ON knowledge_links(news_id_a);

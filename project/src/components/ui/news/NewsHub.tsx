@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Newspaper, CalendarClock, Activity, Search, ChevronDown, ChevronRight, ExternalLink, AlertTriangle, Clock, TrendingUp, Shield, Globe } from 'lucide-react';
+import { Newspaper, CalendarClock, Activity, ChevronDown, ChevronRight, ExternalLink, Clock, TrendingUp, Shield, Globe } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
-import { CATEGORIE_UTENTE, CATEGORIE_SCADENZA, CATEGORIE_UTENTE_COLORS, CATEGORIE_SCADENZA_COLORS, CATEGORIE_ICONE, REGIONI_ITALIA } from '../../../types/intelligence';
+import { CATEGORIE_UTENTE, CATEGORIE_SCADENZA, CATEGORIE_UTENTE_COLORS, CATEGORIE_SCADENZA_COLORS, CATEGORIE_ICONE } from '../../../types/intelligence';
 import { formatDataItaliana } from '../../../rag/intelligence-engine';
 import type { NotiziaIntelligence, ScadenzaIntelligence, CategoriaUtente, CategoriaScadenza } from '../../../types/intelligence';
 import { Link } from 'react-router-dom';
@@ -36,7 +36,7 @@ function groupScadenzeByCategory(items: ScadenzaIntelligence[]): BoxScadenza[] {
   })).filter(box => box.items.length > 0);
 }
 
-export default function NewsHub({ isHomePage = true }: NewsHubProps) {
+export default function NewsHub(_props: NewsHubProps) {
   const [activeTab, setActiveTab] = useState<'notizie' | 'scadenze'>('notizie');
   const [newsByCategory, setNewsByCategory] = useState<BoxNews[]>([]);
   const [scadenzeByCategory, setScadenzeByCategory] = useState<BoxScadenza[]>([]);
@@ -57,13 +57,13 @@ export default function NewsHub({ isHomePage = true }: NewsHubProps) {
 
       let allNews: NotiziaIntelligence[] = [];
       if (!newsResult.error && newsResult.data && newsResult.data.length > 0) {
-        allNews = newsResult.data.map((n: any) => ({
-          id: n.id, titolo: n.titolo, descrizione: n.descrizione || '',
-          dataPubblicazione: n.data_pubblicazione || n.created_at,
-          fonte: { livello: n.fonte_livello || 'A', nome: n.fonte_nome || 'MIM', url: n.fonte_url || '', peso: n.fonte_peso || 100 },
-          classifica: { criticita: n.criticita || 'media', impatto: n.impatto || 'nazionale', platea: n.platea || 'ampia', target: n.target || ['docenti'], categoria: n.categoria || 'Normative, Note e Circolari Ministeriali', livelloFonte: n.fonte_livello || 'A', fontePrimaria: n.fonte_primaria || '', fonteUrl: n.fonte_url_dettaglio || '', dataAcquisizione: n.data_acquisizione || n.created_at },
-          contenuti: n.produzione_livelli || [], tag: n.tag || [], link: n.link || '', isPinned: n.is_pinned || false, regione: n.regione || null,
-        }));
+        allNews = (newsResult.data as Array<Record<string, unknown>>).map((n: Record<string, unknown>) => ({
+          id: String(n.id), titolo: String(n.titolo), descrizione: String(n.descrizione || ''),
+          dataPubblicazione: String(n.data_pubblicazione || n.created_at),
+          fonte: { livello: String(n.fonte_livello || 'A'), nome: String(n.fonte_nome || 'MIM'), url: String(n.fonte_url || ''), peso: Number(n.fonte_peso || 100) },
+          classifica: { criticita: String(n.criticita || 'media'), impatto: String(n.impatto || 'nazionale'), platea: String(n.platea || 'ampia'), target: Array.isArray(n.target) ? n.target as string[] : ['docenti'], categoria: String(n.categoria || 'Normative, Note e Circolari Ministeriali'), livelloFonte: String(n.fonte_livello || 'A'), fontePrimaria: String(n.fonte_primaria || ''), fonteUrl: String(n.fonte_url_dettaglio || ''), dataAcquisizione: String(n.data_acquisizione || n.created_at) },
+          contenuti: Array.isArray(n.produzione_livelli) ? n.produzione_livelli : [], tag: Array.isArray(n.tag) ? n.tag : [], link: String(n.link || ''), isPinned: Boolean(n.is_pinned), regione: n.regione ? String(n.regione) : null,
+        })) as NotiziaIntelligence[];
       }
 
       setNewsByCategory(groupNewsByCategory(allNews));
@@ -71,12 +71,12 @@ export default function NewsHub({ isHomePage = true }: NewsHubProps) {
 
       let allScadenze: ScadenzaIntelligence[] = [];
       if (!scadenzeResult.error && scadenzeResult.data && scadenzeResult.data.length > 0) {
-        allScadenze = scadenzeResult.data.map((s: any) => ({
-          id: s.id, titolo: s.titolo, descrizione: s.descrizione || '', normativa: s.normativa || '',
-          soggettiCoinvolti: s.soggetti_coinvolti || ['docenti'], dataScadenza: s.data_scadenza || '',
-          priorita: s.priorita || 'media', impatto: s.impatto || 'nazionale',
-          conseguenzeNonAzione: s.conseguenze_non_azione || '', link: s.link || '', tipo: s.tipo || '', guidaOperativa: s.guida_operativa || '', regione: s.regione || '',
-        }));
+        allScadenze = (scadenzeResult.data as Array<Record<string, unknown>>).map((s: Record<string, unknown>) => ({
+          id: String(s.id), titolo: String(s.titolo), descrizione: String(s.descrizione || ''), normativa: String(s.normativa || ''),
+          soggettiCoinvolti: Array.isArray(s.soggetti_coinvolti) ? s.soggetti_coinvolti as string[] : ['docenti'], dataScadenza: String(s.data_scadenza || ''),
+          priorita: String(s.priorita || 'media'), impatto: String(s.impatto || 'nazionale'),
+          conseguenzeNonAzione: String(s.conseguenze_non_azione || ''), link: String(s.link || ''), tipo: String(s.tipo || ''), guidaOperativa: String(s.guida_operativa || ''), regione: String(s.regione || ''),
+        })) as ScadenzaIntelligence[];
       }
       setScadenzeByCategory(groupScadenzeByCategory(allScadenze));
     } catch (err) {
@@ -86,7 +86,6 @@ export default function NewsHub({ isHomePage = true }: NewsHubProps) {
     }
   };
 
-  const switchBgClass = 'bg-gray-100/80 backdrop-blur-sm rounded-2xl p-1.5 border border-slate-200/60 shadow-soft';
   const activePillNews = 'bg-brand-blu text-white shadow-md shadow-brand-blu/10';
   const activePillScadenze = 'bg-brand-ambra text-white shadow-md shadow-brand-ambra/10';
   const inactivePill = 'text-gray-600 hover:text-brand-blu/80';
@@ -296,7 +295,7 @@ function NewsCard({ item }: { item: NotiziaIntelligence }) {
             <div className="mt-2.5 space-y-1.5">
               {elaborazione.slice(0, 4).map((livello, i) => (
                 <div key={i} className="text-[11px] text-gray-600 leading-relaxed bg-gray-50/80 rounded-lg px-2.5 py-1.5 border border-slate-100">
-                  {typeof livello === 'string' ? livello : (livello as any)?.contenuto || ''}
+                  {typeof livello === 'string' ? livello : (livello as { contenuto?: unknown })?.contenuto ? String((livello as { contenuto?: unknown }).contenuto) : ''}
                 </div>
               ))}
             </div>

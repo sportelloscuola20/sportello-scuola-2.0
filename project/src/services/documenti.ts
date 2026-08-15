@@ -7,26 +7,10 @@
 
 import { supabaseAdapter } from '../foundation/adapters';
 import { eventBus } from '../foundation/events';
-import { createLineage } from '../foundation/types';
 import type { DataLineageObject } from '../foundation/types';
+import type { DocumentoNormativo } from '../types/database';
 
-export interface DocumentoNormativo {
-  id: string;
-  titolo: string;
-  descrizione: string;
-  abstract?: string;
-  tipo: string;
-  categoria: string;
-  ente?: string;
-  anno?: string;
-  regione?: string;
-  url_documento?: string;
-  validated: boolean;
-  validated_at?: string;
-  validated_by?: string;
-  is_archived: boolean;
-  created_at: string;
-}
+export type { DocumentoNormativo } from '../types/database';
 
 export interface DocumentiResponse {
   data: DocumentoNormativo[];

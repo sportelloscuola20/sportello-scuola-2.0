@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import {
   Search, Filter, FileText, BookOpen, Building, ShieldCheck, List, ExternalLink,
-  X, AlertCircle, Calendar, Tag, Users, ChevronDown, ChevronUp, RefreshCw,
-  GraduationCap, Download,
+  X, AlertCircle, Calendar, Tag, ChevronDown, ChevronUp,
+  GraduationCap,
 } from 'lucide-react';
 import {
   DOCUMENTI_NORMATIVI,

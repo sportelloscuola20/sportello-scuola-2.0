@@ -26,25 +26,25 @@ export default function ArchivePage() {
           .order('data_pubblicazione', { ascending: false })
           .limit(200);
         if (newsData && newsData.length > 0) {
-          setNewsItems((newsData as any[]).map(n => ({
-            id: n.id,
-            titolo: n.titolo,
-            descrizione: n.descrizione || '',
-            dataPubblicazione: n.data_pubblicazione || n.created_at,
-            fonte: { livello: n.fonte_livello || 'A', nome: n.fonte_nome || '', url: n.fonte_url || '', peso: n.fonte_peso || 100 },
+          setNewsItems((newsData as Array<Record<string, unknown>>).map(n => ({
+            id: String(n.id),
+            titolo: String(n.titolo),
+            descrizione: String(n.descrizione || ''),
+            dataPubblicazione: String(n.data_pubblicazione || n.created_at),
+            fonte: { livello: String(n.fonte_livello || 'A'), nome: String(n.fonte_nome || ''), url: String(n.fonte_url || ''), peso: Number(n.fonte_peso || 100) },
             classifica: {
-              criticita: n.criticita || 'media', impatto: n.impatto || 'nazionale',
-              platea: n.platea || 'ampia', target: n.target || ['docenti'],
-              categoria: n.categoria || 'Normative, Note e Circolari Ministeriali',
-              livelloFonte: n.fonte_livello || 'A',
-              fontePrimaria: n.fonte_primaria || '', fonteUrl: n.fonte_url_dettaglio || '',
-              dataAcquisizione: n.data_acquisizione || n.created_at,
+              criticita: String(n.criticita || 'media'), impatto: String(n.impatto || 'nazionale'),
+              platea: String(n.platea || 'ampia'), target: Array.isArray(n.target) ? n.target as string[] : ['docenti'],
+              categoria: String(n.categoria || 'Normative, Note e Circolari Ministeriali'),
+              livelloFonte: String(n.fonte_livello || 'A'),
+              fontePrimaria: String(n.fonte_primaria || ''), fonteUrl: String(n.fonte_url_dettaglio || ''),
+              dataAcquisizione: String(n.data_acquisizione || n.created_at),
             },
-            contenuti: n.produzione_livelli || [],
-            tag: n.tag || [],
-            link: n.link || '',
-            isPinned: n.is_pinned || false,
-          })));
+            contenuti: Array.isArray(n.produzione_livelli) ? n.produzione_livelli : [],
+            tag: Array.isArray(n.tag) ? n.tag : [],
+            link: String(n.link || ''),
+            isPinned: Boolean(n.is_pinned),
+          })) as NotiziaIntelligence[]);
         } else {
           setNewsItems([]);
         }
@@ -59,22 +59,22 @@ export default function ArchivePage() {
           .order('data_scadenza', { ascending: true })
           .limit(200);
         if (deadlineData && deadlineData.length > 0) {
-          setDeadlineItems((deadlineData as any[]).map(d => ({
-            id: d.id,
-            titolo: d.titolo,
-            descrizione: d.descrizione || '',
-            normativa: d.normativa || '',
-            soggettiCoinvolti: d.soggetti_coinvolti || ['docenti'],
-            dataScadenza: d.data_scadenza,
-            priorita: d.priorita || 'media',
-            impatto: d.impatto || 'nazionale',
-            conseguenzeNonAzione: d.conseguenze_non_azione || '',
-            link: d.link || '',
-            tipo: d.tipo || 'generale',
-            guidaOperativa: d.guida_operativa || '',
-            autoGenerata: d.auto_generata,
-            regione: d.regione || '',
-          })));
+          setDeadlineItems((deadlineData as Array<Record<string, unknown>>).map(d => ({
+            id: String(d.id),
+            titolo: String(d.titolo),
+            descrizione: String(d.descrizione || ''),
+            normativa: String(d.normativa || ''),
+            soggettiCoinvolti: Array.isArray(d.soggetti_coinvolti) ? d.soggetti_coinvolti as string[] : ['docenti'],
+            dataScadenza: String(d.data_scadenza),
+            priorita: String(d.priorita || 'media'),
+            impatto: String(d.impatto || 'nazionale'),
+            conseguenzeNonAzione: String(d.conseguenze_non_azione || ''),
+            link: String(d.link || ''),
+            tipo: String(d.tipo || 'generale'),
+            guidaOperativa: String(d.guida_operativa || ''),
+            autoGenerata: d.auto_generata ? Boolean(d.auto_generata) : undefined,
+            regione: String(d.regione || ''),
+          })) as ScadenzaIntelligence[]);
         } else {
           setDeadlineItems([]);
         }

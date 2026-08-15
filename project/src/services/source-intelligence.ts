@@ -7,8 +7,6 @@
 
 import { SOURCE_MATRIX, type SourceFeed } from '../rag/engine/sources';
 import { supabase } from '../lib/supabaseClient';
-import { createLineage } from '../foundation/types';
-import type { DataLineageObject } from '../foundation/types';
 
 export interface FetchedContent {
   source: SourceFeed;
@@ -152,8 +150,9 @@ export async function runMonitoringCycle(): Promise<ProcessingResult[]> {
         const stored = await storeContent(item);
         if (stored) result.itemsNew++;
       }
-    } catch (e: any) {
-      result.errors.push(e.message);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      result.errors.push(message);
     }
 
     result.duration = Date.now() - start;

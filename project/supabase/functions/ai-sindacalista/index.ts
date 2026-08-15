@@ -10,6 +10,32 @@ const corsHeaders = {
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const MODEL = 'gemini-3.1-flash-lite';
 
+// Verify an HS256 JWT signed with SUPABASE_JWT_SECRET (anon, authenticated and
+// service tokens all pass; forged tokens are rejected).
+async function verifyJwt(token: string): Promise<boolean> {
+  const secret = Deno.env.get('SUPABASE_JWT_SECRET') || '';
+  if (!secret || !token) return false;
+  const parts = token.split('.');
+  if (parts.length !== 3) return false;
+  const [headerB64, payloadB64, signatureB64] = parts;
+  try {
+    const data = `${headerB64}.${payloadB64}`;
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign'],
+    );
+    const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
+    const expected = btoa(String.fromCharCode(...new Uint8Array(sig)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return expected === signatureB64;
+  } catch {
+    return false;
+  }
+}
+
 // ================================================================
 // SYSTEM PROMPT — Sindacalista AI Sportello Scuola 2.0
 // ================================================================
@@ -643,6 +669,16 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Require a valid Supabase-issued JWT — prevents forged/anonymous quota abuse.
+  const authHeader = req.headers.get('Authorization') || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!token || !(await verifyJwt(token))) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

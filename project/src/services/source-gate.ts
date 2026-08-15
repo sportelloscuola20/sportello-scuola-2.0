@@ -104,7 +104,7 @@ export function validateSourceGate(
             : `Peso ${peso} < 60 — valore insufficiente per integrazione diretta`,
         };
 
-      case 'maintenance_cost':
+      case 'maintenance_cost': {
         // Maintenance cost is sustainable if source has a valid URL and isn't a known unreliable domain
         const hasUrl = !!url && url.startsWith('http');
         return {
@@ -114,8 +114,9 @@ export function validateSourceGate(
             ? 'URL valido, costo manutenzione sostenibile'
             : 'URL mancante o non valido — costo manutenzione insostenibile',
         };
+      }
 
-      case 'reliability':
+      case 'reliability': {
         // Reliability is verified if the source is in a known authority level (not just press)
         const level = 'level' in source ? source.level : null;
         const isReliable = level !== null && level <= 5; // L1-L5 are reliable
@@ -126,8 +127,9 @@ export function validateSourceGate(
             ? 'Fonte verificata e coerente'
             : 'Fonte non verificata — richiede validazione aggiuntiva',
         };
+      }
 
-      case 'no_duplication':
+      case 'no_duplication': {
         // Check if another source with same name or URL already exists
         if (existingSources) {
           const isDuplicate = existingSources.some(
@@ -143,6 +145,7 @@ export function validateSourceGate(
           };
         }
         return { ...c, passed: true, reason: 'Check duplicazione non eseguito (nessuna lista fornita)' };
+      }
 
       case 'arch_impact':
         // Architectural impact is positive if source integrates cleanly

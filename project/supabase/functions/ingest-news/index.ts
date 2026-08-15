@@ -281,6 +281,19 @@ function normalizeCategory(raw: string): string {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
 
+  // Require a valid Supabase JWT (admin dashboard) or the shared cron secret (cron-job.org).
+  const cronSecret = Deno.env.get('CRON_SECRET') || '';
+  const providedSecret = req.headers.get('x-cron-secret') || '';
+  const authHeader = req.headers.get('Authorization') || '';
+  const hasValidCronSecret = cronSecret.length > 0 && providedSecret === cronSecret;
+  const hasUserJwt = authHeader.startsWith('Bearer ') && authHeader.length > 20;
+  if (!hasValidCronSecret && !hasUserJwt) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   const startTime = Date.now();
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
-  Search, Filter, Mail, BellRing, Lock, Unlock, CreditCard, Loader2,
+  Search, Filter, BellRing, Lock, CreditCard, Loader2,
   CheckCircle, X, ExternalLink, MapPin, Calendar, Users, BookOpen,
   ChevronDown, ChevronUp, AlertCircle, Building2, Clock, RefreshCw,
 } from 'lucide-react';
@@ -76,22 +76,22 @@ export default function InterpelliPage() {
           .order('data_scadenza', { ascending: true })
           .limit(200);
 
-        const supabaseItems: Interpello[] = (error || !data) ? [] : data.map((r: any) => ({
-          id: `SUP-${r.id}`,
-          titolo: r.titolo || 'Interpello USP',
-          descrizione: r.descrizione || r.titolo || '',
-          provincia: r.provincia || '',
+        const supabaseItems: Interpello[] = (error || !data) ? [] : data.map((r: Record<string, unknown>) => ({
+          id: `SUP-${String(r.id)}`,
+          titolo: String(r.titolo || 'Interpello USP'),
+          descrizione: String(r.descrizione || r.titolo || ''),
+          provincia: String(r.provincia || ''),
           regione: '',
-          classeConcorso: r.categoria || '',
+          classeConcorso: String(r.categoria || ''),
           ordineScuola: '',
-          tipoContratto: (r.tipo || 'Supplenza temporanea') as Interpello['tipoContratto'],
-          dataPubblicazione: r.data_pubblicazione || '',
-          scadenza: r.data_scadenza || '',
+          tipoContratto: (String(r.tipo || 'Supplenza temporanea')) as Interpello['tipoContratto'],
+          dataPubblicazione: String(r.data_pubblicazione || ''),
+          scadenza: String(r.data_scadenza || ''),
           postiDisponibili: 0,
           requisiti: [],
-          fonte: r.ente || 'USP',
-          fonteUrl: r.link || '',
-          stato: deriveStato(r.data_scadenza) === 'aperto' ? 'attivo' : 'scaduto',
+          fonte: String(r.ente || 'USP'),
+          fonteUrl: String(r.link || ''),
+          stato: deriveStato(String(r.data_scadenza)) === 'aperto' ? 'attivo' : 'scaduto',
         }));
 
         const officialIds = new Set(INTERPELLI_UFFICIALI.map(i => `${i.provincia}-${i.classeConcorso}-${i.scadenza}`));
@@ -129,8 +129,9 @@ export default function InterpelliPage() {
       } else {
         throw new Error('URL checkout non ricevuto');
       }
-    } catch (err: any) {
-      setCheckoutError(err.message || 'Errore durante l\'attivazione. Riprova più tardi.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : typeof err === 'string' ? err : 'Errore durante l\'attivazione. Riprova più tardi.';
+      setCheckoutError(message || 'Errore durante l\'attivazione. Riprova più tardi.');
     } finally {
       setCheckoutLoading(false);
     }
@@ -170,7 +171,7 @@ export default function InterpelliPage() {
       setPagina(1);
       setLoading(false);
     }, 300);
-  }, [canSearch, isAuthenticated, filtroProvincia, filtroClasse, filtroOrdine, filtroTipoContratto, tuttiInterpelli, searchQuery, searchCount]);
+  }, [canSearch, isAuthenticated, filtroProvincia, filtroClasse, filtroOrdine, filtroTipoContratto, tuttiInterpelli, searchQuery]);
 
   const paginatedResults = risultati.slice(0, pagina * risultatiPerPagina);
 

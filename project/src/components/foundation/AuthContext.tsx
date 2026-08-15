@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { sendOnboardingEmail, sendAdminNotification } from '../../lib/emailService';
-const CREATOR_EMAIL = import.meta.env.VITE_CREATOR_EMAIL || 'sportelloscuola2.0@gmail.com';
 
 export interface UserProfile {
   id: string;
@@ -100,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             full_name: profile.full_name || full_name || null,
             ruolo: profile.ruolo,
             is_premium: profile.is_premium,
-            is_admin: profile.email === CREATOR_EMAIL,
+            is_admin: profile.is_admin,
           };
           setUser(p);
           persistUser(p);
@@ -113,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           full_name: full_name || null,
           ruolo: (session.user.user_metadata?.ruolo as UserProfile['ruolo']) || 'aspirante',
           is_premium: false,
-          is_admin: email === CREATOR_EMAIL,
+          is_admin: false,
         };
         setUser(newProfile);
         persistUser(newProfile);
@@ -166,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         full_name: profile.full_name,
         ruolo: profile.ruolo,
         is_premium: profile.is_premium,
-        is_admin: profile.email === CREATOR_EMAIL,
+        is_admin: profile.is_admin,
       };
       setUser(updated);
       persistUser(updated);
@@ -213,7 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             full_name: profile?.full_name || data.user.user_metadata?.full_name || null,
             ruolo: profile?.ruolo || data.user.user_metadata?.ruolo || 'aspirante',
             is_premium: profile?.is_premium || false,
-            is_admin: userEmail === CREATOR_EMAIL,
+            is_admin: profile?.is_admin || false,
           };
           setUser(p);
           persistUser(p);
@@ -247,7 +246,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           full_name: profile?.full_name || data.user.user_metadata?.full_name || null,
           ruolo: profile?.ruolo || data.user.user_metadata?.ruolo || 'aspirante',
           is_premium: profile?.is_premium || false,
-          is_admin: userEmail === CREATOR_EMAIL,
+          is_admin: profile?.is_admin || false,
         };
         setUser(p);
         persistUser(p);
@@ -301,6 +300,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');

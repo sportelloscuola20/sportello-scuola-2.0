@@ -11,7 +11,7 @@ interface LoginModalProps {
 
 type SignupStatus = 'idle' | 'loading' | 'success' | 'error';
 
-const INPUT_STYLE: Record<string, string> = {
+const INPUT_STYLE: Record<string, string | number> = {
   width: '100%',
   padding: '12px 12px 12px 40px',
   border: '1px solid #D1D5DB',
@@ -22,7 +22,7 @@ const INPUT_STYLE: Record<string, string> = {
   transition: 'border-color 0.2s, box-shadow 0.2s',
 };
 
-const ICON_STYLE: Record<string, string> = {
+const ICON_STYLE: Record<string, string | number> = {
   position: 'absolute',
   left: 12,
   top: '50%',
@@ -98,7 +98,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
       password,
       options: {
         data: { full_name: fullName, ruolo },
-        redirectTo: 'https://sportelloscuola2-0.it/area-riservata',
+        emailRedirectTo: 'https://sportelloscuola2-0.it/area-riservata',
       },
     });
 

@@ -57,7 +57,7 @@ export default function CentroInterpelli() {
     } finally {
       setLoading(false);
     }
-  }, [canSearch, isAuthenticated, filtroProvincia, filtroClasse, filtroTipoPosto, searchCount]);
+  }, [canSearch, isAuthenticated, filtroProvincia, filtroClasse, filtroTipoPosto]);
 
   const statoBadge: Record<string, string> = {
     aperto: 'bg-green-100 text-green-700',
