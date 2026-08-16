@@ -10,30 +10,21 @@ const corsHeaders = {
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const MODEL = 'gemini-3.1-flash-lite';
 
-// Verify an HS256 JWT signed with SUPABASE_JWT_SECRET (anon, authenticated and
-// service tokens all pass; forged tokens are rejected).
+// Verify a Supabase-issued JWT via the Auth server (server-side).
+// Uses supabase.auth.getUser() which validates HS256 (anon/service) AND the
+// ES256/RS256 keys from the project JWKS (current session tokens), and rejects
+// revoked or expired tokens. A token is valid only if it resolves to a real user,
+// which blocks anonymous quota abuse.
 async function verifyJwt(token: string): Promise<boolean> {
-  const secret = Deno.env.get('SUPABASE_JWT_SECRET') || '';
-  if (!secret || !token) return false;
-  const parts = token.split('.');
-  if (parts.length !== 3) return false;
-  const [headerB64, payloadB64, signatureB64] = parts;
-  try {
-    const data = `${headerB64}.${payloadB64}`;
-    const key = await crypto.subtle.importKey(
-      'raw',
-      new TextEncoder().encode(secret),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign'],
-    );
-    const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
-    const expected = btoa(String.fromCharCode(...new Uint8Array(sig)))
-      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    return expected === signatureB64;
-  } catch {
-    return false;
-  }
+  if (!token) return false;
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  if (!supabaseUrl || !supabaseServiceKey) return false;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { data, error } = await supabase.auth.getUser(token);
+  return !error && !!data.user;
 }
 
 // ================================================================
