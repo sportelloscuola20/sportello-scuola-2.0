@@ -83,16 +83,16 @@ describe('Analytics service', () => {
       const views = { count: 10, data: null };
       const usersData = { data: [{ user_id: 'u1' }, { user_id: 'u2' }, { user_id: 'u1' }] };
       const pagesData = {
-        data: [{ page: '/a' }, { page: '/b' }, { page: '/a' }, { page: '/c' }],
+        data: [{ path: '/a' }, { path: '/b' }, { path: '/a' }, { path: '/c' }],
       };
-      const featuresData = { data: [{ feature: 'f1' }, { feature: 'f1' }, { feature: 'f2' }] };
+      const featuresData = { data: [{ feature_name: 'f1' }, { feature_name: 'f1' }, { feature_name: 'f2' }] };
 
       const resolveFor = (table: string, cols: string, opts?: unknown): unknown => {
         if (table !== 'page_analytics') return null;
         if (cols === '*' && opts && (opts as { head?: boolean }).head) return views;
         if (cols === 'user_id') return usersData;
-        if (cols === 'page') return pagesData;
-        if (cols === 'feature') return featuresData;
+        if (cols === 'path') return pagesData;
+        if (cols === 'feature_name') return featuresData;
         return null;
       };
 

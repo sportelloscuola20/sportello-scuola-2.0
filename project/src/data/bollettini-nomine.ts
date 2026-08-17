@@ -5,6 +5,8 @@
 // 43 classi GPS × 108 province × turni reali per provincia
 // ============================================================
 
+import { useSyncExternalStore } from 'react';
+
 export interface ClasseConcorso {
   codice: string;
   materia: string;
@@ -88,6 +90,55 @@ export const CLASSI_CONCORSO: ClasseConcorso[] = [
   { codice: 'A-62', materia: 'Tecnologie e tecniche per la grafica', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
   { codice: 'A-66', materia: 'Informatica (esaurimento)', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
   { codice: 'A-08', materia: 'Discipline geometriche e architettura', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-02', materia: 'Design dei metalli, dell\'oreficeria, delle pietre dure e delle gemme', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-03', materia: 'Design della ceramica', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-05', materia: 'Design del tessuto e della moda', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-07', materia: 'Discipline audiovisive', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-09', materia: 'Discipline grafiche, pittoriche e scenografiche', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-10', materia: 'Discipline grafico-pubblicitarie', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-14', materia: 'Discipline plastiche, scultoree e scenoplastiche', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-15', materia: 'Discipline sanitarie', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-16', materia: 'Disegno artistico e modellazione odontotecnica', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-31', materia: 'Scienze degli alimenti', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-32', materia: 'Scienze della geologia e della mineralogia', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-36', materia: 'Scienze e tecnologia della logistica', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-37', materia: 'Scienze e tecnologie delle costruzioni', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-38', materia: 'Scienze e tecnologie delle costruzioni aeronautiche', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-40', materia: 'Scienze e tecnologie elettriche ed elettroniche', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-43', materia: 'Scienze e tecnologie nautiche', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-44', materia: 'Scienze e tecnologie tessili, dell\'abbigliamento e della moda', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-52', materia: 'Scienze, tecnologie e tecniche di produzioni animali', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-53', materia: 'Storia della musica e della danza', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-57', materia: 'Tecnica della danza classica', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-58', materia: 'Tecnica della danza contemporanea', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-59', materia: 'Tecnica di accompagnamento alla danza', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-63', materia: 'Tecnologie musicali', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-64', materia: 'Teoria, analisi e composizione', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'A-65', materia: 'Teoria e tecnica della comunicazione', ordineScuola: 'Secondaria II Grado', fascia: 'A' },
+  { codice: 'B-03', materia: 'Laboratori di fisica', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-05', materia: 'Laboratorio di logistica', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-07', materia: 'Laboratorio di ottica', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-08', materia: 'Laboratori di produzione industriali ed artigianali della ceramica', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-09', materia: 'Laboratori di scienze e tecnologie aeronautiche', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-10', materia: 'Laboratori di scienze e tecnologie delle costruzioni aeronautiche', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-11', materia: 'Laboratori di scienze e tecnologie agrarie', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-12', materia: 'Laboratori di scienze e tecnologie chimiche e microbiologiche', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-13', materia: 'Laboratori di scienze e tecnologie della calzatura e della moda', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-14', materia: 'Laboratori di scienze e tecnologie delle costruzioni', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-15', materia: 'Laboratori di scienze e tecnologie elettriche ed elettroniche', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-16', materia: 'Laboratori di scienze e tecnologie informatiche', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-17', materia: 'Laboratori di scienze e tecnologie meccaniche', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-18', materia: 'Laboratori di scienze e tecnologie tessili, dell\'abbigliamento e della moda', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-19', materia: 'Laboratori di servizi di ricettività alberghiera', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-20', materia: 'Laboratori di servizi enogastronomici, settore cucina', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-21', materia: 'Laboratori di servizi enogastronomici, settore sala e vendita', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-22', materia: 'Laboratori di tecnologie e tecniche delle comunicazioni multimediali', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-23', materia: 'Laboratori per i servizi socio-sanitari', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-24', materia: 'Laboratorio di scienze e tecnologie nautiche', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-25', materia: 'Laboratorio di scienze e tecnologie delle costruzioni navali', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-26', materia: 'Laboratorio di tecnologie del legno', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-28', materia: 'Laboratorio di tecnologie orafe', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
+  { codice: 'B-29', materia: 'Gabinetto fisioterapico', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
   { codice: 'ADSS', materia: 'Sostegno - Secondaria II Grado', ordineScuola: 'Secondaria II Grado', fascia: 'S' },
   { codice: 'B-06', materia: 'Laboratorio tecnologie informatiche', ordineScuola: 'Secondaria II Grado', fascia: 'B' },
 ];
@@ -96,15 +147,36 @@ export const CLASSI_CONCORSO: ClasseConcorso[] = [
 
 let _rawData: BollettinoEntry[] | null = null;
 let _loadPromise: Promise<BollettinoEntry[]> | null = null;
+let _map: Map<string, BollettinoEntry[]> | null = null;
+let _eagerArray: BollettinoEntry[] | null = null;
+
+type Listener = () => void;
+const _listeners = new Set<Listener>();
+
+function emitChange() {
+  _map = null;
+  _eagerArray = null;
+  for (const l of _listeners) l();
+}
 
 async function ensureRealDataLoaded(): Promise<BollettinoEntry[]> {
   if (_rawData) return _rawData;
   if (_loadPromise) return _loadPromise;
   _loadPromise = fetch('/bollettini-real-data.json')
     .then(r => r.json())
-    .then(data => { _rawData = data as BollettinoEntry[]; return _rawData; });
+    .then(data => { _rawData = data as BollettinoEntry[]; emitChange(); return _rawData; });
   return _loadPromise;
 }
+
+// React hook — re-renderizza i consumer quando i dati reali arrivano
+export function useBollettiniData(): BollettinoEntry[] {
+  return useSyncExternalStore(
+    (cb) => { _listeners.add(cb); return () => _listeners.delete(cb); },
+    () => _rawData ?? EMPTY,
+  );
+}
+
+const EMPTY: BollettinoEntry[] = [];
 
 // ═══ HELPER FUNCTIONS ═══
 
@@ -171,7 +243,6 @@ export function filtraPerCompetizione(entries: BollettinoEntry[], livello: strin
 
 // ═══ LAZY MAP — Costruita dai dati reali JSON ═══
 
-let _map: Map<string, BollettinoEntry[]> | null = null;
 function ensureMap(): Map<string, BollettinoEntry[]> {
   if (_map) return _map;
   _map = new Map();
@@ -203,11 +274,10 @@ export const BOLLETTINI_NOMINE: BollettinoEntry[] = new Proxy([] as BollettinoEn
 });
 
 // Also provide eager array for filter operations
-let _eagerArray: BollettinoEntry[] | null = null;
 export function getAllBollettini(): BollettinoEntry[] {
-  if (_eagerArray) return _eagerArray;
-  _eagerArray = _rawData ?? [];
-  return _eagerArray;
+  if (_eagerArray && _rawData) return _eagerArray;
+  if (_rawData) { _eagerArray = _rawData; return _eagerArray; }
+  return [];
 }
 
 // Async initializer — call on app mount to load data

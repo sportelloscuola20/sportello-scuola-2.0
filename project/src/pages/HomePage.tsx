@@ -13,11 +13,11 @@ import NewsHub from '../components/ui/news/NewsHub';
 import FAQ from '../components/knowledge/FAQ';
 import Contact from '../components/ui/services/Contact';
 import LoginModal from '../components/foundation/LoginModal';
-import { getAllBollettini, CLASSI_CONCORSO } from '../data/bollettini-nomine';
+import { useBollettiniData, CLASSI_CONCORSO } from '../data/bollettini-nomine';
 
 function NominePreview() {
+  const bollettini = useBollettiniData();
   const stats = useMemo(() => {
-    const bollettini = getAllBollettini();
     const totalPositions = bollettini.reduce((s, b) => s + b.posizioniAssegnate, 0);
     const totalCandidates = bollettini.reduce((s, b) => s + b.candidatiInGraduatoria, 0);
     const provinceSet = new Set(bollettini.map(b => b.provinciaSigla));
@@ -27,13 +27,13 @@ function NominePreview() {
       coverageRate: totalCandidates > 0 ? ((totalPositions / totalCandidates) * 100).toFixed(1) : '0',
       activeProvinces: provinceSet.size,
     };
-  }, []);
+  }, [bollettini]);
 
   const recentBollettini = useMemo(() => {
-    return [...getAllBollettini()]
+    return [...bollettini]
       .sort((a, b) => b.dataBollettino.localeCompare(a.dataBollettino))
       .slice(0, 6);
-  }, []);
+  }, [bollettini]);
 
   const competizioneStyle: Record<string, string> = {
     molto_alta: 'bg-red-100 text-red-700',

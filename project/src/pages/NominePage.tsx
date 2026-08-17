@@ -7,7 +7,7 @@ import {
 import { USP_PROVINCE, REGIONI_WITH_USP, getUSPBySigla } from '../data/usp-italiane';
 import {
   CLASSI_CONCORSO, getBollettiniByClasse, getBollettiniByClasseAndProvincia,
-  getSintesiByClasse, getClasseByCodice, getAllBollettini,
+  getSintesiByClasse, getClasseByCodice, useBollettiniData,
   type BollettinoEntry,
 } from '../data/bollettini-nomine';
 
@@ -83,6 +83,8 @@ export default function NominePage() {
   const [expandedFascia, setExpandedFascia] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'turno' | 'competizione' | 'punteggioMinimo' | 'posizioniAssegnate'>('turno');
 
+  const tuttiBollettini = useBollettiniData();
+
   const provinceFiltrate = regioneSelezionata
     ? USP_PROVINCE.filter(p => p.regioneCodice === regioneSelezionata)
     : USP_PROVINCE;
@@ -108,7 +110,7 @@ export default function NominePage() {
     } else if (classeSelezionata) {
       result = getBollettiniByClasse(classeSelezionata);
     } else {
-      result = getAllBollettini();
+      result = tuttiBollettini;
     }
     if (provinciaSelezionata && !classeSelezionata) result = result.filter(b => b.provinciaSigla === provinciaSelezionata);
     if (tipoGraduatoria) result = result.filter(b => b.tipoGraduatoria === tipoGraduatoria);
@@ -117,17 +119,17 @@ export default function NominePage() {
       result = result.filter(b => codiciOrdine.includes(b.classeCodice));
     }
     return sortBollettini(result, sortBy);
-  }, [classeSelezionata, provinciaSelezionata, tipoGraduatoria, ordineScuola, sortBy]);
+  }, [classeSelezionata, provinciaSelezionata, tipoGraduatoria, ordineScuola, sortBy, tuttiBollettini]);
 
   const statsGlobali = useMemo(() => {
     const scoped = classeSelezionata
       ? getBollettiniByClasse(classeSelezionata)
       : ordineScuola
-        ? getAllBollettini().filter(b => {
+        ? tuttiBollettini.filter(b => {
             const codici = CLASSI_CONCORSO.filter(c => c.ordineScuola === ordineScuola).map(c => c.codice);
             return codici.includes(b.classeCodice);
           })
-        : getAllBollettini();
+        : tuttiBollettini;
 
     const totPosizioni = scoped.reduce((s, e) => s + e.posizioniAssegnate, 0);
     const totCandidati = scoped.reduce((s, e) => s + e.candidatiInGraduatoria, 0);
@@ -148,7 +150,7 @@ export default function NominePage() {
       totaleBollettini: scoped.length,
       muitoAltaCount,
     };
-  }, [classeSelezionata, ordineScuola]);
+  }, [classeSelezionata, ordineScuola, tuttiBollettini]);
 
   const punteggioVal = punteggioMio ? parseFloat(punteggioMio) : null;
 

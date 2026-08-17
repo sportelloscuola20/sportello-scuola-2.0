@@ -32,9 +32,11 @@ function makeEntry(overrides: Partial<BollettinoEntry>): BollettinoEntry {
 describe('Bollettini helpers', () => {
   describe('CLASSI_CONCORSO', () => {
     it('should include all official classes', () => {
-      expect(CLASSI_CONCORSO).toHaveLength(42);
+      expect(CLASSI_CONCORSO.length).toBeGreaterThanOrEqual(90);
       expect(CLASSI_CONCORSO.some(c => c.codice === '00AA')).toBe(true);
       expect(CLASSI_CONCORSO.some(c => c.codice === 'ADSS')).toBe(true);
+      expect(CLASSI_CONCORSO.some(c => c.codice === 'A-37')).toBe(true);
+      expect(CLASSI_CONCORSO.some(c => c.codice === 'B-12')).toBe(true);
     });
 
     it('should include all ordini di scuola', () => {

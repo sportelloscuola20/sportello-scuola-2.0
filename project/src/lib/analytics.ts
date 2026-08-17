@@ -20,8 +20,11 @@ export interface AnalyticsEvent {
   event_type: AnalyticsEventType;
   user_id?: string;
   page?: string;
+  query?: string;
+  result_count?: number;
   feature?: string;
   metadata?: Record<string, unknown>;
+  session_id?: string;
 }
 
 /** Track an analytics event (fire-and-forget) */
@@ -30,9 +33,12 @@ export async function trackEvent(event: AnalyticsEvent): Promise<void> {
     await supabase.from('page_analytics').insert({
       event_type: event.event_type,
       user_id: event.user_id || null,
-      page: event.page || null,
-      feature: event.feature || null,
+      path: event.page || null,
+      query: event.query || null,
+      result_count: event.result_count ?? null,
+      feature_name: event.feature || null,
       metadata: event.metadata || {},
+      session_id: event.session_id || null,
       created_at: new Date().toISOString(),
     });
   } catch {
@@ -50,7 +56,9 @@ export async function trackSearch(query: string, resultCount: number, userId?: s
   return trackEvent({
     event_type: 'search',
     user_id: userId,
-    metadata: { query, result_count: resultCount },
+    query,
+    result_count: resultCount,
+    metadata: { result_count: resultCount },
   });
 }
 
@@ -81,10 +89,10 @@ export async function getDashboardStats(): Promise<{
       supabase.from('page_analytics').select('user_id')
         .gte('created_at', last24h)
         .not('user_id', 'is', null),
-      supabase.from('page_analytics').select('page')
+      supabase.from('page_analytics').select('path')
         .eq('event_type', 'page_view')
         .gte('created_at', last24h),
-      supabase.from('page_analytics').select('feature')
+      supabase.from('page_analytics').select('feature_name')
         .eq('event_type', 'feature_use')
         .gte('created_at', last24h),
     ]);
@@ -92,7 +100,7 @@ export async function getDashboardStats(): Promise<{
     // Aggregate top pages
     const pageCount = new Map<string, number>();
     (pages.data || []).forEach(r => {
-      if (r.page) pageCount.set(r.page, (pageCount.get(r.page) || 0) + 1);
+      if (r.path) pageCount.set(r.path, (pageCount.get(r.path) || 0) + 1);
     });
     const topPages = [...pageCount.entries()]
       .sort((a, b) => b[1] - a[1])
@@ -102,7 +110,7 @@ export async function getDashboardStats(): Promise<{
     // Aggregate top features
     const featureCount = new Map<string, number>();
     (features.data || []).forEach(r => {
-      if (r.feature) featureCount.set(r.feature, (featureCount.get(r.feature) || 0) + 1);
+      if (r.feature_name) featureCount.set(r.feature_name, (featureCount.get(r.feature_name) || 0) + 1);
     });
     const topFeatures = [...featureCount.entries()]
       .sort((a, b) => b[1] - a[1])

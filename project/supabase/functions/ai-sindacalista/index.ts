@@ -15,8 +15,19 @@ const MODEL = 'gemini-3.1-flash-lite';
 // ES256/RS256 keys from the project JWKS (current session tokens), and rejects
 // revoked or expired tokens. A token is valid only if it resolves to a real user,
 // which blocks anonymous quota abuse.
+//
+// The public frontend also calls without a session, sending the legacy project
+// anon key (a public HS256 JWT with iss=supabase, ref=<project>, role=anon) as
+// Bearer token (see src/services/chat.ts). The anon key ships in the client
+// bundle and is not a secret, so it is stored in the custom secret ANON_KEY_JWT
+// and matched by value. SUPABASE_ANON_KEY env was migrated by the platform to
+// the publishable key, so it is accepted as a secondary credential too.
 async function verifyJwt(token: string): Promise<boolean> {
   if (!token) return false;
+  const anonKey = Deno.env.get('ANON_KEY_JWT') || '';
+  const publishableKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+  if (anonKey && token === anonKey) return true;
+  if (publishableKey && token === publishableKey) return true;
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
   if (!supabaseUrl || !supabaseServiceKey) return false;
